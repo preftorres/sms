@@ -1,30 +1,24 @@
 <!DOCTYPE html>
-<html lang="pt-br" class="h-full bg-slate-50">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portal da Saúde & Auditoria de Cotas | Prefeitura de Torres</title>
-    
-    <!-- Fonte Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal da Saúde e Auditoria - Prefeitura de Torres</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
                     colors: {
-                        torres: {
-                            dark: '#0f172a',
-                            primary: '#0369a1',
-                            accent: '#0284c7',
-                            light: '#e0f2fe'
+                        torres: { 
+                            dark: '#0f172a', 
+                            primary: '#1e40af', 
+                            accent: '#3b82f6',
+                            light: '#dbeafe'
                         }
                     }
                 }
@@ -32,265 +26,213 @@
         }
     </script>
 
-    <!-- Folha de Estilos Customizada & Impressão -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen flex flex-col font-sans text-slate-800 antialiased">
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
 
-    <!-- BOTÃO FLUTUANTE DE ACESSO AO MODO ADMINISTRATIVO -->
-    <div class="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 print:hidden flex items-center gap-2">
-        <div id="admin-badge-indicator" class="hidden px-2.5 py-1 bg-amber-400 text-slate-950 font-bold text-xs rounded-full shadow-md animate-pulse">
-            Admin Ativo
-        </div>
-        <button id="btn-admin-floating" onclick="app.admin.toggleAuthOrOpen()" 
-                title="Acesso Administrativo" 
-                class="p-3 bg-white/90 hover:bg-white rounded-full border border-slate-300 shadow-md hover:shadow-lg transition-all text-slate-700 hover:text-torres-accent backdrop-blur-md">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-        </button>
-    </div>
-
-    <!-- CABEÇALHO INSTITUCIONAL GLOBAL -->
-    <header class="bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 text-white shadow-lg print:hidden sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+    <!-- CABEÇALHO GLOBAL (Menu com botão ativo em fundo azul claro) -->
+    <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
+        <div class="container mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="app.ui.navigate('landing')">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
-                    <!-- Suporta imagem do brasão ou fallback vetorial -->
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
                     <img src="torres-rs-logo-300x139.webp" 
                          alt="Prefeitura de Torres" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" 
                          class="max-w-full h-auto object-contain">
-                    <svg class="w-6 h-6 text-sky-700 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg class="w-6 h-6 text-blue-800 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
                 <div>
-                    <span class="block text-[10px] uppercase font-bold tracking-widest text-sky-300 leading-tight">Prefeitura de Torres / RS</span>
-                    <h1 class="text-base sm:text-lg font-black tracking-tight leading-tight">Secretaria Municipal de Saúde</h1>
+                    <span class="block text-[10px] uppercase font-bold tracking-widest text-blue-400 leading-none">Prefeitura de Torres</span>
+                    <h1 class="text-base font-black tracking-tight leading-tight">Secretaria Municipal da Saúde</h1>
                 </div>
             </div>
 
-            <!-- MENU DE NAVEGAÇÃO SPA (Fundo azul claro somente na página ativa) -->
-            <nav id="header-nav" class="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm font-semibold">
-                <button id="nav-btn-landing" onclick="app.ui.navigate('landing')" class="nav-tab px-3.5 py-2 rounded-xl transition-all">
+            <!-- BOTÕES DE NAVEGAÇÃO -->
+            <nav id="main-nav" class="flex items-center space-x-2 text-xs font-semibold">
+                <button id="nav-btn-landing" onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all">
                     Início
                 </button>
-                <button id="nav-btn-saude_links" onclick="app.ui.navigate('saude_links')" class="nav-tab px-3.5 py-2 rounded-xl transition-all">
-                    Portal da Saúde
+                <button id="nav-btn-saude_links" onclick="app.ui.navigate('saude_links')" class="nav-btn px-4 py-2 rounded-xl transition-all">
+                    Portal de Acessos
                 </button>
-                <button id="nav-btn-auditoria_exames" onclick="app.ui.navigate('auditoria_exames')" class="nav-tab px-3.5 py-2 rounded-xl transition-all">
+                <button id="nav-btn-auditoria_exames" onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-4 py-2 rounded-xl transition-all">
                     Auditoria de Cotas
                 </button>
             </nav>
         </div>
     </header>
 
-    <!-- VIEWPORT DA SPA -->
-    <main id="app-viewport" class="flex-grow flex flex-col">
-        <!-- Telas injetadas via app.render -->
-    </main>
+    <!-- BOTÃO ADMIN DISCRETO ORIGINAL -->
+    <div class="fixed top-3.5 right-4 z-50 print:hidden">
+        <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-2.5 glass-blur hover:bg-white rounded-full border border-slate-200 shadow-sm transition-all group">
+            <svg class="h-5 w-5 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </button>
+    </div>
 
-    <!-- RODAPÉ MUNICIPAL -->
-    <footer class="bg-white border-t border-slate-200 text-slate-500 text-xs py-4 px-4 text-center print:hidden">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span>Prefeitura Municipal de Torres — Secretaria da Saúde | <code class="text-slate-600 font-mono">preftorres.github.io/sms</code></span>
-            <span>Controle e Monitoramento Contratual • Gestão Pública Digital</span>
-        </div>
-    </footer>
+    <!-- ÁREA PRINCIPAL DA SPA -->
+    <div id="app-viewport" class="flex-grow flex flex-col">
+        <!-- O conteúdo será injetado aqui via app.render.all() -->
+    </div>
 
-    <!-- MODAL DE AUTENTICAÇÃO ADMINISTRATIVA -->
-    <div id="modal-auth" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn">
-            <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-sky-100 text-sky-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                </div>
-                <h3 class="text-xl font-extrabold text-slate-800">Acesso Restrito</h3>
-                <p class="text-slate-500 text-xs mt-1">Informe a senha para gerenciar atalhos, contratos e exames.</p>
-            </div>
+    <!-- MODAL DE LOGIN (SENHA ORIGINAL: admin123) -->
+    <div id="modal-auth" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl">
+            <h3 class="text-2xl font-black text-slate-800 mb-2 text-center">Acesso Restrito</h3>
+            <p class="text-slate-500 text-center mb-6 text-xs">Digite a senha administrativa e tecle <b>Enter</b></p>
             
             <input type="password" id="input-pass" 
                    onkeydown="if(event.key === 'Enter') app.admin.verify()"
-                   class="w-full bg-slate-100 border-2 border-slate-200 focus:border-sky-600 p-4 rounded-xl mb-3 outline-none text-center text-xl tracking-widest font-mono" 
-                   placeholder="••••••••">
+                   class="w-full bg-slate-100 border-2 border-transparent p-4 rounded-2xl mb-4 outline-none focus:border-blue-500 text-center text-xl font-mono tracking-[0.4em]" 
+                   placeholder="••••">
             
-            <p id="auth-error-msg" class="text-xs text-rose-600 text-center mb-4 hidden font-medium">Senha incorreta. Tente novamente.</p>
-
             <div class="flex gap-3">
-                <button onclick="app.ui.toggleAuthModal(false)" class="flex-1 py-3 font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
-                <button onclick="app.admin.verify()" class="flex-1 bg-sky-700 text-white py-3 rounded-xl font-bold hover:bg-sky-800 transition shadow-md">Entrar</button>
+                <button onclick="app.ui.toggleAuthModal(false)" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                <button onclick="app.admin.verify()" class="flex-1 bg-torres-dark text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-800 transition-all shadow-md">Entrar</button>
             </div>
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO MODAL/EXPANDIDO -->
-    <div id="admin-panel" class="fixed inset-0 z-[110] hidden bg-slate-900/40 backdrop-blur-md overflow-y-auto p-4 sm:p-6 lg:p-10">
-        <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-            
-            <!-- TOPO DO PAINEL ADMIN -->
-            <div class="bg-slate-900 text-white p-6 flex flex-wrap items-center justify-between gap-4">
+    <!-- PAINEL ADMINISTRATIVO (FULLSCREEN COM ABAS) -->
+    <div id="admin-panel" class="fixed inset-0 z-[110] hidden bg-slate-50 overflow-y-auto">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
                 <div>
-                    <span class="text-xs font-bold uppercase tracking-widest text-sky-400">Modo Administrativo</span>
-                    <h2 class="text-2xl font-black">Central de Edição & Gerenciamento</h2>
+                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Gestão Municipal</span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Gerenciador de Acessos & Contratos</h2>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="app.admin.logout()" class="px-4 py-2 text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-600/30 rounded-xl transition border border-rose-500/30">
-                        Encerrar Sessão
-                    </button>
-                    <button onclick="app.admin.exit()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold shadow transition text-sm">
-                        Concluir e Voltar
-                    </button>
+                    <button onclick="app.admin.logout()" class="px-4 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200">Encerrar Sessão</button>
+                    <button onclick="app.admin.exit()" class="bg-torres-dark text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-slate-800 transition">Salvar e Fechar</button>
                 </div>
             </div>
 
-            <!-- ABAS DO PAINEL ADMIN -->
-            <div class="flex border-b border-slate-200 bg-slate-100 px-6 pt-3 gap-2">
-                <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-5 py-3 font-extrabold text-xs sm:text-sm rounded-t-xl bg-white text-sky-800 border-t-2 border-sky-600 shadow-xs">
-                    Atalhos & Links da Saúde
+            <!-- NAVEGAÇÃO DE ABAS DO ADMIN -->
+            <div class="flex border-b border-slate-200 mb-8 gap-2">
+                <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600">
+                    Atalhos do Portal
                 </button>
-                <button id="admin-tab-btn-contratos" onclick="app.admin.switchTab('contratos')" class="px-5 py-3 font-semibold text-xs sm:text-sm rounded-t-xl text-slate-600 hover:bg-white/60">
-                    Contrato & Procedimentos de Exames
+                <button id="admin-tab-btn-contrato" onclick="app.admin.switchTab('contrato')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600">
+                    Contrato & Exames
                 </button>
             </div>
 
-            <!-- CONTEÚDO DA ABA 1: GERENCIAR LINKS -->
-            <div id="admin-tab-links" class="p-6 sm:p-8">
-                <div class="grid lg:grid-cols-12 gap-8">
-                    <!-- Formulário de Atalhos -->
-                    <div class="lg:col-span-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 id="form-title-label" class="font-black text-slate-800 text-base mb-4">Novo Atalho</h3>
+            <!-- ABA 1: GERENCIAR LINKS (DRAG & DROP) -->
+            <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4">
+                    <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
+                        <h3 id="form-title-label" class="font-bold text-base mb-4 text-slate-800">Novo Atalho</h3>
                         <div class="space-y-3">
                             <input type="hidden" id="edit-id">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Título do Link</label>
-                                <input id="field-title" type="text" placeholder="Ex: Betha Cloud" class="w-full p-3 bg-white rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-sky-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Endereço Web (URL)</label>
-                                <input id="field-url" type="text" placeholder="http:// ou https://" class="w-full p-3 bg-white rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-sky-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Descrição</label>
-                                <textarea id="field-desc" rows="3" placeholder="Resumo da funcionalidade do link..." class="w-full p-3 bg-white rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-sky-500 focus:outline-none resize-none"></textarea>
-                            </div>
-                            <button id="btn-save" onclick="app.admin.saveLink()" class="w-full bg-sky-700 hover:bg-sky-800 text-white py-3 rounded-xl font-bold text-xs shadow transition">Salvar Link</button>
-                            <button id="btn-cancel-edit" onclick="app.admin.resetLinkForm()" class="hidden w-full text-slate-500 hover:text-slate-700 py-1.5 text-xs font-semibold">Cancelar Edição</button>
-                        </div>
-                    </div>
-
-                    <!-- Lista com Drag and Drop -->
-                    <div class="lg:col-span-8">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="font-bold text-slate-700 text-sm">Ordem Atual dos Atalhos</h4>
-                            <span class="text-xs text-slate-400">Arraste para reordenar</span>
-                        </div>
-                        <div id="admin-list-draggable" class="space-y-2.5">
-                            <!-- Gerado dinamicamente -->
+                            <input id="field-title" type="text" placeholder="Nome do Link" class="w-full p-3 bg-slate-50 rounded-xl outline-none border focus:border-blue-500 text-xs font-semibold">
+                            <input id="field-url" type="text" placeholder="URL (http://...)" class="w-full p-3 bg-slate-50 rounded-xl outline-none border focus:border-blue-500 text-xs">
+                            <textarea id="field-desc" placeholder="Descrição rápida" rows="3" class="w-full p-3 bg-slate-50 rounded-xl outline-none border focus:border-blue-500 resize-none text-xs"></textarea>
+                            <button id="btn-save" onclick="app.admin.saveLink()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-xs shadow hover:bg-blue-700 transition">Salvar Sistema</button>
+                            <button id="btn-cancel-edit" onclick="app.admin.resetForm()" class="hidden w-full text-slate-400 py-1.5 text-xs font-bold hover:text-slate-600">Cancelar Edição</button>
                         </div>
                     </div>
                 </div>
+                <div class="lg:col-span-8">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Arraste para mudar a ordem</h4>
+                    </div>
+                    <div id="admin-list-draggable" class="space-y-3"></div>
+                </div>
             </div>
 
-            <!-- CONTEÚDO DA ABA 2: GERENCIAR CONTRATO E EXAMES -->
-            <div id="admin-tab-contratos" class="p-6 sm:p-8 hidden">
-                <!-- Edição dos Dados do Contrato Oficial -->
-                <div class="bg-sky-50/70 border border-sky-200 p-6 rounded-2xl mb-8">
-                    <h3 class="font-black text-slate-900 text-sm uppercase tracking-wide mb-4">Dados Oficiais do Contrato & Prestador</h3>
+            <!-- ABA 2: GERENCIAR CONTRATOS & EXAMES -->
+            <div id="admin-view-contrato" class="hidden space-y-8">
+                <!-- Informações Contratuais -->
+                <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                    <h3 class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Dados Principais do Contrato</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nº do Contrato</label>
-                            <input id="cfg-contract-num" type="text" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nº do Contrato</label>
+                            <input id="adm-contract-num" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Empenhos Vinculados</label>
-                            <input id="cfg-empenhos" type="text" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nº dos Empenhos</label>
+                            <input id="adm-contract-empenhos" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Razão Social do Credor</label>
-                            <input id="cfg-prestador" type="text" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Credor / Prestador</label>
+                            <input id="adm-contract-prestador" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                     </div>
                     <div class="mt-4 flex justify-end">
-                        <button onclick="app.admin.saveContractConfig()" class="px-5 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow">
-                            Salvar Dados do Contrato
-                        </button>
+                        <button onclick="app.admin.saveContractInfo()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow">Salvar Dados do Contrato</button>
                     </div>
                 </div>
 
-                <!-- Formulário de Inclusão / Edição de Procedimentos de Exames -->
-                <div class="bg-slate-50 border border-slate-200 p-6 rounded-2xl mb-8">
-                    <h3 id="exam-form-title" class="font-black text-slate-800 text-sm uppercase mb-4">Cadastrar / Modificar Procedimento</h3>
-                    <input type="hidden" id="edit-exam-id">
+                <!-- Adicionar / Editar Procedimento de Exame -->
+                <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                    <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame na Lista</h3>
+                    <input type="hidden" id="adm-exam-id">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nº do Item</label>
-                            <input id="exam-field-item" type="number" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Item Nº</label>
+                            <input id="adm-exam-item" type="number" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Categoria</label>
-                            <select id="exam-field-cat" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Categoria</label>
+                            <select id="adm-exam-cat" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                                 <option value="Laboratorial">Laboratorial</option>
                                 <option value="Imagem">Imagem</option>
                             </select>
                         </div>
                         <div class="lg:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Descrição Oficial (Empenho)</label>
-                            <input id="exam-field-desc-empenho" type="text" placeholder="Nome no contrato/empenho" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Descrição no Empenho</label>
+                            <input id="adm-exam-desc-emp" type="text" placeholder="Ex: GLICOSE" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border focus:border-blue-500">
                         </div>
                         <div class="lg:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Descrição / Cód. SUS/TUSS (Fatura do Prestador)</label>
-                            <input id="exam-field-desc-prestador" type="text" placeholder="Ex: 02.02.01... / Nome prestador" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Descrição / Cód. no Prestador</label>
+                            <input id="adm-exam-desc-prest" type="text" placeholder="Ex: 02.02.01.047-3 / GLICOSE" class="w-full p-3 bg-slate-50 rounded-xl text-xs border focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Qtd. Empenhada Original</label>
-                            <input id="exam-field-qtd" type="number" min="0" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Qtd. Empenhada</label>
+                            <input id="adm-exam-qtd" type="number" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Saldo Anterior</label>
-                            <input id="exam-field-saldo-ant" type="number" min="0" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Faturado no Período</label>
-                            <input id="exam-field-faturado" type="number" min="0" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Saldo Anterior</label>
+                            <input id="adm-exam-saldo-ant" type="number" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                     </div>
-
-                    <div class="mt-5 flex gap-3">
-                        <button id="btn-save-exam" onclick="app.admin.saveExamItem()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow">
-                            Gravar Procedimento
-                        </button>
-                        <button id="btn-cancel-exam" onclick="app.admin.resetExamForm()" class="hidden px-4 py-2.5 text-xs text-slate-500 font-bold hover:text-slate-800">
-                            Cancelar Edição
-                        </button>
+                    <div class="mt-4 flex gap-3">
+                        <button id="btn-adm-save-exam" onclick="app.admin.saveExam()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow">Salvar Procedimento</button>
+                        <button id="btn-adm-cancel-exam" onclick="app.admin.resetExamForm()" class="hidden px-4 py-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold">Cancelar</button>
                     </div>
                 </div>
 
-                <!-- Tabela Rápida de Edição de Exames -->
-                <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-                    <table class="w-full text-xs text-left">
-                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b">
-                            <tr>
-                                <th class="p-3 text-center">Item</th>
-                                <th class="p-3">Categoria</th>
-                                <th class="p-3">Descrição no Empenho</th>
-                                <th class="p-3 text-right">Empenhado</th>
-                                <th class="p-3 text-right">Saldo Ant.</th>
-                                <th class="p-3 text-right">Faturado</th>
-                                <th class="p-3 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-exams-table-body" class="divide-y divide-slate-200 bg-white">
-                            <!-- Gerado dinamicamente -->
-                        </tbody>
-                    </table>
+                <!-- Lista de Procedimentos Cadastrados -->
+                <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Procedimentos Cadastrados no Contrato</h4>
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] border-b">
+                                <tr>
+                                    <th class="p-3 text-center">Item</th>
+                                    <th class="p-3">Categoria</th>
+                                    <th class="p-3">Descrição Empenho</th>
+                                    <th class="p-3 text-right">Empenhado</th>
+                                    <th class="p-3 text-right">Saldo Ant.</th>
+                                    <th class="p-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adm-exams-list-tbody" class="divide-y divide-slate-100 font-medium"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- SCRIPT DA APLICAÇÃO -->
+    <!-- SCRIPT MODULAR -->
     <script src="app.js"></script>
 </body>
 </html>
