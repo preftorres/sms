@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal da Saúde e Auditoria de Cotas | Prefeitura de Torres</title>
+  
+  <!-- Fonte Inter Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Estilos Customizados e Diretivas de Impressão -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="h-full text-slate-800 antialiased flex flex-col font-sans">
+
+  <!-- CABEÇALHO INSTITUCIONAL GLOBAL -->
+  <header id="main-header" class="bg-gradient-to-r from-sky-900 via-sky-800 to-blue-900 text-white shadow-lg print:hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="Router.navigate('landing')">
+        <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm border border-white/20">
+          <!-- Brasão Vetorial Simbólico de Torres -->
+          <svg class="w-8 h-8 text-sky-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div>
+          <span class="block text-xs uppercase tracking-wider font-semibold text-sky-200">Estado do Rio Grande do Sul</span>
+          <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">Prefeitura Municipal de Torres</h1>
+        </div>
+      </div>
+
+      <nav id="header-nav" class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium">
+        <button onclick="Router.navigate('landing')" class="px-3 py-1.5 rounded-md hover:bg-white/10 transition">Início</button>
+        <button onclick="Router.navigate('saude_links')" class="px-3 py-1.5 rounded-md hover:bg-white/10 transition">Portal da Saúde</button>
+        <button onclick="Router.navigate('auditoria_exames')" class="px-3 py-1.5 rounded-md bg-sky-600 hover:bg-sky-500 shadow-sm transition">Auditoria de Cotas</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ÁREA PRINCIPAL DA SPA (VIEWS) -->
+  <main class="flex-1 overflow-x-hidden">
+
+    <!-- VIEW 1: LANDING PAGE MUNICIPAL -->
+    <section id="view-landing" class="spa-view hidden py-12 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 mb-4">
+          Rede Integrada de Gestão Pública
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+          Painel de Sistemas e Serviços Digitais
+        </h2>
+        <p class="mt-4 text-base sm:text-lg text-slate-600">
+          Acesse os módulos estratégicos, processos administrativos e monitoramento de serviços em tempo real da Prefeitura de Torres.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Card Destaque: Saúde -->
+        <div onclick="Router.navigate('saude_links')" class="group bg-white rounded-2xl p-7 shadow-sm hover:shadow-xl border border-slate-200/80 transition-all duration-300 hover:-translate-y-1.5 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
+          <div>
+            <div class="w-14 h-14 bg-sky-600 text-white rounded-xl flex items-center justify-center shadow-md mb-6 group-hover:bg-sky-500 transition">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 group-hover:text-sky-700 transition">Secretaria Municipal de Saúde</h3>
+            <p class="mt-2 text-sm text-slate-600">
+              Acesso centralizado aos prontuários, regulação de exames, almoxarifado, sistemas do SUS e painéis de empenhos.
+            </p>
+          </div>
+          <div class="mt-6 flex items-center text-sm font-semibold text-sky-600 group-hover:text-sky-800">
+            Acessar ecossistema da saúde <span class="ml-2">→</span>
+          </div>
+        </div>
+
+        <!-- Card Demonstrativo: Fazenda / Finanças -->
+        <div class="bg-white/70 rounded-2xl p-7 shadow-sm border border-slate-200/70 opacity-80 flex flex-col justify-between">
+          <div>
+            <div class="w-14 h-14 bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center mb-6">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-700">Secretaria da Fazenda</h3>
+            <p class="mt-2 text-sm text-slate-500">Tributos municipais, notas fiscais eletrônicas, certidões e balanços orçamentários fiscais.</p>
+          </div>
+          <span class="mt-6 text-xs uppercase font-bold text-slate-400">Ambiente Restrito</span>
+        </div>
+
+        <!-- Card Demonstrativo: Administração Geral -->
+        <div class="bg-white/70 rounded-2xl p-7 shadow-sm border border-slate-200/70 opacity-80 flex flex-col justify-between">
+          <div>
+            <div class="w-14 h-14 bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center mb-6">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-700">Protocolo & Atendimento</h3>
+            <p class="mt-2 text-sm text-slate-500">Abertura de solicitações, processos eletrônicos e ouvidoria central municipal de Torres.</p>
+          </div>
+          <span class="mt-6 text-xs uppercase font-bold text-slate-400">Acesso Geral</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: PORTAL DE ACESSOS DA SAÚDE -->
+    <section id="view-saude" class="spa-view hidden py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-sky-600">Secretaria Municipal de Saúde</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Portal Integrado de Acessos e Ferramentas</h2>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button id="btn-admin-auth" onclick="App.openAdminAuthModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 transition">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Modo Administrativo
+          </button>
+        </div>
+      </div>
+
+      <!-- BANNER DE DESTAQUE: AUDITORIA DE EXAMES -->
+      <div class="mt-8 bg-gradient-to-r from-sky-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-96 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
+        <div class="max-w-2xl relative z-10">
+          <span class="inline-block px-3 py-1 bg-amber-400/20 text-amber-300 text-xs uppercase font-bold rounded-full mb-3 tracking-wide">
+            Contratos de Exames Laboratoriais e Imagem
+          </span>
+          <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Auditoria & Gestão de Cotas de Empenhos</h3>
+          <p class="mt-2 text-sm sm:text-base text-sky-100">
+            Controle analítico de saldos, faturamento de procedimentos executados pelo prestador credenciado e conciliação em tempo real.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-4">
+            <button onclick="Router.navigate('auditoria_exames')" class="inline-flex items-center px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+              Abrir Sistema de Auditoria
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRID DE LINKS INSTITUCIONAIS -->
+      <div class="mt-10">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-base font-bold text-slate-700 uppercase tracking-wider">Sistemas & Atalhos Frequentes</h4>
+          <span id="drag-hint" class="text-xs text-slate-400 hidden">Modo de edição ativo: arraste para ordenar os links</span>
+        </div>
+        <div id="links-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Renderizado dinamicamente pelo JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: SISTEMA DE AUDITORIA E CONTROLE DE COTAS -->
+    <section id="view-auditoria" class="spa-view hidden py-6 px-3 sm:px-6 lg:px-8 max-w-[1700px] mx-auto">
+      
+      <!-- CABEÇALHO CONTRATUAL ESPECÍFICO -->
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 mb-6 print:border-none print:shadow-none print:p-0">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="px-2.5 py-0.5 rounded text-xs font-extrabold bg-sky-100 text-sky-800">SMS / CONTRATO PÚBLICO</span>
+              <span class="text-xs text-slate-500 font-medium">Exercício 2026</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+              Auditoria de Execução Contratual — Exames Laboratoriais e Diagnósticos
+            </h2>
+            <div class="mt-2 text-xs sm:text-sm text-slate-600 flex flex-wrap gap-x-6 gap-y-1">
+              <span><strong>Prefeitura:</strong> Torres/RS</span>
+              <span><strong>Contrato:</strong> nº 67/2026</span>
+              <span><strong>Empenhos Vinculados:</strong> 3406/2026 e 3407/2026</span>
+              <span><strong>Prestador Credenciado:</strong> M. B. Laboratório de Análises Clínicas Ltda</span>
+            </div>
+          </div>
+
+          <!-- BOTÕES DE AÇÃO (CSV / PRINT / RESET) -->
+          <div class="flex flex-wrap items-center gap-2 print:hidden">
+            <button onclick="AuditModule.exportCSV()" class="inline-flex items-center px-3 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Exportar (.CSV)
+            </button>
+            <button onclick="window.print()" class="inline-flex items-center px-3 py-2 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+              Imprimir Relatório
+            </button>
+            <button onclick="AuditModule.confirmReset()" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-300 transition">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Restaurar Dados
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BARRA DE KPIS / CARDS DE RESUMO -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Qtd. Total Contratada</span>
+          <p id="kpi-total-empenhado" class="text-2xl font-black text-slate-800 mt-1">0</p>
+          <span class="text-[11px] text-slate-400">Total somado de cotas originais</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Faturado no Período</span>
+          <p id="kpi-total-faturado" class="text-2xl font-black text-sky-700 mt-1">0</p>
+          <span class="text-[11px] text-slate-400">Exames executados na competência</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-purple-200 bg-purple-50/50">
+          <span class="text-xs font-semibold text-purple-900 uppercase tracking-wide">Itens Esgotados</span>
+          <p id="kpi-itens-esgotados" class="text-2xl font-black text-purple-700 mt-1">0</p>
+          <span class="text-[11px] text-purple-600 font-medium">Consumo ≥ 100% ou saldo zerado</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-red-200 bg-red-50/50">
+          <span class="text-xs font-semibold text-red-900 uppercase tracking-wide">Alerta Crítico (≥ 30%)</span>
+          <p id="kpi-itens-criticos" class="text-2xl font-black text-red-700 mt-1">0</p>
+          <span class="text-[11px] text-red-600 font-medium">Necessitam atenção para suplementação</span>
+        </div>
+      </div>
+
+      <!-- BARRA DE FILTROS E PESQUISA -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+        <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </span>
+            <input type="text" id="filter-search" oninput="AuditModule.applyFilters()" placeholder="Buscar por código SUS/TUSS, nome no empenho ou na fatura..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+          </div>
+
+          <div class="w-full sm:w-52">
+            <select id="filter-category" onchange="AuditModule.applyFilters()" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              <option value="ALL">Todas as Categorias</option>
+              <option value="Laboratorial">Laboratoriais</option>
+              <option value="Imagem">Imagem / Diagnóstico</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1 md:pt-0">
+          <label class="inline-flex items-center cursor-pointer select-none text-xs font-semibold text-slate-700">
+            <input type="checkbox" id="filter-hide-zero" onchange="AuditModule.applyFilters()" class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 border-slate-300 mr-2" />
+            Ocultar procedimentos não faturados (Zera no período)
+          </label>
+        </div>
+      </div>
+
+      <!-- TABELA DE AUDITORIA COM CABEÇALHO FIXO (STICKY) -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="table-scroll-container overflow-y-auto max-h-[620px] relative">
+          <table id="audit-table" class="w-full text-left border-collapse text-xs">
+            <thead class="sticky-thead bg-slate-100 text-slate-700 uppercase tracking-wider font-bold text-[11px] shadow-sm">
+              <tr class="border-b border-slate-300">
+                <th class="py-3.5 px-3 text-center w-12">Item</th>
+                <th class="py-3.5 px-3 w-28">Categoria</th>
+                <th class="py-3.5 px-3 min-w-[200px]">Descrição Oficial (Empenho)</th>
+                <th class="py-3.5 px-3 min-w-[200px]">Descrição / Cód. (Prestador)</th>
+                <th class="py-3.5 px-3 text-right w-24">Qtd. Emp.</th>
+                <th class="py-3.5 px-3 text-right w-28">Saldo Ant.</th>
+                <th class="py-3.5 px-3 text-right w-28 bg-sky-50/70 border-x border-sky-200">Faturado</th>
+                <th class="py-3.5 px-3 text-right w-24">Saldo Atual</th>
+                <th class="py-3.5 px-3 text-right w-24">% Cons.</th>
+                <th class="py-3.5 px-3 text-right w-24">% Rest.</th>
+                <th class="py-3.5 px-3 text-center w-32">Situação</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body" class="divide-y divide-slate-200">
+              <!-- Renderizado dinamicamente pelo JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <div id="table-empty-message" class="hidden p-8 text-center text-slate-500 text-sm">
+          Nenhum procedimento encontrado para os critérios de busca selecionados.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RODAPÉ MUNICIPAL -->
+  <footer class="bg-white border-t border-slate-200 text-slate-500 text-xs py-4 px-4 sm:px-8 text-center print:hidden">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <span>Prefeitura Municipal de Torres — Secretaria da Saúde | preftorres.github.io</span>
+      <span>Controle Interno e Auditoria Contratual • Exercício 2026</span>
+    </div>
+  </footer>
+
+  <!-- MODAL: AUTENTICAÇÃO ADMINISTRATIVA -->
+  <div id="modal-admin-auth" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <h3 class="text-base font-bold text-slate-900">Autenticação Administrativa</h3>
+        <button onclick="App.closeAdminModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <p class="text-xs text-slate-600 mt-2">
+        Digite a senha de administrador da Saúde para reordenar, adicionar ou remover atalhos institucionais.
+      </p>
+      <form onsubmit="App.verifyAdminPassword(event)" class="mt-4">
+        <input type="password" id="admin-pass-input" placeholder="Senha do gestor..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none" required />
+        <p id="admin-auth-error" class="text-xs text-red-600 mt-1.5 hidden">Senha incorreta. Tente novamente.</p>
+        <div class="mt-5 flex justify-end space-x-2">
+          <button type="button" onclick="App.closeAdminModal()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-1.5 text-xs font-bold bg-sky-700 hover:bg-sky-800 text-white rounded-lg transition">Acessar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="app.js"></script>
+</body>
+</html>
