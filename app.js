@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * Portal Integrado & Auditoria com Autenticação na Nuvem (Google Sheets)
+ * Portal Integrado & Auditoria com Autenticação e Controle de Perfis (RBAC)
  * Arquivo: app.js
  * ============================================================================
  */
@@ -95,7 +95,7 @@ const app = {
     }
   },
 
-  // MÓDULO DE AUTENTICAÇÃO COM FECHAMENTO BLINDADO
+  // MÓDULO DE AUTENTICAÇÃO COM CONTROLE DE PERFIS
   auditAuth: {
     checkSession() {
       const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
@@ -116,7 +116,10 @@ const app = {
       if (!badge || !nameEl) return;
 
       if (app.state.auth.isLogged && app.state.auth.user) {
-        nameEl.textContent = app.state.auth.user.nome || app.state.auth.user.usuario;
+        // Exibe o nome e o perfil do usuário logado
+        const perfil = app.state.auth.user.perfil || 'Operador';
+        const nome = app.state.auth.user.nome || app.state.auth.user.usuario;
+        nameEl.textContent = `${nome} (${perfil})`;
         badge.classList.remove('hidden');
       } else {
         badge.classList.add('hidden');
@@ -145,16 +148,12 @@ const app = {
       }
     },
 
-    // FUNÇÃO QUE RESOLVE O PROBLEMA DO CANCELAR
     cancelLogin() {
       this.closeLoginModal();
       app.state.pendingView = null;
-
-      // Retorna para a tela em que o usuário estava antes de clicar
       const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria'))
         ? app.state.previousView
         : 'saude_links';
-
       app.ui.navigate(target);
     },
 
@@ -192,7 +191,6 @@ const app = {
           err.classList.remove('hidden');
         }
       } catch (error) {
-        // Fallback offline de segurança
         if (u === "admin" && p === "admin123") {
           const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral (Offline)", perfil: "Administrador" };
           app.state.auth.isLogged = true;
@@ -343,13 +341,11 @@ const app = {
     },
 
     go(view) {
-      // Bloqueio de acesso para quem não está logado
       if ((view === 'auditoria_hub' || view === 'auditoria_detalhe') && !app.state.auth.isLogged) {
         app.auditAuth.promptLogin(view);
         return;
       }
 
-      // Se navegou para fora da auditoria, garante que o modal de login seja fechado
       if (view !== 'auditoria_hub' && view !== 'auditoria_detalhe') {
         app.auditAuth.closeLoginModal();
         app.state.previousView = view;
@@ -1036,7 +1032,15 @@ const app = {
     }
   },
 
+  // MÓDULO ADMINISTRATIVO COM CONTROLE DE PERFIL (RBAC)
   admin: {
+    // Verifica se o usuário atual é Administrador Geral
+    isAdminUser() {
+      return app.state.auth.isLogged && 
+             app.state.auth.user && 
+             app.state.auth.user.perfil === 'Administrador';
+    },
+
     trigger(directToContract = false) {
       if (!app.state.auth.isLogged) {
         app.auditAuth.promptLogin('landing');
@@ -1050,6 +1054,19 @@ const app = {
       if (!panel) return;
       panel.classList.remove('hidden');
 
+      const isMasterAdmin = this.isAdminUser();
+
+      // Se for Operador, oculta o botão da aba de usuários
+      const btnUsuarios = document.getElementById('admin-tab-btn-usuarios');
+      const viewUsuarios = document.getElementById('admin-view-usuarios');
+      
+      if (btnUsuarios) {
+        btnUsuarios.style.display = isMasterAdmin ? 'inline-block' : 'none';
+      }
+      if (!isMasterAdmin && viewUsuarios) {
+        viewUsuarios.classList.add('hidden');
+      }
+
       if (directToContract) {
         this.switchTab('contrato');
       } else {
@@ -1057,7 +1074,10 @@ const app = {
       }
       this.renderLinksList();
       this.renderExamsList();
-      this.loadUsersList();
+      
+      if (isMasterAdmin) {
+        this.loadUsersList();
+      }
     },
 
     exit() {
@@ -1067,6 +1087,12 @@ const app = {
     },
 
     switchTab(tab) {
+      // Bloqueia acesso à aba de usuários se não for Administrador
+      if (tab === 'usuarios' && !this.isAdminUser()) {
+        this.switchTab('contrato');
+        return;
+      }
+
       const viewLinks = document.getElementById('admin-view-links');
       const viewContrato = document.getElementById('admin-view-contrato');
       const viewUsuarios = document.getElementById('admin-view-usuarios');
@@ -1092,7 +1118,9 @@ const app = {
       }
     },
 
+    // GESTÃO DE USUÁRIOS (SÓ ADMIN PODE VER OU CHAMAR)
     async loadUsersList() {
+      if (!this.isAdminUser()) return;
       const tbody = document.getElementById('adm-users-list-tbody');
       if (!tbody) return;
 
@@ -1122,6 +1150,8 @@ const app = {
     },
 
     async createUser() {
+      if (!this.isAdminUser()) return alert("Apenas administradores podem cadastrar usuários.");
+
       const nome = document.getElementById('user-field-nome').value.trim();
       const usuario = document.getElementById('user-field-login').value.trim().toLowerCase();
       const senha = document.getElementById('user-field-senha').value.trim();
@@ -1155,6 +1185,8 @@ const app = {
     },
 
     async deleteUser(id, usuario) {
+      if (!this.isAdminUser()) return alert("Apenas administradores podem excluir usuários.");
+
       if (confirm(`Deseja excluir o usuário "${usuario}" da planilha?`)) {
         app.ui.setSyncStatus(true, "Excluindo usuário...");
         await app.data.sendToCloud({
