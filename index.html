@@ -71,13 +71,13 @@
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- MODAL DO GEMINI: IMPORTADOR + GUIA PARA LEIGOS COM 3 BOTÕES DE COPIAR -->
+    <!-- MODAL DO GEMINI: IMPORTADOR + GUIA COM INSTRUÇÕES REAIS DE TORRES -->
     <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
         <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
             
             <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
 
-            <!-- ABAS DO MODAL: IMPORTAR vs TUTORIAL -->
+            <!-- ABAS DO MODAL -->
             <div class="flex border-b border-slate-200 pb-3 mb-6 gap-3">
                 <button id="btn-tab-gemini-paste" onclick="app.gemini.switchTab('paste')" class="px-4 py-2 font-black text-xs uppercase tracking-wider rounded-xl bg-blue-100 text-blue-900">
                     📋 Colar Dados do Gemini
@@ -87,18 +87,18 @@
                 </button>
             </div>
 
-            <!-- TELA 1: COLAR E IMPORTAR -->
+            <!-- TELA 1: COLAR E PROCESSAR -->
             <div id="view-gemini-paste" class="space-y-4">
                 <div>
                     <h3 class="text-lg font-black text-slate-900">Importar Tabela Extraída pelo Gemini</h3>
-                    <p class="text-xs text-slate-500 mt-1">Cole abaixo o texto gerado pelo seu Gem. O sistema organizará os itens sequenciais (01, 02, 03...), destacará as cotas em cinza e salvará tudo na planilha.</p>
+                    <p class="text-xs text-slate-500 mt-1">Cole abaixo o texto gerado pelo seu Gem a partir das fotos do contrato ou da fatura do laboratório.</p>
                 </div>
 
-                <textarea id="gemini-paste-area" rows="8" placeholder="Cole aqui a resposta do Gemini (Ex: 01;Laboratorial;HEMOGRAMA COMPLETO;02.02.02.038-0;2000;1213;194...)" class="w-full p-4 bg-slate-50 border-2 border-slate-200 focus:border-blue-500 rounded-2xl text-xs font-mono outline-none resize-none"></textarea>
+                <textarea id="gemini-paste-area" rows="8" placeholder="Cole aqui a resposta gerada pelo Gem..." class="w-full p-4 bg-slate-50 border-2 border-slate-200 focus:border-blue-500 rounded-2xl text-xs font-mono outline-none resize-none"></textarea>
 
                 <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
                     <button type="button" onclick="app.gemini.switchTab('guide')" class="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
-                        <span>❓</span> Não sabe como gerar esse texto? Veja como configurar seu Gem
+                        <span>❓</span> Como configurar o Gem no Gemini? Veja o passo a passo
                     </button>
                     <div class="flex gap-2">
                         <button type="button" onclick="app.gemini.closeModal()" class="px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
@@ -109,14 +109,14 @@
                 </div>
             </div>
 
-            <!-- TELA 2: GUIA DIDÁTICO PARA LEIGOS (COM OS 3 BOTÕES DE COPIAR) -->
+            <!-- TELA 2: GUIA DIDÁTICO COM OS 3 BOTÕES DE COPIAR ATUALIZADOS -->
             <div id="view-gemini-guide" class="hidden space-y-5">
                 <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200">
                     <h4 class="text-xs font-black uppercase text-blue-900 flex items-center gap-1.5">
                         <span>🎯</span> Passo 1 de 2: Abrir a tela de criação no Gemini
                     </h4>
                     <p class="text-xs text-blue-800 mt-1">
-                        Abra o Gemini no seu navegador ou celular, clique no menu lateral em <b>Gems</b> e depois em <b>Novo Gem</b>.
+                        Abra o Gemini no computador ou celular, clique no menu em <b>Gems</b> e depois em <b>Novo Gem</b>.
                     </p>
                 </div>
 
@@ -124,10 +124,10 @@
                     <span>📋</span> Passo 2 de 2: Copie e cole nos 3 campos do Gemini
                 </h4>
 
-                <!-- CAMPO 1: NOME COM BOTÃO COPIAR -->
+                <!-- CAMPO 1: NOME -->
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex-1">
-                        <span class="text-[10px] font-black uppercase text-slate-400 block">1º Campo da tela: Nome</span>
+                        <span class="text-[10px] font-black uppercase text-slate-400 block">1º Campo: Nome</span>
                         <p id="gem-text-name" class="text-sm font-black text-slate-900 mt-0.5">Auditor de Exames - Torres</p>
                     </div>
                     <button id="btn-copy-name" onclick="app.gemini.copyField('gem-text-name', 'btn-copy-name')" class="btn-copy px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
@@ -135,44 +135,45 @@
                     </button>
                 </div>
 
-                <!-- CAMPO 2: DESCRIÇÃO COM BOTÃO COPIAR -->
+                <!-- CAMPO 2: DESCRIÇÃO -->
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex-1">
-                        <span class="text-[10px] font-black uppercase text-slate-400 block">2º Campo da tela: Descrição</span>
-                        <p id="gem-text-desc" class="text-xs font-medium text-slate-700 mt-0.5">Assistente de auditoria que transcreve fotos de empenhos e faturas de exames para o sistema da Secretaria da Saúde de Torres/RS.</p>
+                        <span class="text-[10px] font-black uppercase text-slate-400 block">2º Campo: Descrição</span>
+                        <p id="gem-text-desc" class="text-xs font-medium text-slate-700 mt-0.5">Auditor de contas públicas que cruza contratos municipais e relatórios de laboratórios credenciados de Torres/RS.</p>
                     </div>
                     <button id="btn-copy-desc" onclick="app.gemini.copyField('gem-text-desc', 'btn-copy-desc')" class="btn-copy px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
                         <span>📄</span> Copiar Descrição
                     </button>
                 </div>
 
-                <!-- CAMPO 3: INSTRUÇÕES COM BOTÃO COPIAR -->
+                <!-- CAMPO 3: INSTRUÇÕES COM O PROMPT REAL DE TORRES -->
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-black uppercase text-slate-400">3º Campo da tela: Instruções (O cérebro do Gem)</span>
+                        <span class="text-[10px] font-black uppercase text-slate-400">3º Campo: Instruções (O cérebro do Gem)</span>
                         <button id="btn-copy-instructions" onclick="app.gemini.copyField('gem-text-instructions', 'btn-copy-instructions')" class="btn-copy px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
                             <span>📋</span> Copiar Instruções Completas
                         </button>
                     </div>
-                    <div class="max-h-36 overflow-y-auto custom-scroll p-3 bg-white rounded-xl border border-slate-200">
-                        <pre id="gem-text-instructions" class="text-[11px] font-mono text-slate-600 whitespace-pre-wrap">Você é um assistente especialista em auditoria de contas públicas da Secretaria Municipal de Saúde de Torres/RS.
+                    <div class="max-h-40 overflow-y-auto custom-scroll p-3 bg-white rounded-xl border border-slate-200">
+                        <pre id="gem-text-instructions" class="text-[11px] font-mono text-slate-600 whitespace-pre-wrap">Você é um auditor especialista em saúde pública da Prefeitura Municipal de Torres/RS.
+Sua função é ler imagens de Termos de Contrato/Empenho municipal e Relatórios Estatísticos/Faturas de Laboratórios credenciados (como o Laboratório Biomédico Ltda).
 
-Sua função é receber fotos ou PDFs de notas fiscais, faturas de prestadores/laboratórios credenciados ou folhas de empenho municipal, e transcrever a lista de exames/procedimentos com máxima precisão.
-
-Sempre que eu enviar uma imagem ou documento, extraia os dados e responda ESTRITAMENTE em formato tabular separado por ponto e vírgula (;), no seguinte padrão:
+Ao receber as imagens:
+1. Identifique os procedimentos e cruze a "Especificação" e "Quantidade" do Contrato com a "Qtde Total" faturada pelo laboratório.
+2. Formate a saída EXCLUSIVAMENTE em linhas separadas por ponto e vírgula (;), no seguinte padrão:
 
 Item;Categoria;Descricao_Empenho;Descricao_Prestador;Qtd_Empenho;Saldo_Anterior;Faturado
 
-Regras essenciais:
-1. Item: numeração sequencial começando em 01 (ex: 01, 02, 03...).
-2. Categoria: classifique como "Laboratorial" ou "Imagem" (ex: radiografia, ultrassonografia, ecg são Imagem; hemograma, glicose, urina são Laboratorial).
-3. Descricao_Empenho: nome do procedimento conforme o contrato ou folha de empenho municipal. Se não constar, use o próprio nome do exame.
-4. Descricao_Prestador: código (TUSS, SUS ou código interno do laboratório) seguido do nome do exame faturado.
-5. Qtd_Empenho: quantidade original contratada. Se for apenas folha de fatura e não constar, preencha 0.
-6. Saldo_Anterior: saldo restante disponível. Se for novo contrato e não constar, preencha 0.
-7. Faturado: quantidade faturada/executada no período. Se for folha de abertura de empenho, preencha 0.
+Regras:
+- Item: Use sempre 2 dígitos sequenciais (01, 02, 03...).
+- Categoria: "Laboratorial" para análises clínicas/sangue/urina/fezes e "Imagem" para exames diagnósticos.
+- Descricao_Empenho: Nome oficial que está na tabela do Contrato (ex: Ácido Fólico (Vitamina B9)).
+- Descricao_Prestador: Código e nome que aparecem no relatório do laboratório (ex: 1 - AFOLI - ACIDO FOLICO).
+- Qtd_Empenho: Quantidade contratada no termo municipal. Se não constar no documento enviado, use 0.
+- Saldo_Anterior: Quantidade inicial disponível. Se for contrato novo, repita a Qtd_Empenho.
+- Faturado: O valor da coluna "Qtde Total" do relatório do laboratório. Se o exame não foi realizado no mês ou se você estiver lendo apenas a folha de contrato, preencha 0.
 
-IMPORTANTE: Não escreva introduções, saudações nem explicações. Responda APENAS com as linhas de dados, permitindo a cópia direta para o sistema de auditoria da prefeitura.</pre>
+IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou encerramento, para que o texto possa ser colado diretamente no sistema web da prefeitura.</pre>
                     </div>
                 </div>
 
@@ -263,7 +264,7 @@ IMPORTANTE: Não escreva introduções, saudações nem explicações. Responda 
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO COM GESTÃO DE USUÁRIOS -->
+    <!-- PAINEL ADMINISTRATIVO -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -276,6 +277,7 @@ IMPORTANTE: Não escreva introduções, saudações nem explicações. Responda 
                 </div>
             </div>
 
+            <!-- ABAS DO ADMIN -->
             <div class="flex border-b border-slate-200 mb-8 gap-2">
                 <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600">
                     Atalhos do Portal
@@ -373,7 +375,7 @@ IMPORTANTE: Não escreva introduções, saudações nem explicações. Responda 
                 </div>
             </div>
 
-            <!-- ABA 3: USUÁRIOS (SÓ ADMIN) -->
+            <!-- ABA 3: USUÁRIOS -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
