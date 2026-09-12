@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * PREFEITURA DE TORRES - SECRETARIA DA SAÚDE
- * Portal de Acessos & Módulo de Auditoria Contratual com Sincronização em Nuvem
+ * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
+ * Portal Integrado de Acessos & Auditoria Contratual com Google Sheets
+ * Arquivo: app.js (Completo e Integrado)
  * ============================================================================
  */
 
-// COLE AQUI A URL GERADA NA IMPLANTAÇÃO DO GOOGLE APPS SCRIPT:
-const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzB_7aIOl2t5Pq3nVBHJ7TyPd2vJsXBJ5HZ0mkg7Xn2mzewLPZ0brFBJB_rp5NfPkjwrw/exec"; 
+// URL DA API DO GOOGLE APPS SCRIPT
+const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzB_7aIOl2t5Pq3nVBHJ7TyPd2vJsXBJ5HZ0mkg7Xn2mzewLPZ0brFBJB_rp5NfPkjwrw/exec";
 
 const CONFIG = {
   pass: 'admin123',
@@ -18,6 +19,7 @@ const CONFIG = {
   }
 };
 
+// LINKS INSTITUCIONAIS ORIGINAIS
 const INITIAL_LINKS = [
   { id: 1, title: 'Vacinas', url: 'http://vaciastorres.dpdns.org', desc: 'Controle de Imunização' },
   { id: 2, title: 'ETP/TR', url: 'https://etp-tr.torres.rs.gov.br/', desc: 'Termos de Referência' },
@@ -26,12 +28,14 @@ const INITIAL_LINKS = [
   { id: 5, title: 'Webmail', url: 'http://webmail.torres.rs.gov.br/', desc: 'E-mail Institucional' }
 ];
 
+// INFORMAÇÕES CONTRATUAIS
 const INITIAL_CONTRACT = {
   num: '67/2026',
   empenhos: '3406/2026 e 3407/2026',
   prestador: 'M. B. Laboratório de Análises Clínicas Ltda'
 };
 
+// BASE OFICIAL DE EXAMES DOS EMPENHOS 3406 E 3407/2026 + IMAGEM
 const INITIAL_EXAMS = [
   { id: 1, item: 1, cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
   { id: 6, item: 6, cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
@@ -54,13 +58,12 @@ const INITIAL_EXAMS = [
 
 const app = {
   state: {
-    view: 'landing',
+    view: 'landing', // 'landing', 'saude_links', 'auditoria_exames'
     links: [],
     contract: {},
     exams: [],
     isAdmin: false,
     clockTimer: null,
-    isSyncing: false,
     filters: { search: '', category: 'ALL', hideZero: false }
   },
 
@@ -68,8 +71,8 @@ const app = {
     this.data.load();
     this.admin.checkSession();
     this.router.init();
-    
-    // Se a URL do Google Sheets estiver preenchida, busca dados frescos da planilha
+
+    // Sincroniza com a nuvem na inicialização
     if (GOOGLE_API_URL) {
       this.data.syncFromCloud();
     }
@@ -99,20 +102,22 @@ const app = {
       localStorage.setItem(CONFIG.keys.exams, JSON.stringify(app.state.exams));
     },
 
-    // LEITURA NA NUVEM (Google Sheets -> App)
+    // Ler dados da Planilha Google
     async syncFromCloud() {
       if (!GOOGLE_API_URL) return;
       try {
-        app.ui.setSyncStatus(true, "Sincronizando com a planilha...");
+        app.ui.setSyncStatus(true, "Consultando Planilha Google...");
         const response = await fetch(GOOGLE_API_URL, { redirect: 'follow' });
         const res = await response.json();
-        
+
         if (res.status === "success" && Array.isArray(res.data) && res.data.length > 0) {
           app.state.exams = res.data;
           this.saveExams();
           if (app.state.view === 'auditoria_exames') {
             app.audit.renderTable();
           }
+        } else if (res.status === "empty" || (Array.isArray(res.data) && res.data.length === 0)) {
+          console.log("Planilha vazia. Pronta para envio da base inicial.");
         }
       } catch (err) {
         console.warn("Modo Offline: Mantendo dados locais.", err);
@@ -121,12 +126,11 @@ const app = {
       }
     },
 
-    // GRAVAÇÃO NA NUVEM (App -> Google Sheets)
+    // Enviar dados para a Planilha Google
     async sendToCloud(payload) {
       if (!GOOGLE_API_URL) return;
       try {
         app.ui.setSyncStatus(true, "Gravando na planilha...");
-        // Envio como text/plain evita bloqueio de CORS com o Apps Script
         await fetch(GOOGLE_API_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -134,9 +138,22 @@ const app = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        console.error("Erro ao sincronizar com Google Sheets:", err);
+        console.error("Erro ao enviar dados para a nuvem:", err);
       } finally {
-        setTimeout(() => app.ui.setSyncStatus(false), 800);
+        setTimeout(() => app.ui.setSyncStatus(false), 900);
+      }
+    },
+
+    // Carga inicial em massa para a planilha vazia
+    async seedCloudDatabase() {
+      if (!GOOGLE_API_URL) return alert("URL da API não configurada!");
+      if (confirm("Deseja gravar todos os exames atuais na Planilha do Google agora?")) {
+        app.ui.setSyncStatus(true, "Subindo todos os exames para o Google Sheets...");
+        await app.data.sendToCloud({
+          action: "INITIAL_SEED",
+          exams: app.state.exams
+        });
+        alert("Comando de carga enviado! Aguarde alguns instantes e recarregue a sua planilha do Google.");
       }
     }
   },
@@ -166,6 +183,7 @@ const app = {
       window.location.hash = view;
     },
 
+    // Apenas a página selecionada ganha fundo azul claro
     updateActiveMenu(activeView) {
       const navButtons = [
         { id: 'nav-btn-landing', view: 'landing' },
@@ -187,12 +205,15 @@ const app = {
 
     toggleAuthModal(show) {
       const m = document.getElementById('modal-auth');
+      if (!m) return;
       m.classList.toggle('hidden', !show);
       m.classList.toggle('flex', show);
       if (show) {
         const inp = document.getElementById('input-pass');
-        inp.value = '';
-        setTimeout(() => inp.focus(), 60);
+        if (inp) {
+          inp.value = '';
+          setTimeout(() => inp.focus(), 60);
+        }
       }
     },
 
@@ -229,9 +250,11 @@ const app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
+    // TELA 1: LANDING PAGE
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 fade-in">
+            <!-- LOGO DA PREFEITURA -->
             <div class="mb-12 text-center">
                 <div class="w-32 h-32 md:w-48 md:h-48 bg-white rounded-full shadow-2xl flex items-center justify-center p-4 mb-6 mx-auto border-4 border-slate-100">
                     <img src="torres-rs-logo-300x139.webp" 
@@ -246,6 +269,7 @@ const app = {
                 <div class="h-1 w-24 bg-blue-600 mx-auto mt-4 rounded-full"></div>
             </div>
 
+            <!-- CARD DA SECRETARIA -->
             <button onclick="app.ui.navigate('saude_links')" class="card-landing bg-white p-10 rounded-[3rem] shadow-xl flex flex-col items-center max-w-sm w-full group">
                 <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
@@ -258,6 +282,7 @@ const app = {
       `;
     },
 
+    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -279,6 +304,7 @@ const app = {
         </div>
 
         <div class="container mx-auto px-6 py-10 fade-in">
+            <!-- CARD DESTAQUE: AUDITORIA DE EXAMES -->
             <div class="mb-10 bg-gradient-to-r from-blue-900 to-indigo-950 text-white p-8 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div class="max-w-2xl">
                     <span class="inline-block px-3 py-1 bg-amber-400 text-slate-950 text-[10px] font-black uppercase rounded-full tracking-wider mb-2">
@@ -294,6 +320,7 @@ const app = {
                 </button>
             </div>
 
+            <!-- GRID DOS ATALHOS ORIGINAIS -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 ${app.state.links.map(l => `
                     <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group">
@@ -324,10 +351,12 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
+    // TELA 3: AUDITORIA DE COTAS E EXAMES
     auditoriaExames(el) {
       el.innerHTML = `
         <div class="container mx-auto px-4 sm:px-6 py-8 fade-in">
           
+          <!-- BANNER CONTRATUAL -->
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:border-none print:shadow-none print:p-0">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
@@ -346,9 +375,13 @@ const app = {
                 </div>
               </div>
 
+              <!-- BOTÕES DE AÇÃO -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.data.syncFromCloud()" title="Atualizar dados da planilha" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                  🔄 Atualizar
+                  🔄 Recarregar Nuvem
+                </button>
+                <button onclick="app.data.seedCloudDatabase()" title="Grava todos os exames atuais na Planilha do Google" class="px-3 py-2 text-xs font-bold rounded-xl bg-sky-500 hover:bg-sky-600 text-white transition shadow-sm">
+                  ☁️ Enviar Base p/ Planilha
                 </button>
                 <button onclick="app.audit.exportCSV()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow transition">
                   Exportar (.CSV)
@@ -368,6 +401,7 @@ const app = {
             </div>
           </div>
 
+          <!-- KPIS DE RESUMO -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Empenhado</span>
@@ -391,6 +425,7 @@ const app = {
             </div>
           </div>
 
+          <!-- BARRA DE FILTROS -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row justify-between gap-4 print:hidden">
             <div class="flex-1 flex flex-col sm:flex-row gap-3">
               <input type="text" id="filter-search" oninput="app.audit.filter()" placeholder="Buscar por código ou descrição..." class="flex-1 px-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
@@ -406,6 +441,7 @@ const app = {
             </label>
           </div>
 
+          <!-- TABELA COM SCROLL E CABEÇALHO FIXO -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -456,6 +492,7 @@ const app = {
         percRestante = 0;
       }
 
+      // Regras Condicionais de Cores
       let style = {
         rowClass: 'bg-white hover:bg-slate-50',
         badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
@@ -491,6 +528,7 @@ const app = {
       return { saldoAtual, percConsumo, percRestante, style };
     },
 
+    // Edição de saldo/faturado com Upsert direto no Google Sheets
     updateVal(id, field, val) {
       const parsed = Math.max(0, parseInt(val, 10) || 0);
       const target = app.state.exams.find(x => x.id === id);
@@ -500,11 +538,12 @@ const app = {
       app.data.saveExams();
       this.renderTable();
 
-      // Grava no Google Sheets em segundo plano
+      // Envia o valor e o objeto completo para criar a linha caso ela ainda não exista na planilha
       app.data.sendToCloud({
         action: "UPDATE_VALUES",
         id: id,
-        [field]: parsed
+        [field]: parsed,
+        itemData: target
       });
     },
 
@@ -659,7 +698,7 @@ const app = {
 
     verify() {
       const input = document.getElementById('input-pass');
-      if (input.value === CONFIG.pass) {
+      if (input && input.value === CONFIG.pass) {
         app.state.isAdmin = true;
         localStorage.setItem(CONFIG.keys.adminLogged, 'true');
         app.ui.toggleAuthModal(false);
@@ -667,7 +706,7 @@ const app = {
       } else {
         alert("Senha Inválida!");
       }
-      input.value = '';
+      if (input) input.value = '';
     },
 
     logout() {
@@ -678,7 +717,10 @@ const app = {
     },
 
     openPanel(directToContract = false) {
-      document.getElementById('admin-panel').classList.remove('hidden');
+      const panel = document.getElementById('admin-panel');
+      if (!panel) return;
+      panel.classList.remove('hidden');
+
       if (directToContract) {
         this.switchTab('contrato');
       } else {
@@ -690,7 +732,8 @@ const app = {
     },
 
     exit() {
-      document.getElementById('admin-panel').classList.add('hidden');
+      const panel = document.getElementById('admin-panel');
+      if (panel) panel.classList.add('hidden');
       app.render.all();
     },
 
@@ -700,19 +743,22 @@ const app = {
       const btnLinks = document.getElementById('admin-tab-btn-links');
       const btnContrato = document.getElementById('admin-tab-btn-contrato');
 
+      if (!viewLinks || !viewContrato) return;
+
       if (tab === 'links') {
         viewLinks.classList.remove('hidden');
         viewContrato.classList.add('hidden');
-        btnLinks.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
-        btnContrato.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
+        if (btnLinks) btnLinks.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+        if (btnContrato) btnContrato.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
       } else {
         viewLinks.classList.add('hidden');
         viewContrato.classList.remove('hidden');
-        btnContrato.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
-        btnLinks.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
+        if (btnContrato) btnContrato.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+        if (btnLinks) btnLinks.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
       }
     },
 
+    // Atalhos & Drag and Drop
     renderLinksList() {
       const list = document.getElementById('admin-list-draggable');
       if (!list) return;
@@ -808,10 +854,14 @@ const app = {
       }
     },
 
+    // Gestão de Contratos e Exames
     loadContractFields() {
-      document.getElementById('adm-contract-num').value = app.state.contract.num;
-      document.getElementById('adm-contract-empenhos').value = app.state.contract.empenhos;
-      document.getElementById('adm-contract-prestador').value = app.state.contract.prestador;
+      const cNum = document.getElementById('adm-contract-num');
+      const cEmp = document.getElementById('adm-contract-empenhos');
+      const cPrest = document.getElementById('adm-contract-prestador');
+      if (cNum) cNum.value = app.state.contract.num;
+      if (cEmp) cEmp.value = app.state.contract.empenhos;
+      if (cPrest) cPrest.value = app.state.contract.prestador;
     },
 
     saveContractInfo() {
@@ -922,7 +972,7 @@ const app = {
         app.data.saveExams();
         this.renderExamsList();
 
-        // Remove na planilha do Google
+        // Exclui na planilha do Google
         app.data.sendToCloud({
           action: "DELETE_EXAM",
           id: id
@@ -932,4 +982,5 @@ const app = {
   }
 };
 
+// Inicialização segura após o carregamento do DOM
 window.addEventListener('DOMContentLoaded', () => app.init());
