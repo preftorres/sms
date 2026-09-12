@@ -82,7 +82,6 @@ const app = {
     this.auditAuth.checkSession();
     this.router.init();
 
-    // Fecha modais com a tecla ESC
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         app.auditAuth.cancelLogin();
@@ -95,7 +94,6 @@ const app = {
     }
   },
 
-  // MÓDULO DE AUTENTICAÇÃO COM CONTROLE DE PERFIS
   auditAuth: {
     checkSession() {
       const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
@@ -116,7 +114,6 @@ const app = {
       if (!badge || !nameEl) return;
 
       if (app.state.auth.isLogged && app.state.auth.user) {
-        // Exibe o nome e o perfil do usuário logado
         const perfil = app.state.auth.user.perfil || 'Operador';
         const nome = app.state.auth.user.nome || app.state.auth.user.usuario;
         nameEl.textContent = `${nome} (${perfil})`;
@@ -429,6 +426,7 @@ const app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
+    // TELA 1: HOME MUNICIPAL COM NOMES PADRONIZADOS E SUBTÍTULO ATUALIZADO
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
@@ -443,11 +441,14 @@ const app = {
                     </svg>
                 </div>
                 <h1 class="text-2xl md:text-4xl font-black text-torres-dark uppercase tracking-tight">Prefeitura Municipal de Torres</h1>
-                <p class="text-xs uppercase tracking-widest text-slate-400 font-bold mt-1">Portal Integrado de Serviços e Secretarias</p>
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-bold mt-1">Portal Interno de Serviços</p>
                 <div class="h-1 w-20 bg-blue-600 mx-auto mt-3 rounded-full"></div>
             </div>
 
+            <!-- GRADE COM NOMES 100% PADRONIZADOS -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
+                
+                <!-- 1. SAÚDE (DIRETO E PADRONIZADO) -->
                 <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -458,15 +459,16 @@ const app = {
                                 Disponível
                             </span>
                         </div>
-                        <h2 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 transition">Secretaria da Saúde</h2>
+                        <h2 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 transition">Saúde</h2>
                         <p class="text-slate-500 font-medium text-xs leading-relaxed">Central de sistemas, ferramentas institucionais e auditoria de contratos e exames.</p>
                     </div>
                     <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-blue-600">
-                        <span>Acessar Portal da Saúde</span>
+                        <span>Acessar Saúde</span>
                         <span class="group-hover:translate-x-1.5 transition">→</span>
                     </div>
                 </button>
 
+                <!-- 2. EDUCAÇÃO -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -481,6 +483,7 @@ const app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
+                <!-- 3. TURISMO E CULTURA -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -495,6 +498,7 @@ const app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
+                <!-- 4. ADMINISTRAÇÃO GERAL -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -513,6 +517,7 @@ const app = {
       `;
     },
 
+    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -522,7 +527,7 @@ const app = {
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </button>
                     <div>
-                        <h2 class="text-xl font-black text-white leading-none">SECRETARIA DA SAÚDE</h2>
+                        <h2 class="text-xl font-black text-white leading-none">SAÚDE</h2>
                         <p class="text-blue-400 text-xs font-bold tracking-widest mt-1 uppercase">Portal Integrado de Acessos</p>
                     </div>
                 </div>
@@ -594,9 +599,21 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
+    // TELA 3A: HUB DE CONTRATOS (COM SETA DISCRETA PARA VOLTAR AO PORTAL)
     auditoriaHub(el) {
       el.innerHTML = `
-        <div class="container mx-auto px-6 py-10 fade-in">
+        <div class="container mx-auto px-6 py-6 sm:py-8 fade-in">
+            
+            <!-- SETA DISCRETA PARA VOLTAR AO PORTAL DE ACESSOS -->
+            <div class="mb-4">
+                <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition group py-1">
+                    <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <span>Voltar para o Portal de Acessos</span>
+                </button>
+            </div>
+
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
                 <div>
                     <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Auditoria & Fiscalização da Saúde</span>
@@ -659,18 +676,27 @@ const app = {
       `;
     },
 
+    // TELA 3B: DETALHE DO CONTRATO
     auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
       el.innerHTML = `
-        <div class="container mx-auto px-4 sm:px-6 py-8 fade-in">
+        <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
+          
+          <!-- SETA DISCRETA PARA VOLTAR À LISTA DE CONTRATOS -->
+          <div class="mb-4">
+              <button onclick="app.ui.navigate('auditoria_exames')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition group py-1">
+                  <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                  </svg>
+                  <span>Voltar para a Lista de Contratos</span>
+              </button>
+          </div>
+
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:border-none print:shadow-none print:p-0">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div class="flex items-center gap-3 mb-2">
-                  <button onclick="app.ui.navigate('auditoria_exames')" class="text-xs font-black text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition">
-                    ← Voltar aos Contratos
-                  </button>
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 uppercase">
                     Aba: ${currentContract.tabName}
                   </span>
@@ -1032,9 +1058,7 @@ const app = {
     }
   },
 
-  // MÓDULO ADMINISTRATIVO COM CONTROLE DE PERFIL (RBAC)
   admin: {
-    // Verifica se o usuário atual é Administrador Geral
     isAdminUser() {
       return app.state.auth.isLogged && 
              app.state.auth.user && 
@@ -1056,7 +1080,6 @@ const app = {
 
       const isMasterAdmin = this.isAdminUser();
 
-      // Se for Operador, oculta o botão da aba de usuários
       const btnUsuarios = document.getElementById('admin-tab-btn-usuarios');
       const viewUsuarios = document.getElementById('admin-view-usuarios');
       
@@ -1087,7 +1110,6 @@ const app = {
     },
 
     switchTab(tab) {
-      // Bloqueia acesso à aba de usuários se não for Administrador
       if (tab === 'usuarios' && !this.isAdminUser()) {
         this.switchTab('contrato');
         return;
@@ -1118,7 +1140,6 @@ const app = {
       }
     },
 
-    // GESTÃO DE USUÁRIOS (SÓ ADMIN PODE VER OU CHAMAR)
     async loadUsersList() {
       if (!this.isAdminUser()) return;
       const tbody = document.getElementById('adm-users-list-tbody');
