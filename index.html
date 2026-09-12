@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal da Saúde e Gestão de Contratos - Prefeitura de Torres</title>
+    <title>Portal Municipal - Prefeitura de Torres</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -29,9 +29,11 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
 
-    <!-- CABEÇALHO GLOBAL (Menu com botão ativo em fundo azul claro) -->
+    <!-- CABEÇALHO INSTITUCIONAL GLOBAL DA PREFEITURA -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- IDENTIFICAÇÃO GERAL DO MUNICÍPIO (Sem vincular à Saúde) -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="app.ui.navigate('landing')">
                 <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
                     <img src="Logo_Torres_100x100.webp" 
@@ -43,26 +45,20 @@
                     </svg>
                 </div>
                 <div>
-                    <span class="block text-[10px] uppercase font-bold tracking-widest text-blue-400 leading-none">Prefeitura de Torres</span>
-                    <h1 class="text-base font-black tracking-tight leading-tight">Secretaria Municipal da Saúde</h1>
+                    <span class="block text-[10px] uppercase font-bold tracking-widest text-blue-400 leading-none">Estado do Rio Grande do Sul</span>
+                    <h1 class="text-base font-black tracking-tight leading-tight">Prefeitura Municipal de Torres</h1>
                 </div>
             </div>
 
+            <!-- NAVEGAÇÃO CONTEXTUAL (Renderizada dinamicamente pelo JavaScript) -->
             <nav id="main-nav" class="flex items-center space-x-2 text-xs font-semibold">
-                <button id="nav-btn-landing" onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all">
-                    Início
-                </button>
-                <button id="nav-btn-saude_links" onclick="app.ui.navigate('saude_links')" class="nav-btn px-4 py-2 rounded-xl transition-all">
-                    Portal de Acessos
-                </button>
-                <button id="nav-btn-auditoria_exames" onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-4 py-2 rounded-xl transition-all">
-                    Auditoria de Contratos
-                </button>
+                <!-- Se estiver na Home: apenas "Início" -->
+                <!-- Se entrar na Saúde: "Início", "Portal da Saúde" e "Auditoria de Contratos" -->
             </nav>
         </div>
     </header>
 
-    <!-- BOTÃO ADMIN DISCRETO -->
+    <!-- BOTÃO ADMIN FLUTUANTE DISCRETO -->
     <div class="fixed top-3.5 right-4 z-50 print:hidden">
         <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-2.5 glass-blur hover:bg-white rounded-full border border-slate-200 shadow-sm transition-all group">
             <svg class="h-5 w-5 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +80,7 @@
                 </div>
                 <button onclick="app.audit.closeNewContractModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
             </div>
-            <p class="text-xs text-slate-500 mb-6">Uma nova aba será criada na sua planilha do Google para este contrato, salvando o registro com data e hora de inclusão.</p>
+            <p class="text-xs text-slate-500 mb-6">Uma nova aba será criada na planilha do Google para este contrato, salvando o registro com data e hora de inclusão.</p>
 
             <div class="space-y-3.5">
                 <div>
@@ -155,7 +151,6 @@
                 </button>
             </div>
 
-            <!-- ABA DE LINKS -->
             <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -178,7 +173,6 @@
                 </div>
             </div>
 
-            <!-- ABA DE PROCEDIMENTOS -->
             <div id="admin-view-contrato" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-3xl border shadow-sm">
                     <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame no Contrato Ativo</h3>
