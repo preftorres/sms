@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STYLE.CSS - PREFEITURA DE TORRES (DESIGN SYSTEM LIMPO E CENTRADO NO USUÁRIO)
+   STYLE.CSS - PREFEITURA DE TORRES
    ========================================================================== */
 
 body {
@@ -17,7 +17,6 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Card Landing */
 .card-landing {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
@@ -33,7 +32,6 @@ body {
   backdrop-filter: blur(10px);
 }
 
-/* Drag & Drop */
 .dragging {
   opacity: 0.45;
   border: 2px dashed #3b82f6 !important;
@@ -42,14 +40,12 @@ body {
   border-top: 3px solid #3b82f6 !important;
 }
 
-/* Header Sticky da Tabela */
 .sticky-thead {
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-/* Scrollbar Customizado */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -75,6 +71,13 @@ input[type="number"].table-num {
   appearance: textfield;
 }
 
+/* Feedback visual de cópia */
+.btn-copy.copied {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
 /* ==========================================================================
    IMPRESSÃO FORMAL (@media print)
    ========================================================================== */
@@ -86,8 +89,9 @@ input[type="number"].table-num {
 
   header,
   footer,
-  #modal-auth,
+  #modal-audit-login,
   #modal-new-contract,
+  #modal-gemini-import,
   #admin-panel,
   .print\:hidden,
   button,
