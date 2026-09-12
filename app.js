@@ -308,7 +308,7 @@ const app = {
         <div class="flex-grow flex flex-col items-center justify-center p-6 fade-in">
             <div class="mb-12 text-center">
                 <div class="w-32 h-32 md:w-48 md:h-48 bg-white rounded-full shadow-2xl flex items-center justify-center p-4 mb-6 mx-auto border-4 border-slate-100">
-                    <img src="torres-rs-logo-300x139.webp" 
+                    <img src="Logo_Torres_100x100.webp" 
                          alt="Prefeitura de Torres" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"
                          class="max-w-full h-auto object-contain">
