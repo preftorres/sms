@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * Portal Integrado & Auditoria Multi-Contratos com Google Sheets
+ * Portal Integrado & Hub de Auditoria de Contratos
  * Arquivo: app.js
  * ============================================================================
  */
@@ -12,13 +12,14 @@ const CONFIG = {
   pass: 'admin123',
   keys: {
     links: 'torres_links_v6',
-    contractsList: 'torres_contracts_list_v2026',
-    activeContractTab: 'torres_active_contract_tab_v2026',
-    examsCache: 'torres_exams_cache_v2026',
+    contractsList: 'torres_contracts_hub_v1',
+    activeContractTab: 'torres_active_tab_v1',
+    examsCache: 'torres_exams_cache_v1',
     adminLogged: 'torres_is_admin_v1'
   }
 };
 
+// LINKS INSTITUCIONAIS
 const INITIAL_LINKS = [
   { id: 1, title: 'Vacinas', url: 'http://vaciastorres.dpdns.org', desc: 'Controle de Imunização' },
   { id: 2, title: 'ETP/TR', url: 'https://etp-tr.torres.rs.gov.br/', desc: 'Termos de Referência' },
@@ -27,17 +28,18 @@ const INITIAL_LINKS = [
   { id: 5, title: 'Webmail', url: 'http://webmail.torres.rs.gov.br/', desc: 'E-mail Institucional' }
 ];
 
-// Contrato Padrão Inicial
+// CONTRATOS PADRÃO COM DATA E HORA DE CRIAÇÃO
 const DEFAULT_CONTRACTS = [
   {
     tabName: "Contrato_67_2026",
     num: "67/2026",
     empenhos: "3406/2026 e 3407/2026",
-    prestador: "M. B. Laboratório de Análises Clínicas Ltda"
+    prestador: "M. B. Laboratório de Análises Clínicas Ltda",
+    createdAt: "12/09/2026 às 08:30"
   }
 ];
 
-// Exames Padrão dos Empenhos 3406 e 3407/2026
+// MODELO DE PROCEDIMENTOS
 const TEMPLATE_EXAMS = [
   { id: 1, item: 1, cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
   { id: 6, item: 6, cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
@@ -60,7 +62,7 @@ const TEMPLATE_EXAMS = [
 
 const app = {
   state: {
-    view: 'landing',
+    view: 'landing', // 'landing', 'saude_links', 'auditoria_hub', 'auditoria_detalhe'
     links: [],
     contracts: [],
     activeContractTab: 'Contrato_67_2026',
@@ -108,7 +110,7 @@ const app = {
       localStorage.setItem(CONFIG.keys.links, JSON.stringify(app.state.links));
     },
 
-    // Consulta a planilha do Google para o contrato selecionado
+    // Consulta à nuvem
     async syncFromCloud(showFeedback = false) {
       if (!GOOGLE_API_URL) return;
       try {
@@ -119,7 +121,14 @@ const app = {
 
         if (res.status === "success") {
           if (Array.isArray(res.contracts) && res.contracts.length > 0) {
-            app.state.contracts = res.contracts;
+            // Preserva as datas de criação locais caso o Google Sheets não as tenha
+            app.state.contracts = res.contracts.map(c => {
+              const local = app.state.contracts.find(l => l.tabName === c.tabName);
+              return {
+                ...c,
+                createdAt: c.createdAt || (local ? local.createdAt : "12/09/2026 às 08:30")
+              };
+            });
             this.saveLocalContracts();
           }
 
@@ -127,15 +136,17 @@ const app = {
             app.state.exams = res.exams;
             this.saveLocalExams();
           } else if (app.state.activeContractTab === 'Contrato_67_2026' && app.state.exams.length > 0) {
-            // Se a aba estiver vazia pela primeira vez, povoa com os dados iniciais
+            // Auto-povoamento da primeira aba
             await this.seedActiveContract(false);
           }
 
-          if (app.state.view === 'auditoria_exames') {
-            app.render.auditoriaExames(document.getElementById('app-viewport'));
+          if (app.state.view === 'auditoria_detalhe') {
+            app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
+          } else if (app.state.view === 'auditoria_hub') {
+            app.render.auditoriaHub(document.getElementById('app-viewport'));
           }
 
-          if (showFeedback) alert("Dados sincronizados com a Planilha Google!");
+          if (showFeedback) alert("Dados atualizados com sucesso diretamente do Google Sheets!");
         }
       } catch (err) {
         console.warn("Modo Offline ativado.", err);
@@ -171,7 +182,6 @@ const app = {
           action: "INITIAL_SEED",
           exams: app.state.exams
         });
-        if (showConfirm) alert("Base enviada! Aguarde 3 segundos e confira a aba no Google Sheets.");
       }
     }
   },
@@ -186,11 +196,20 @@ const app = {
       let hash = window.location.hash.replace('#', '').trim();
       if (hash === 'saude') hash = 'saude_links';
 
-      const validViews = ['landing', 'saude_links', 'auditoria_exames'];
-      const target = validViews.includes(hash) ? hash : 'landing';
+      // 'auditoria_exames' agora leva para o Hub de Contratos
+      if (hash === 'auditoria_exames' || hash === 'auditoria') {
+        app.state.view = 'auditoria_hub';
+      } else if (hash.startsWith('auditoria_contrato=')) {
+        const tab = hash.split('=')[1];
+        app.state.activeContractTab = tab;
+        app.state.view = 'auditoria_detalhe';
+      } else if (['landing', 'saude_links'].includes(hash)) {
+        app.state.view = hash;
+      } else {
+        app.state.view = 'landing';
+      }
 
-      app.state.view = target;
-      app.ui.updateActiveMenu(target);
+      app.ui.updateActiveMenu();
       app.render.all();
     }
   },
@@ -201,18 +220,15 @@ const app = {
       window.location.hash = view;
     },
 
-    updateActiveMenu(activeView) {
-      const navButtons = [
-        { id: 'nav-btn-landing', view: 'landing' },
-        { id: 'nav-btn-saude_links', view: 'saude_links' },
-        { id: 'nav-btn-auditoria_exames', view: 'auditoria_exames' }
-      ];
+    updateActiveMenu() {
+      const activeNav = (app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe')
+        ? 'nav-btn-auditoria_exames'
+        : (app.state.view === 'saude_links' ? 'nav-btn-saude_links' : 'nav-btn-landing');
 
-      navButtons.forEach(btn => {
-        const el = document.getElementById(btn.id);
+      ['nav-btn-landing', 'nav-btn-saude_links', 'nav-btn-auditoria_exames'].forEach(id => {
+        const el = document.getElementById(id);
         if (!el) return;
-
-        if (btn.view === activeView) {
+        if (id === activeNav) {
           el.className = 'nav-btn px-4 py-2 rounded-xl transition-all bg-blue-100 text-blue-950 font-black shadow-sm';
         } else {
           el.className = 'nav-btn px-4 py-2 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 font-semibold';
@@ -260,13 +276,16 @@ const app = {
         this.landing(vp);
       } else if (app.state.view === 'saude_links') {
         this.saudeLinks(vp);
-      } else if (app.state.view === 'auditoria_exames') {
-        this.auditoriaExames(vp);
+      } else if (app.state.view === 'auditoria_hub') {
+        this.auditoriaHub(vp);
+      } else if (app.state.view === 'auditoria_detalhe') {
+        this.auditoriaDetalhe(vp);
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
+    // TELA 1: LANDING PAGE
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 fade-in">
@@ -289,13 +308,14 @@ const app = {
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 </div>
                 <h2 class="text-2xl font-black text-slate-800 mb-2">Secretaria da Saúde</h2>
-                <p class="text-slate-400 font-medium text-center">Acesse a central de sistemas, links úteis e auditoria de cotas.</p>
+                <p class="text-slate-400 font-medium text-center">Acesse a central de sistemas, links úteis e auditoria de contratos.</p>
                 <div class="mt-8 px-6 py-2.5 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">Clique para entrar</div>
             </button>
         </div>
       `;
     },
 
+    // TELA 2: PORTAL DE ACESSOS (CARD HARMONIOSO COM BORDA AZUL, SEM O BANNER PESADO)
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -306,7 +326,7 @@ const app = {
                     </button>
                     <div>
                         <h2 class="text-xl font-black text-white leading-none">SECRETARIA DA SAÚDE</h2>
-                        <p class="text-blue-400 text-xs font-bold tracking-widest mt-1 uppercase">Portal de Acessos</p>
+                        <p class="text-blue-400 text-xs font-bold tracking-widest mt-1 uppercase">Portal Integrado de Acessos</p>
                     </div>
                 </div>
                 <div id="clock-display" class="text-right text-white">
@@ -317,29 +337,45 @@ const app = {
         </div>
 
         <div class="container mx-auto px-6 py-10 fade-in">
-            <div class="mb-10 bg-gradient-to-r from-blue-900 to-indigo-950 text-white p-8 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div class="max-w-2xl">
-                    <span class="inline-block px-3 py-1 bg-amber-400 text-slate-950 text-[10px] font-black uppercase rounded-full tracking-wider mb-2">
-                        Painel de Controle Contratual
-                    </span>
-                    <h3 class="text-2xl font-black">Auditoria e Gestão de Exames (Empenhos)</h3>
-                    <p class="text-blue-200 text-xs sm:text-sm mt-1">
-                        Controle por contrato com abas sincronizadas diretamente no Google Sheets.
-                    </p>
-                </div>
-                <button onclick="app.ui.navigate('auditoria_exames')" class="px-6 py-3.5 bg-white hover:bg-blue-50 text-blue-900 rounded-2xl font-black text-xs shadow-md transition transform hover:-translate-y-0.5 whitespace-nowrap">
-                    Abrir Auditoria de Cotas →
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                ${app.state.links.map(l => `
-                    <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group">
-                        <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                
+                <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS (INTEGRADO À GRADE COM BORDA AZUL DE DESTAQUE) -->
+                <button onclick="app.ui.navigate('auditoria_exames')" 
+                   class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                            Gestão & Auditoria
+                        </span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
                         </div>
-                        <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-blue-600 transition">${l.title}</h3>
-                        <p class="text-sm text-slate-400 font-medium leading-tight">${l.desc}</p>
+                        <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-blue-600 transition">Auditoria de Cotas de Exames</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Painel de conferência e controle de execução dos contratos e empenhos da saúde.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+                        <span>Acessar Painel</span>
+                        <span class="group-hover:translate-x-1 transition">→</span>
+                    </div>
+                </button>
+
+                <!-- LINKS INSTITUCIONAIS EXATOS -->
+                ${app.state.links.map(l => `
+                    <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between">
+                        <div>
+                            <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            </div>
+                            <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-blue-600 transition">${l.title}</h3>
+                            <p class="text-sm text-slate-400 font-medium leading-tight">${l.desc}</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-600 transition">
+                            <span>Abrir Sistema</span>
+                            <span class="group-hover:translate-x-1 transition">↗</span>
+                        </div>
                     </a>
                 `).join('')}
             </div>
@@ -362,65 +398,118 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
-    // TELA 3: AUDITORIA MULTI-CONTRATOS
-    auditoriaExames(el) {
+    // TELA 3A: HUB DE CONTRATOS (SELEÇÃO EM CARDS COM DATA E HORA DE CRIAÇÃO)
+    auditoriaHub(el) {
+      el.innerHTML = `
+        <div class="container mx-auto px-6 py-10 fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Auditoria & Fiscalização de Saúde</span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Contratos de Exames Cadastrados</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Selecione um contrato para auditar procedimentos e cotas ou cadastre um novo.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="app.data.syncFromCloud(true)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
+                        🔄 Atualizar da Planilha
+                    </button>
+                    <button onclick="app.audit.openNewContractModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                        <span class="text-sm">+</span> Novo Contrato
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRADE DE CARDS DOS CONTRATOS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${app.state.contracts.map(c => `
+                    <div class="bg-white rounded-[2.5rem] p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-black rounded-full uppercase border border-blue-100">
+                                    Aba: ${c.tabName}
+                                </span>
+                                <span class="text-[11px] font-bold text-slate-400">Ativo</span>
+                            </div>
+                            
+                            <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-600 transition">Contrato nº ${c.num}</h3>
+                            <p class="text-xs font-semibold text-slate-600 mt-1 line-clamp-2">${c.prestador}</p>
+                            
+                            <div class="mt-4 p-3 bg-slate-50 rounded-2xl text-[11px] text-slate-500 space-y-1">
+                                <p><strong>Empenhos:</strong> ${c.empenhos}</p>
+                                <p class="text-slate-400 text-[10px] flex items-center gap-1 mt-2">
+                                    <span>📅</span> Registrado em: <b class="text-slate-600">${c.createdAt || "12/09/2026 às 08:30"}</b>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100">
+                            <button onclick="app.audit.openContractDetail('${c.tabName}')" 
+                                    class="w-full py-3 bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
+                                <span>Abrir Auditoria deste Contrato</span>
+                                <span>→</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+
+                <!-- CARD PONTILHADO "+ NOVO CONTRATO" -->
+                <button onclick="app.audit.openNewContractModal()" 
+                   class="bg-white/60 hover:bg-white rounded-[2.5rem] p-8 border-2 border-dashed border-slate-300 hover:border-blue-500 shadow-xs hover:shadow-md transition-all flex flex-col items-center justify-center text-center group min-h-[280px]">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </div>
+                    <h4 class="font-black text-slate-800 text-base mb-1 group-hover:text-blue-600 transition">Cadastrar Novo Contrato</h4>
+                    <p class="text-xs text-slate-400 max-w-xs">Cria uma nova aba e inicia o controle de cotas e procedimentos.</p>
+                    <span class="mt-4 text-xs font-bold text-blue-600">+ Adicionar</span>
+                </button>
+            </div>
+        </div>
+      `;
+    },
+
+    // TELA 3B: DETALHE DO CONTRATO SELECIONADO (TABELA, KPIS E FILTROS)
+    auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
       el.innerHTML = `
         <div class="container mx-auto px-4 sm:px-6 py-8 fade-in">
           
-          <!-- BANNER DO CONTRATO COM SELETOR DE ABAS -->
+          <!-- BARRA SUPERIOR DE IDENTIFICAÇÃO E RETORNO -->
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:border-none print:shadow-none print:p-0">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div class="flex-1">
-                <div class="flex flex-wrap items-center gap-2 mb-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 uppercase">SMS / CONTROLE INTERNO</span>
+              <div>
+                <div class="flex items-center gap-3 mb-2">
+                  <button onclick="app.ui.navigate('auditoria_exames')" class="text-xs font-black text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition">
+                    ← Voltar aos Contratos
+                  </button>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 uppercase">
+                    Aba: ${currentContract.tabName}
+                  </span>
                   <span id="cloud-sync-status" class="hidden text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold"></span>
                 </div>
-
-                <!-- SELETOR DINÂMICO DE CONTRATO / ABA -->
-                <div class="flex flex-wrap items-center gap-3">
-                  <div class="relative">
-                    <select id="contract-tab-selector" onchange="app.audit.switchContract(this.value)" class="bg-slate-50 border-2 border-blue-200 focus:border-blue-600 rounded-2xl px-4 py-2 text-sm font-black text-slate-800 outline-none shadow-xs cursor-pointer">
-                      ${app.state.contracts.map(c => `
-                        <option value="${c.tabName}" ${c.tabName === app.state.activeContractTab ? 'selected' : ''}>
-                          Contrato nº ${c.num} (${c.prestador})
-                        </option>
-                      `).join('')}
-                    </select>
-                  </div>
-
-                  <button onclick="app.audit.openNewContractModal()" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-black transition border border-blue-200 flex items-center gap-1">
-                    <span>+</span> Novo Contrato
-                  </button>
-                </div>
-
-                <div class="mt-3 text-xs text-slate-600 flex flex-wrap gap-x-5 gap-y-1">
-                  <span><strong>Aba na Planilha:</strong> <code class="text-blue-700 font-mono font-bold">${currentContract.tabName}</code></span>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900">
+                  Auditoria de Cotas — Contrato nº ${currentContract.num}
+                </h2>
+                <div class="mt-1 text-xs text-slate-600 flex flex-wrap gap-x-5 gap-y-1">
                   <span><strong>Empenhos:</strong> ${currentContract.empenhos}</span>
                   <span><strong>Prestador:</strong> ${currentContract.prestador}</span>
+                  <span><strong>Cadastrado em:</strong> ${currentContract.createdAt || "12/09/2026"}</span>
                 </div>
               </div>
 
-              <!-- BOTÕES DE AÇÃO -->
+              <!-- BARRA DE AÇÕES LIMPA E DIRETA -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
-                <button onclick="app.data.seedActiveContract(true)" title="Grava todos os exames na aba ativa do Google Sheets" class="px-4 py-2 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition shadow-md flex items-center gap-1.5">
-                  <span>📤</span> Salvar Tudo na Aba
+                <button onclick="app.data.syncFromCloud(true)" title="Puxar dados atualizados desta aba no Google Sheets" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
+                  <span>🔄</span> Sincronizar
                 </button>
-                
-                <button onclick="app.data.syncFromCloud(true)" title="Puxa os dados atualizados da aba ativa" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
-                  <span>📥</span> Baixar da Aba
-                </button>
-
                 <button onclick="app.audit.exportCSV()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow transition">
                   Exportar (.CSV)
                 </button>
-                <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-900 text-white shadow transition">
+                <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition">
                   Imprimir / PDF
                 </button>
                 ${app.state.isAdmin ? `
                   <button onclick="app.admin.trigger(true)" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 shadow transition">
-                    ✏️ Editar Procedimentos
+                    ⚙️ Procedimentos
                   </button>
                 ` : ''}
               </div>
@@ -467,7 +556,7 @@ const app = {
             </label>
           </div>
 
-          <!-- TABELA DE EXAMES -->
+          <!-- TABELA DE EXAMES COM SCROLL INTERNO E STICKY HEADER -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -490,7 +579,7 @@ const app = {
               </table>
             </div>
             <div id="table-empty" class="hidden p-8 text-center text-slate-400 text-xs font-medium">
-              Nenhum exame cadastrado nesta aba do contrato.
+              Nenhum exame cadastrado para este contrato.
             </div>
           </div>
 
@@ -502,20 +591,15 @@ const app = {
   },
 
   audit: {
-    // Troca de contrato ativo / aba
-    async switchContract(tabName) {
-      if (tabName === app.state.activeContractTab) return;
+    // Abre a auditoria de um contrato específico a partir do Hub
+    openContractDetail(tabName) {
       app.state.activeContractTab = tabName;
       app.data.saveLocalContracts();
 
-      // Carrega exames do cache local deste contrato
       const rawExams = localStorage.getItem(`${CONFIG.keys.examsCache}_${tabName}`);
       app.state.exams = rawExams ? JSON.parse(rawExams) : [];
 
-      app.render.auditoriaExames(document.getElementById('app-viewport'));
-
-      // Puxa da nuvem para atualizar
-      await app.data.syncFromCloud();
+      window.location.hash = `auditoria_contrato=${tabName}`;
     },
 
     openNewContractModal() {
@@ -539,17 +623,22 @@ const app = {
         return;
       }
 
-      // Gera o nome seguro da aba no Google Sheets (ex: Contrato_85_2026)
       const safeTabName = `Contrato_${num.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      // Data e hora de criação formatada
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('pt-BR');
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const createdAtStr = `${dateStr} às ${timeStr}`;
 
       const newContractObj = {
         tabName: safeTabName,
         num: num,
         empenhos: empenhos || 'A definir',
-        prestador: prestador
+        prestador: prestador,
+        createdAt: createdAtStr
       };
 
-      // Adiciona na lista local
       app.state.contracts.push(newContractObj);
       app.state.activeContractTab = safeTabName;
       app.state.exams = copyTemplate ? JSON.parse(JSON.stringify(TEMPLATE_EXAMS)) : [];
@@ -557,17 +646,16 @@ const app = {
       app.data.saveLocalContracts();
       app.data.saveLocalExams();
       this.closeNewContractModal();
-      app.render.auditoriaExames(document.getElementById('app-viewport'));
 
-      // Envia comando para o Google Apps Script criar a nova aba
-      app.ui.setSyncStatus(true, `Criando aba "${safeTabName}" no Google Sheets...`);
+      // Transiciona direto para os exames do novo contrato
+      this.openContractDetail(safeTabName);
+
+      // Envia ordem para criar a nova aba no Google Sheets com data de criação
       await app.data.sendToCloud({
         action: "CREATE_CONTRACT",
         ...newContractObj,
         initialExams: app.state.exams
       });
-
-      alert(`Aba "${safeTabName}" criada com sucesso na sua Planilha Google!`);
     },
 
     calculate(item) {
@@ -630,7 +718,7 @@ const app = {
       app.data.saveLocalExams();
       this.renderTable();
 
-      // Grava diretamente na aba ativa do contrato
+      // Grava no Google Sheets na aba do contrato atual
       app.data.sendToCloud({
         action: "UPDATE_VALUES",
         contract: app.state.activeContractTab,
@@ -921,129 +1009,4 @@ const app = {
     resetForm() {
       document.getElementById('edit-id').value = "";
       document.getElementById('field-title').value = "";
-      document.getElementById('field-url').value = "";
-      document.getElementById('field-desc').value = "";
-      document.getElementById('form-title-label').textContent = "Novo Atalho";
-      document.getElementById('btn-save').textContent = "Salvar Sistema";
-      document.getElementById('btn-cancel-edit').classList.add('hidden');
-    },
-
-    removeLink(id) {
-      if (confirm("Excluir atalho?")) {
-        app.state.links = app.state.links.filter(l => l.id !== id);
-        app.data.saveLinks();
-        this.renderLinksList();
-      }
-    },
-
-    renderExamsList() {
-      const tbody = document.getElementById('adm-exams-list-tbody');
-      if (!tbody) return;
-
-      tbody.innerHTML = app.state.exams.map(e => `
-        <tr class="hover:bg-slate-50">
-          <td class="p-3 text-center font-bold">${e.item}</td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold">${e.cat}</span></td>
-          <td class="p-3 font-semibold text-slate-800">${e.descEmpenho}</td>
-          <td class="p-3 text-right">${e.qtdEmpenho}</td>
-          <td class="p-3 text-right">${e.saldoAnterior}</td>
-          <td class="p-3 text-center">
-            <button onclick="app.admin.editExam(${e.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">Editar</button>
-            <button onclick="app.admin.removeExam(${e.id})" class="text-red-500 hover:text-red-700 font-bold">Excluir</button>
-          </td>
-        </tr>
-      `).join('');
-    },
-
-    saveExam() {
-      const id = document.getElementById('adm-exam-id').value;
-      const item = parseInt(document.getElementById('adm-exam-item').value, 10);
-      const cat = document.getElementById('adm-exam-cat').value;
-      const descEmpenho = document.getElementById('adm-exam-desc-emp').value.trim();
-      const descPrestador = document.getElementById('adm-exam-desc-prest').value.trim();
-      const qtdEmpenho = parseInt(document.getElementById('adm-exam-qtd').value, 10) || 0;
-      const saldoAnterior = parseInt(document.getElementById('adm-exam-saldo-ant').value, 10) || 0;
-
-      if (!item || !descEmpenho) {
-        alert("Preencha ao menos o número do item e a descrição do empenho.");
-        return;
-      }
-
-      let examObj = {
-        id: id ? Number(id) : Date.now(),
-        item,
-        cat,
-        descEmpenho,
-        descPrestador: descPrestador || descEmpenho,
-        qtdEmpenho,
-        saldoAnterior,
-        faturado: 0
-      };
-
-      if (id) {
-        const idx = app.state.exams.findIndex(x => x.id == id);
-        if (idx !== -1) {
-          examObj.faturado = app.state.exams[idx].faturado || 0;
-          app.state.exams[idx] = examObj;
-        }
-      } else {
-        app.state.exams.push(examObj);
-      }
-
-      app.state.exams.sort((a, b) => a.item - b.item);
-      app.data.saveLocalExams();
-      this.resetExamForm();
-      this.renderExamsList();
-
-      app.data.sendToCloud({
-        action: "SAVE_EXAM",
-        contract: app.state.activeContractTab,
-        ...examObj
-      });
-    },
-
-    editExam(id) {
-      const e = app.state.exams.find(x => x.id == id);
-      if (!e) return;
-      document.getElementById('adm-exam-id').value = e.id;
-      document.getElementById('adm-exam-item').value = e.item;
-      document.getElementById('adm-exam-cat').value = e.cat;
-      document.getElementById('adm-exam-desc-emp').value = e.descEmpenho;
-      document.getElementById('adm-exam-desc-prest').value = e.descPrestador;
-      document.getElementById('adm-exam-qtd').value = e.qtdEmpenho;
-      document.getElementById('adm-exam-saldo-ant').value = e.saldoAnterior;
-
-      document.getElementById('adm-exam-form-title').textContent = `Editando Item ${e.item} (${app.state.activeContractTab})`;
-      document.getElementById('btn-adm-save-exam').textContent = "Atualizar Exame";
-      document.getElementById('btn-adm-cancel-exam').classList.remove('hidden');
-    },
-
-    resetExamForm() {
-      document.getElementById('adm-exam-id').value = '';
-      document.getElementById('adm-exam-item').value = '';
-      document.getElementById('adm-exam-desc-emp').value = '';
-      document.getElementById('adm-exam-desc-prest').value = '';
-      document.getElementById('adm-exam-qtd').value = '';
-      document.getElementById('adm-exam-saldo-ant').value = '';
-      document.getElementById('adm-exam-form-title').textContent = "Adicionar / Editar Exame no Contrato Selecionado";
-      document.getElementById('btn-adm-save-exam').textContent = "Salvar Procedimento";
-      document.getElementById('btn-adm-cancel-exam').classList.add('hidden');
-    },
-
-    removeExam(id) {
-      if (confirm("Excluir este exame deste contrato?")) {
-        app.state.exams = app.state.exams.filter(x => x.id !== id);
-        app.data.saveLocalExams();
-        this.renderExamsList();
-
-        app.data.sendToCloud({
-          action: "DELETE_EXAM",
-          contract: app.state.activeContractTab,
-          id: id
-        });
-      }
-    }
-  }
-};
-
-window.addEventListener('DOMContentLoaded', () => app.init());
+      document.getElem
