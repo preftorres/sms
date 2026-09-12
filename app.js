@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * Portal Integrado & Hub de Auditoria de Contratos
+ * Portal Integrado & Hub de Auditoria Multi-Contratos com Google Sheets
  * Arquivo: app.js
  * ============================================================================
  */
@@ -19,16 +19,16 @@ const CONFIG = {
   }
 };
 
-// LINKS INSTITUCIONAIS
+// LINKS INSTITUCIONAIS: VACINAS CORRIGIDO (HTTPS) E POSICIONADO MAIS ABAIXO
 const INITIAL_LINKS = [
-  { id: 1, title: 'Vacinas', url: 'http://vaciastorres.dpdns.org', desc: 'Controle de Imunização' },
   { id: 2, title: 'ETP/TR', url: 'https://etp-tr.torres.rs.gov.br/', desc: 'Termos de Referência' },
   { id: 3, title: 'Betha Cloud', url: 'http://betha.cloud/', desc: 'Sistemas ERP' },
   { id: 4, title: '1Doc', url: 'http://torres.1doc.com.br/', desc: 'Processos Digitais' },
-  { id: 5, title: 'Webmail', url: 'http://webmail.torres.rs.gov.br/', desc: 'E-mail Institucional' }
+  { id: 5, title: 'Webmail', url: 'http://webmail.torres.rs.gov.br/', desc: 'E-mail Institucional' },
+  { id: 1, title: 'Vacinas', url: 'https://vacinastorres.dpdns.org/', desc: 'Controle de Imunização' }
 ];
 
-// CONTRATOS PADRÃO COM DATA E HORA DE CRIAÇÃO
+// CONTRATOS PADRÃO COM DATA E HORA DE REGISTRO
 const DEFAULT_CONTRACTS = [
   {
     tabName: "Contrato_67_2026",
@@ -39,7 +39,7 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// MODELO DE PROCEDIMENTOS
+// MODELO PADRÃO DE PROCEDIMENTOS
 const TEMPLATE_EXAMS = [
   { id: 1, item: 1, cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
   { id: 6, item: 6, cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
@@ -62,7 +62,7 @@ const TEMPLATE_EXAMS = [
 
 const app = {
   state: {
-    view: 'landing', // 'landing', 'saude_links', 'auditoria_hub', 'auditoria_detalhe'
+    view: 'landing',
     links: [],
     contracts: [],
     activeContractTab: 'Contrato_67_2026',
@@ -106,11 +106,11 @@ const app = {
       localStorage.setItem(CONFIG.keys.activeContractTab, app.state.activeContractTab);
     },
 
-    saveLinks() {
+    saveLinksLocally() {
       localStorage.setItem(CONFIG.keys.links, JSON.stringify(app.state.links));
     },
 
-    // Consulta à nuvem
+    // Consulta à nuvem (Contratos, Exames e Atalhos)
     async syncFromCloud(showFeedback = false) {
       if (!GOOGLE_API_URL) return;
       try {
@@ -120,8 +120,17 @@ const app = {
         const res = await response.json();
 
         if (res.status === "success") {
+          // Atualiza atalhos a partir da aba _Atalhos
+          if (Array.isArray(res.shortcuts) && res.shortcuts.length > 0) {
+            app.state.links = res.shortcuts;
+            this.saveLinksLocally();
+            if (app.state.view === 'saude_links') {
+              app.render.saudeLinks(document.getElementById('app-viewport'));
+            }
+          }
+
+          // Atualiza lista de contratos
           if (Array.isArray(res.contracts) && res.contracts.length > 0) {
-            // Preserva as datas de criação locais caso o Google Sheets não as tenha
             app.state.contracts = res.contracts.map(c => {
               const local = app.state.contracts.find(l => l.tabName === c.tabName);
               return {
@@ -132,11 +141,11 @@ const app = {
             this.saveLocalContracts();
           }
 
+          // Atualiza exames do contrato ativo
           if (Array.isArray(res.exams) && res.exams.length > 0) {
             app.state.exams = res.exams;
             this.saveLocalExams();
           } else if (app.state.activeContractTab === 'Contrato_67_2026' && app.state.exams.length > 0) {
-            // Auto-povoamento da primeira aba
             await this.seedActiveContract(false);
           }
 
@@ -146,11 +155,11 @@ const app = {
             app.render.auditoriaHub(document.getElementById('app-viewport'));
           }
 
-          if (showFeedback) alert("Dados atualizados com sucesso diretamente do Google Sheets!");
+          if (showFeedback) alert("Dados atualizados com sucesso diretamente da Planilha Google!");
         }
       } catch (err) {
         console.warn("Modo Offline ativado.", err);
-        if (showFeedback) alert("Modo offline: exibindo dados do cache local.");
+        if (showFeedback) alert("Modo offline: exibindo dados salvos em cache.");
       } finally {
         app.ui.setSyncStatus(false);
       }
@@ -175,8 +184,17 @@ const app = {
       }
     },
 
+    // Salva a lista inteira de atalhos na aba _Atalhos do Google Sheets
+    async syncShortcutsToCloud() {
+      app.ui.setSyncStatus(true, "Salvando atalhos no Google Sheets...");
+      await this.sendToCloud({
+        action: "SAVE_SHORTCUTS",
+        shortcuts: app.state.links
+      });
+    },
+
     async seedActiveContract(showConfirm = true) {
-      if (!showConfirm || confirm(`Deseja enviar a base de exames para a aba "${app.state.activeContractTab}" na Planilha Google?`)) {
+      if (!showConfirm || confirm(`Deseja enviar a base de exames para a aba "${app.state.activeContractTab}" no Google Sheets?`)) {
         app.ui.setSyncStatus(true, "Enviando dados para a aba...");
         await app.data.sendToCloud({
           action: "INITIAL_SEED",
@@ -196,7 +214,6 @@ const app = {
       let hash = window.location.hash.replace('#', '').trim();
       if (hash === 'saude') hash = 'saude_links';
 
-      // 'auditoria_exames' agora leva para o Hub de Contratos
       if (hash === 'auditoria_exames' || hash === 'auditoria') {
         app.state.view = 'auditoria_hub';
       } else if (hash.startsWith('auditoria_contrato=')) {
@@ -315,7 +332,7 @@ const app = {
       `;
     },
 
-    // TELA 2: PORTAL DE ACESSOS (CARD HARMONIOSO COM BORDA AZUL, SEM O BANNER PESADO)
+    // TELA 2: PORTAL DE ACESSOS (CARD DE AUDITORIA HARMONIOSO NA GRADE COM BORDA AZUL)
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -339,7 +356,7 @@ const app = {
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                 
-                <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS (INTEGRADO À GRADE COM BORDA AZUL DE DESTAQUE) -->
+                <!-- CARD DE DESTAQUE: AUDITORIA DE CONTRATOS (BORDA AZUL E SUTIL) -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -354,7 +371,7 @@ const app = {
                             </svg>
                         </div>
                         <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-blue-600 transition">Auditoria de Cotas de Exames</h3>
-                        <p class="text-sm text-slate-400 font-medium leading-tight">Painel de conferência e controle de execução dos contratos e empenhos da saúde.</p>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Acesse os contratos de exames, acompanhamento de empenhos e execução.</p>
                     </div>
                     <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
                         <span>Acessar Painel</span>
@@ -362,7 +379,7 @@ const app = {
                     </div>
                 </button>
 
-                <!-- LINKS INSTITUCIONAIS EXATOS -->
+                <!-- LINKS SALVOS NO GOOGLE SHEETS -->
                 ${app.state.links.map(l => `
                     <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between">
                         <div>
@@ -398,7 +415,7 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
-    // TELA 3A: HUB DE CONTRATOS (SELEÇÃO EM CARDS COM DATA E HORA DE CRIAÇÃO)
+    // TELA 3A: HUB DE SELEÇÃO DE CONTRATOS
     auditoriaHub(el) {
       el.innerHTML = `
         <div class="container mx-auto px-6 py-10 fade-in">
@@ -418,7 +435,6 @@ const app = {
                 </div>
             </div>
 
-            <!-- GRADE DE CARDS DOS CONTRATOS -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 ${app.state.contracts.map(c => `
                     <div class="bg-white rounded-[2.5rem] p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col justify-between group">
@@ -451,7 +467,7 @@ const app = {
                     </div>
                 `).join('')}
 
-                <!-- CARD PONTILHADO "+ NOVO CONTRATO" -->
+                <!-- CARD "+ NOVO CONTRATO" -->
                 <button onclick="app.audit.openNewContractModal()" 
                    class="bg-white/60 hover:bg-white rounded-[2.5rem] p-8 border-2 border-dashed border-slate-300 hover:border-blue-500 shadow-xs hover:shadow-md transition-all flex flex-col items-center justify-center text-center group min-h-[280px]">
                     <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
@@ -466,14 +482,13 @@ const app = {
       `;
     },
 
-    // TELA 3B: DETALHE DO CONTRATO SELECIONADO (TABELA, KPIS E FILTROS)
+    // TELA 3B: DETALHE DO CONTRATO
     auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
       el.innerHTML = `
         <div class="container mx-auto px-4 sm:px-6 py-8 fade-in">
           
-          <!-- BARRA SUPERIOR DE IDENTIFICAÇÃO E RETORNO -->
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:border-none print:shadow-none print:p-0">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
@@ -496,7 +511,7 @@ const app = {
                 </div>
               </div>
 
-              <!-- BARRA DE AÇÕES LIMPA E DIRETA -->
+              <!-- BARRA DE AÇÕES LIMPA -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.data.syncFromCloud(true)" title="Puxar dados atualizados desta aba no Google Sheets" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
                   <span>🔄</span> Sincronizar
@@ -556,7 +571,7 @@ const app = {
             </label>
           </div>
 
-          <!-- TABELA DE EXAMES COM SCROLL INTERNO E STICKY HEADER -->
+          <!-- TABELA DE EXAMES -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -591,7 +606,6 @@ const app = {
   },
 
   audit: {
-    // Abre a auditoria de um contrato específico a partir do Hub
     openContractDetail(tabName) {
       app.state.activeContractTab = tabName;
       app.data.saveLocalContracts();
@@ -625,7 +639,6 @@ const app = {
 
       const safeTabName = `Contrato_${num.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
-      // Data e hora de criação formatada
       const now = new Date();
       const dateStr = now.toLocaleDateString('pt-BR');
       const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -647,10 +660,8 @@ const app = {
       app.data.saveLocalExams();
       this.closeNewContractModal();
 
-      // Transiciona direto para os exames do novo contrato
       this.openContractDetail(safeTabName);
 
-      // Envia ordem para criar a nova aba no Google Sheets com data de criação
       await app.data.sendToCloud({
         action: "CREATE_CONTRACT",
         ...newContractObj,
@@ -718,7 +729,6 @@ const app = {
       app.data.saveLocalExams();
       this.renderTable();
 
-      // Grava no Google Sheets na aba do contrato atual
       app.data.sendToCloud({
         action: "UPDATE_VALUES",
         contract: app.state.activeContractTab,
@@ -964,18 +974,20 @@ const app = {
           item.classList.add('drag-over');
         });
         item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-        item.addEventListener('drop', () => {
+        item.addEventListener('drop', async () => {
           const endIndex = +item.dataset.index;
           const moving = app.state.links.splice(startIndex, 1)[0];
           app.state.links.splice(endIndex, 0, moving);
-          app.data.saveLinks();
+          app.data.saveLinksLocally();
           app.admin.renderLinksList();
+          // Grava a nova ordem dos cards no Google Sheets
+          await app.data.syncShortcutsToCloud();
         });
         item.addEventListener('dragend', () => item.classList.remove('dragging'));
       });
     },
 
-    saveLink() {
+    async saveLink() {
       const id = document.getElementById('edit-id').value;
       const title = document.getElementById('field-title').value.trim();
       const url = document.getElementById('field-url').value.trim();
@@ -989,9 +1001,12 @@ const app = {
         app.state.links.push({ id: Date.now(), title, url, desc });
       }
 
-      app.data.saveLinks();
+      app.data.saveLinksLocally();
       this.resetForm();
       this.renderLinksList();
+
+      // Grava na aba _Atalhos da planilha do Google
+      await app.data.syncShortcutsToCloud();
     },
 
     editLink(id) {
@@ -1016,11 +1031,13 @@ const app = {
       document.getElementById('btn-cancel-edit').classList.add('hidden');
     },
 
-    removeLink(id) {
-      if (confirm("Excluir atalho?")) {
+    async removeLink(id) {
+      if (confirm("Excluir este atalho permanentemente?")) {
         app.state.links = app.state.links.filter(l => l.id !== id);
-        app.data.saveLinks();
+        app.data.saveLinksLocally();
         this.renderLinksList();
+
+        await app.data.syncShortcutsToCloud();
       }
     },
 
