@@ -1009,4 +1009,129 @@ const app = {
     resetForm() {
       document.getElementById('edit-id').value = "";
       document.getElementById('field-title').value = "";
-      document.getElem
+      document.getElementById('field-url').value = "";
+      document.getElementById('field-desc').value = "";
+      document.getElementById('form-title-label').textContent = "Novo Atalho";
+      document.getElementById('btn-save').textContent = "Salvar Sistema";
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+    },
+
+    removeLink(id) {
+      if (confirm("Excluir atalho?")) {
+        app.state.links = app.state.links.filter(l => l.id !== id);
+        app.data.saveLinks();
+        this.renderLinksList();
+      }
+    },
+
+    renderExamsList() {
+      const tbody = document.getElementById('adm-exams-list-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = app.state.exams.map(e => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 text-center font-bold">${e.item}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold">${e.cat}</span></td>
+          <td class="p-3 font-semibold text-slate-800">${e.descEmpenho}</td>
+          <td class="p-3 text-right">${e.qtdEmpenho}</td>
+          <td class="p-3 text-right">${e.saldoAnterior}</td>
+          <td class="p-3 text-center">
+            <button onclick="app.admin.editExam(${e.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">Editar</button>
+            <button onclick="app.admin.removeExam(${e.id})" class="text-red-500 hover:text-red-700 font-bold">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+    },
+
+    saveExam() {
+      const id = document.getElementById('adm-exam-id').value;
+      const item = parseInt(document.getElementById('adm-exam-item').value, 10);
+      const cat = document.getElementById('adm-exam-cat').value;
+      const descEmpenho = document.getElementById('adm-exam-desc-emp').value.trim();
+      const descPrestador = document.getElementById('adm-exam-desc-prest').value.trim();
+      const qtdEmpenho = parseInt(document.getElementById('adm-exam-qtd').value, 10) || 0;
+      const saldoAnterior = parseInt(document.getElementById('adm-exam-saldo-ant').value, 10) || 0;
+
+      if (!item || !descEmpenho) {
+        alert("Preencha ao menos o número do item e a descrição do empenho.");
+        return;
+      }
+
+      let examObj = {
+        id: id ? Number(id) : Date.now(),
+        item,
+        cat,
+        descEmpenho,
+        descPrestador: descPrestador || descEmpenho,
+        qtdEmpenho,
+        saldoAnterior,
+        faturado: 0
+      };
+
+      if (id) {
+        const idx = app.state.exams.findIndex(x => x.id == id);
+        if (idx !== -1) {
+          examObj.faturado = app.state.exams[idx].faturado || 0;
+          app.state.exams[idx] = examObj;
+        }
+      } else {
+        app.state.exams.push(examObj);
+      }
+
+      app.state.exams.sort((a, b) => a.item - b.item);
+      app.data.saveLocalExams();
+      this.resetExamForm();
+      this.renderExamsList();
+
+      app.data.sendToCloud({
+        action: "SAVE_EXAM",
+        contract: app.state.activeContractTab,
+        ...examObj
+      });
+    },
+
+    editExam(id) {
+      const e = app.state.exams.find(x => x.id == id);
+      if (!e) return;
+      document.getElementById('adm-exam-id').value = e.id;
+      document.getElementById('adm-exam-item').value = e.item;
+      document.getElementById('adm-exam-cat').value = e.cat;
+      document.getElementById('adm-exam-desc-emp').value = e.descEmpenho;
+      document.getElementById('adm-exam-desc-prest').value = e.descPrestador;
+      document.getElementById('adm-exam-qtd').value = e.qtdEmpenho;
+      document.getElementById('adm-exam-saldo-ant').value = e.saldoAnterior;
+
+      document.getElementById('adm-exam-form-title').textContent = `Editando Item ${e.item} (${app.state.activeContractTab})`;
+      document.getElementById('btn-adm-save-exam').textContent = "Atualizar Exame";
+      document.getElementById('btn-adm-cancel-exam').classList.remove('hidden');
+    },
+
+    resetExamForm() {
+      document.getElementById('adm-exam-id').value = '';
+      document.getElementById('adm-exam-item').value = '';
+      document.getElementById('adm-exam-desc-emp').value = '';
+      document.getElementById('adm-exam-desc-prest').value = '';
+      document.getElementById('adm-exam-qtd').value = '';
+      document.getElementById('adm-exam-saldo-ant').value = '';
+      document.getElementById('adm-exam-form-title').textContent = "Adicionar / Editar Exame no Contrato Ativo";
+      document.getElementById('btn-adm-save-exam').textContent = "Salvar Procedimento";
+      document.getElementById('btn-adm-cancel-exam').classList.add('hidden');
+    },
+
+    removeExam(id) {
+      if (confirm("Excluir este exame deste contrato?")) {
+        app.state.exams = app.state.exams.filter(x => x.id !== id);
+        app.data.saveLocalExams();
+        this.renderExamsList();
+
+        app.data.sendToCloud({
+          action: "DELETE_EXAM",
+          contract: app.state.activeContractTab,
+          id: id
+        });
+      }
+    }
+  }
+};
+
+window.addEventListener('DOMContentLoaded', () => app.init());
