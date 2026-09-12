@@ -71,9 +71,13 @@
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- MODAL DE LOGIN EXCLUSIVO DA AUDITORIA (VALIDAÇÃO NA PLANILHA GOOGLE) -->
-    <div id="modal-audit-login" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn">
+    <!-- MODAL DE LOGIN DA AUDITORIA (COM FECHAMENTO CORRIGIDO) -->
+    <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
+            
+            <!-- BOTÃO X NO CANTO -->
+            <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
             <div class="text-center mb-6">
                 <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-inner">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -96,7 +100,10 @@
                 <p id="login-error-msg" class="hidden text-xs text-rose-600 font-bold text-center pt-1"></p>
 
                 <div class="pt-3 flex gap-3">
-                    <button type="button" onclick="app.ui.navigate('landing')" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <!-- BOTÃO CANCELAR TOTALMENTE FUNCIONAL -->
+                    <button type="button" onclick="app.auditAuth.cancelLogin()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition">
+                        Cancelar
+                    </button>
                     <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
                         Entrar
                     </button>
@@ -106,7 +113,7 @@
     </div>
 
     <!-- MODAL DE NOVO CONTRATO -->
-    <div id="modal-new-contract" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+    <div id="modal-new-contract" onclick="if(event.target === this) app.audit.closeNewContractModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                 <div>
@@ -147,7 +154,7 @@
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO COM GESTÃO DE USUÁRIOS -->
+    <!-- PAINEL ADMINISTRATIVO -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -160,7 +167,7 @@
                 </div>
             </div>
 
-            <!-- ABAS DO ADMIN (ATALHOS, PROCEDIMENTOS E USUÁRIOS) -->
+            <!-- ABAS DO ADMIN -->
             <div class="flex border-b border-slate-200 mb-8 gap-2">
                 <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600">
                     Atalhos do Portal
@@ -258,9 +265,8 @@
                 </div>
             </div>
 
-            <!-- ABA 3: GESTÃO DE USUÁRIOS (CRIAR E EXCLUIR NA PLANILHA GOOGLE) -->
+            <!-- ABA 3: USUÁRIOS -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
-                <!-- Formulário de Novo Usuário -->
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
                         <h3 class="font-bold text-base mb-4 text-slate-800">Cadastrar Novo Usuário</h3>
@@ -291,7 +297,6 @@
                     </div>
                 </div>
 
-                <!-- Tabela de Usuários Ativos -->
                 <div class="lg:col-span-8">
                     <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
                         <div class="p-5 border-b border-slate-100 flex justify-between items-center">
@@ -309,9 +314,7 @@
                                         <th class="p-3.5 text-center">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody id="adm-users-list-tbody" class="divide-y divide-slate-100 font-medium">
-                                    <!-- Renderizado via JS -->
-                                </tbody>
+                                <tbody id="adm-users-list-tbody" class="divide-y divide-slate-100 font-medium"></tbody>
                             </table>
                         </div>
                     </div>
