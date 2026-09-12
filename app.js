@@ -38,7 +38,7 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// MODELO DE PROCEDIMENTOS (COM SEQUENCIAL AUTOMÁTICO 01, 02...)
+// MODELO DE PROCEDIMENTOS (SEQUENCIAL 01, 02...)
 const TEMPLATE_EXAMS = [
   { id: 1, item: "01", cat: 'Laboratorial', descEmpenho: 'Ácido Fólico (Vitamina B9)', descPrestador: '1 - AFOLI - ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 150, faturado: 7 },
   { id: 2, item: "02", cat: 'Laboratorial', descEmpenho: 'Ácido Úrico', descPrestador: '1 - AUS - ACIDO URICO', qtdEmpenho: 400, saldoAnterior: 400, faturado: 8 },
@@ -233,14 +233,14 @@ const app = {
       }
     },
 
+    // BADGE QUE EXIBE "Usuário: [nome_usuario]"
     updateBadge() {
       const badge = document.getElementById('auth-user-badge');
       const nameEl = document.getElementById('auth-user-name');
       if (!badge || !nameEl) return;
 
       if (app.state.auth.isLogged && app.state.auth.user) {
-        // PEGA DIRETAMENTE A COLUNA 'USUARIO' DA TABELA (Ex: "Usuário: admin")
-        const loginUsuario = app.state.auth.user.usuario || 'Admin';
+        const loginUsuario = app.state.auth.user.usuario || 'admin';
         nameEl.textContent = `Usuário: ${loginUsuario}`;
         badge.classList.remove('hidden');
       } else {
@@ -485,18 +485,16 @@ const app = {
       window.location.hash = view;
     },
 
+    // MENU CONTEXTUAL ENXUTO (SEM BOTÃO DUPLICADO "INÍCIO" NA HOME)
     updateActiveMenu() {
       const nav = document.getElementById('main-nav');
       if (!nav) return;
 
       const isLanding = app.state.view === 'landing';
 
+      // Na Home: cabeçalho limpo sem botões redundantes
       if (isLanding) {
-        nav.innerHTML = `
-          <button onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all bg-blue-100 text-blue-950 font-black shadow-sm">
-            Início
-          </button>
-        `;
+        nav.innerHTML = '';
         return;
       }
 
@@ -504,14 +502,14 @@ const app = {
       const isAuditoria = app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe';
 
       nav.innerHTML = `
-        <button onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 font-semibold">
+        <button onclick="app.ui.navigate('landing')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
           Início
         </button>
-        <button onclick="app.ui.navigate('saude_links')" class="nav-btn px-4 py-2 rounded-xl transition-all ${isPortal ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'}">
-          Portal da Saúde
+        <button onclick="app.ui.navigate('saude_links')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isPortal ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
+          Saúde
         </button>
-        <button onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-4 py-2 rounded-xl transition-all ${isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'}">
-          Auditoria de Contratos
+        <button onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
+          Auditoria
         </button>
       `;
     },
@@ -822,7 +820,6 @@ const app = {
                 </div>
               </div>
 
-              <!-- BARRA DE AÇÕES -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.gemini.openModal()" title="Importar dados extraídos pelo Gemini a partir de foto" class="px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition flex items-center gap-1.5">
                   <span>🤖</span> Importar com Gemini IA
@@ -844,7 +841,6 @@ const app = {
             </div>
           </div>
 
-          <!-- KPIS -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Empenhado</span>
@@ -868,7 +864,6 @@ const app = {
             </div>
           </div>
 
-          <!-- FILTROS -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row justify-between gap-4 print:hidden">
             <div class="flex-1 flex flex-col sm:flex-row gap-3">
               <input type="text" id="filter-search" oninput="app.audit.filter()" placeholder="Buscar por código ou descrição nesta aba..." class="flex-1 px-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
@@ -884,7 +879,6 @@ const app = {
             </label>
           </div>
 
-          <!-- TABELA DE EXAMES COM QTD. EMPENHADA EDITÁVEL EM CINZA -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
