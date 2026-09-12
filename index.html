@@ -27,9 +27,9 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO INSTITUCIONAL GLOBAL DA PREFEITURA -->
+    <!-- CABEÇALHO INSTITUCIONAL GLOBAL -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
             
@@ -71,11 +71,125 @@
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- MODAL DE LOGIN DA AUDITORIA (COM FECHAMENTO CORRIGIDO) -->
+    <!-- MODAL DO GEMINI: IMPORTADOR + GUIA PARA LEIGOS COM 3 BOTÕES DE COPIAR -->
+    <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
+            
+            <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
+
+            <!-- ABAS DO MODAL: IMPORTAR vs TUTORIAL -->
+            <div class="flex border-b border-slate-200 pb-3 mb-6 gap-3">
+                <button id="btn-tab-gemini-paste" onclick="app.gemini.switchTab('paste')" class="px-4 py-2 font-black text-xs uppercase tracking-wider rounded-xl bg-blue-100 text-blue-900">
+                    📋 Colar Dados do Gemini
+                </button>
+                <button id="btn-tab-gemini-guide" onclick="app.gemini.switchTab('guide')" class="px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-xl text-slate-500 hover:bg-slate-100 flex items-center gap-1.5">
+                    <span>💡</span> Como Criar o Gem (Passo a Passo)
+                </button>
+            </div>
+
+            <!-- TELA 1: COLAR E IMPORTAR -->
+            <div id="view-gemini-paste" class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-black text-slate-900">Importar Tabela Extraída pelo Gemini</h3>
+                    <p class="text-xs text-slate-500 mt-1">Cole abaixo o texto gerado pelo seu Gem. O sistema organizará os itens sequenciais (01, 02, 03...), destacará as cotas em cinza e salvará tudo na planilha.</p>
+                </div>
+
+                <textarea id="gemini-paste-area" rows="8" placeholder="Cole aqui a resposta do Gemini (Ex: 01;Laboratorial;HEMOGRAMA COMPLETO;02.02.02.038-0;2000;1213;194...)" class="w-full p-4 bg-slate-50 border-2 border-slate-200 focus:border-blue-500 rounded-2xl text-xs font-mono outline-none resize-none"></textarea>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <button type="button" onclick="app.gemini.switchTab('guide')" class="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
+                        <span>❓</span> Não sabe como gerar esse texto? Veja como configurar seu Gem
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="app.gemini.closeModal()" class="px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                        <button type="button" onclick="app.gemini.processPaste()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition">
+                            Processar e Preencher Tabela →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA 2: GUIA DIDÁTICO PARA LEIGOS (COM OS 3 BOTÕES DE COPIAR) -->
+            <div id="view-gemini-guide" class="hidden space-y-5">
+                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                    <h4 class="text-xs font-black uppercase text-blue-900 flex items-center gap-1.5">
+                        <span>🎯</span> Passo 1 de 2: Abrir a tela de criação no Gemini
+                    </h4>
+                    <p class="text-xs text-blue-800 mt-1">
+                        Abra o Gemini no seu navegador ou celular, clique no menu lateral em <b>Gems</b> e depois em <b>Novo Gem</b>.
+                    </p>
+                </div>
+
+                <h4 class="text-xs font-black uppercase text-slate-700 pt-1 flex items-center gap-1.5">
+                    <span>📋</span> Passo 2 de 2: Copie e cole nos 3 campos do Gemini
+                </h4>
+
+                <!-- CAMPO 1: NOME COM BOTÃO COPIAR -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex-1">
+                        <span class="text-[10px] font-black uppercase text-slate-400 block">1º Campo da tela: Nome</span>
+                        <p id="gem-text-name" class="text-sm font-black text-slate-900 mt-0.5">Auditor de Exames - Torres</p>
+                    </div>
+                    <button id="btn-copy-name" onclick="app.gemini.copyField('gem-text-name', 'btn-copy-name')" class="btn-copy px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
+                        <span>📄</span> Copiar Nome
+                    </button>
+                </div>
+
+                <!-- CAMPO 2: DESCRIÇÃO COM BOTÃO COPIAR -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex-1">
+                        <span class="text-[10px] font-black uppercase text-slate-400 block">2º Campo da tela: Descrição</span>
+                        <p id="gem-text-desc" class="text-xs font-medium text-slate-700 mt-0.5">Assistente de auditoria que transcreve fotos de empenhos e faturas de exames para o sistema da Secretaria da Saúde de Torres/RS.</p>
+                    </div>
+                    <button id="btn-copy-desc" onclick="app.gemini.copyField('gem-text-desc', 'btn-copy-desc')" class="btn-copy px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
+                        <span>📄</span> Copiar Descrição
+                    </button>
+                </div>
+
+                <!-- CAMPO 3: INSTRUÇÕES COM BOTÃO COPIAR -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black uppercase text-slate-400">3º Campo da tela: Instruções (O cérebro do Gem)</span>
+                        <button id="btn-copy-instructions" onclick="app.gemini.copyField('gem-text-instructions', 'btn-copy-instructions')" class="btn-copy px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
+                            <span>📋</span> Copiar Instruções Completas
+                        </button>
+                    </div>
+                    <div class="max-h-36 overflow-y-auto custom-scroll p-3 bg-white rounded-xl border border-slate-200">
+                        <pre id="gem-text-instructions" class="text-[11px] font-mono text-slate-600 whitespace-pre-wrap">Você é um assistente especialista em auditoria de contas públicas da Secretaria Municipal de Saúde de Torres/RS.
+
+Sua função é receber fotos ou PDFs de notas fiscais, faturas de prestadores/laboratórios credenciados ou folhas de empenho municipal, e transcrever a lista de exames/procedimentos com máxima precisão.
+
+Sempre que eu enviar uma imagem ou documento, extraia os dados e responda ESTRITAMENTE em formato tabular separado por ponto e vírgula (;), no seguinte padrão:
+
+Item;Categoria;Descricao_Empenho;Descricao_Prestador;Qtd_Empenho;Saldo_Anterior;Faturado
+
+Regras essenciais:
+1. Item: numeração sequencial começando em 01 (ex: 01, 02, 03...).
+2. Categoria: classifique como "Laboratorial" ou "Imagem" (ex: radiografia, ultrassonografia, ecg são Imagem; hemograma, glicose, urina são Laboratorial).
+3. Descricao_Empenho: nome do procedimento conforme o contrato ou folha de empenho municipal. Se não constar, use o próprio nome do exame.
+4. Descricao_Prestador: código (TUSS, SUS ou código interno do laboratório) seguido do nome do exame faturado.
+5. Qtd_Empenho: quantidade original contratada. Se for apenas folha de fatura e não constar, preencha 0.
+6. Saldo_Anterior: saldo restante disponível. Se for novo contrato e não constar, preencha 0.
+7. Faturado: quantidade faturada/executada no período. Se for folha de abertura de empenho, preencha 0.
+
+IMPORTANTE: Não escreva introduções, saudações nem explicações. Responda APENAS com as linhas de dados, permitindo a cópia direta para o sistema de auditoria da prefeitura.</pre>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-between items-center">
+                    <span class="text-xs text-slate-400">Depois de colar os 3 campos, clique em <b>Salvar</b> no canto superior do Gemini.</span>
+                    <button type="button" onclick="app.gemini.switchTab('paste')" class="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl">
+                        Voltar para a área de colar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN DA AUDITORIA -->
     <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
-            
-            <!-- BOTÃO X NO CANTO -->
             <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
 
             <div class="text-center mb-6">
@@ -100,20 +214,15 @@
                 <p id="login-error-msg" class="hidden text-xs text-rose-600 font-bold text-center pt-1"></p>
 
                 <div class="pt-3 flex gap-3">
-                    <!-- BOTÃO CANCELAR TOTALMENTE FUNCIONAL -->
-                    <button type="button" onclick="app.auditAuth.cancelLogin()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition">
-                        Cancelar
-                    </button>
-                    <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
-                        Entrar
-                    </button>
+                    <button type="button" onclick="app.auditAuth.cancelLogin()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                    <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">Entrar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- MODAL DE NOVO CONTRATO -->
-    <div id="modal-new-contract" onclick="if(event.target === this) app.audit.closeNewContractModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+    <div id="modal-new-contract" onclick="if(event.target === this) app.audit.closeNewContractModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                 <div>
@@ -122,7 +231,7 @@
                 </div>
                 <button onclick="app.audit.closeNewContractModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
             </div>
-            <p class="text-xs text-slate-500 mb-6">Uma nova aba será criada na planilha do Google para este contrato, salvando o registro com data e hora de inclusão.</p>
+            <p class="text-xs text-slate-500 mb-6">Uma nova aba será criada na planilha do Google para este contrato com data e hora de registro.</p>
 
             <div class="space-y-3.5">
                 <div>
@@ -139,8 +248,8 @@
                 </div>
                 <div class="pt-2">
                     <label class="inline-flex items-center text-xs font-semibold text-slate-700 cursor-pointer select-none">
-                        <input type="checkbox" id="new-contract-copy-template" checked class="w-4 h-4 rounded text-blue-600 mr-2 border-slate-300">
-                        Carregar lista base de procedimentos como modelo
+                        <input type="checkbox" id="new-contract-copy-template" class="w-4 h-4 rounded text-blue-600 mr-2 border-slate-300">
+                        Carregar lista base de procedimentos (com faturamento zerado)
                     </label>
                 </div>
             </div>
@@ -154,7 +263,7 @@
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO -->
+    <!-- PAINEL ADMINISTRATIVO COM GESTÃO DE USUÁRIOS -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -167,7 +276,6 @@
                 </div>
             </div>
 
-            <!-- ABAS DO ADMIN -->
             <div class="flex border-b border-slate-200 mb-8 gap-2">
                 <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600">
                     Atalhos do Portal
@@ -210,8 +318,8 @@
                     <input type="hidden" id="adm-exam-id">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Item Nº</label>
-                            <input id="adm-exam-item" type="number" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Item Nº (Ex: 01)</label>
+                            <input id="adm-exam-item" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Categoria</label>
@@ -265,7 +373,7 @@
                 </div>
             </div>
 
-            <!-- ABA 3: USUÁRIOS -->
+            <!-- ABA 3: USUÁRIOS (SÓ ADMIN) -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
