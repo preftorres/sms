@@ -29,12 +29,12 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO INSTITUCIONAL GLOBAL -->
+    <!-- CABEÇALHO INSTITUCIONAL GLOBAL DA PREFEITURA -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
-        <div class="container mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="container mx-auto px-4 sm:px-6 py-3 sm:py-3.5 flex flex-wrap items-center justify-between gap-3 pr-28 sm:pr-36">
             
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.ui.navigate('landing')">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
+            <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer" onclick="app.ui.navigate('landing')">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md shrink-0">
                     <img src="Logo_Torres_100x100.webp" 
                          alt="Prefeitura de Torres" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" 
@@ -44,8 +44,8 @@
                     </svg>
                 </div>
                 <div>
-                    <span class="block text-[10px] uppercase font-bold tracking-widest text-blue-400 leading-none">Estado do Rio Grande do Sul</span>
-                    <h1 class="text-base font-black tracking-tight leading-tight">Prefeitura Municipal de Torres</h1>
+                    <span class="block text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-blue-400 leading-none">Estado do Rio Grande do Sul</span>
+                    <h1 class="text-sm sm:text-base font-black tracking-tight leading-tight">Prefeitura Municipal de Torres</h1>
                 </div>
             </div>
 
@@ -53,16 +53,18 @@
         </div>
     </header>
 
-    <!-- BOTÃO ADMIN FLUTUANTE DISCRETO -->
-    <div class="fixed top-3.5 right-4 z-50 print:hidden flex items-center gap-2">
-        <div id="auth-user-badge" class="hidden text-[11px] font-bold bg-white/90 border border-slate-200 shadow-sm px-3 py-1.5 rounded-full text-slate-700 flex items-center gap-1.5 backdrop-blur-md">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span id="auth-user-name">Usuário</span>
-            <button onclick="app.auditAuth.logout()" title="Sair da Auditoria" class="ml-1 text-slate-400 hover:text-rose-600 font-black">✕</button>
+    <!-- ÁREA SUPERIOR FIXA: BADGE DO USUÁRIO + BOTÃO CADEADO (RESPONSIVIDADE AJUSTADA) -->
+    <div class="fixed top-2.5 right-2.5 sm:top-3 sm:right-4 z-50 print:hidden flex items-center gap-2 sm:gap-3">
+        <!-- BADGE DO USUÁRIO COM ESPAÇAMENTO SEGURO E CORTE SELETIVO NO CELULAR -->
+        <div id="auth-user-badge" class="hidden text-[10px] sm:text-[11px] font-bold bg-white/95 border border-slate-300/80 shadow-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-slate-800 flex items-center gap-1.5 backdrop-blur-md max-w-[150px] sm:max-w-xs transition-all">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+            <span id="auth-user-name" class="truncate font-black text-blue-900">Usuário: Admin</span>
+            <button onclick="app.auditAuth.logout()" title="Sair da Auditoria" class="ml-1 text-slate-400 hover:text-rose-600 font-black shrink-0 px-1 py-0.5 text-xs">✕</button>
         </div>
 
-        <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-2.5 glass-blur hover:bg-white rounded-full border border-slate-200 shadow-sm transition-all group">
-            <svg class="h-5 w-5 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- BOTÃO DO CADEADO TOTALMENTE PROTEGIDO CONTRA ESMAGAMENTO -->
+        <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-2 sm:p-2.5 bg-white/90 hover:bg-white rounded-full border border-slate-300 shadow-md transition-all group shrink-0 backdrop-blur-md">
+            <svg class="h-4 w-4 sm:h-5 sm:w-5 text-slate-500 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
         </button>
@@ -109,7 +111,7 @@
                 </div>
             </div>
 
-            <!-- TELA 2: GUIA DIDÁTICO COM OS 3 BOTÕES DE COPIAR ATUALIZADOS -->
+            <!-- TELA 2: GUIA DIDÁTICO COM OS 3 BOTÕES DE COPIAR -->
             <div id="view-gemini-guide" class="hidden space-y-5">
                 <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200">
                     <h4 class="text-xs font-black uppercase text-blue-900 flex items-center gap-1.5">
