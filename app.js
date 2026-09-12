@@ -27,36 +27,32 @@ const INITIAL_LINKS = [
   { id: 1, title: 'Vacinas', url: 'https://vacinastorres.dpdns.org/', desc: 'Controle de Imunização' }
 ];
 
-// CONTRATOS PADRÃO
+// CONTRATO OFICIAL IDENTIFICADO NO DOCUMENTO REAL
 const DEFAULT_CONTRACTS = [
   {
     tabName: "Contrato_67_2026",
     num: "67/2026",
     empenhos: "3406/2026 e 3407/2026",
-    prestador: "M. B. Laboratório de Análises Clínicas Ltda",
+    prestador: "LABORATORIO BIOMEDICO LTDA - ME",
     createdAt: "12/09/2026 às 08:30"
   }
 ];
 
-// MODELO DE PROCEDIMENTOS (SEQUENCIAL AUTOMÁTICO 01, 02, 03...)
+// MODELO DE PROCEDIMENTOS (COM SEQUENCIAL AUTOMÁTICO 01, 02...)
 const TEMPLATE_EXAMS = [
-  { id: 1, item: "01", cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
-  { id: 6, item: "02", cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
-  { id: 16, item: "03", cat: 'Laboratorial', descEmpenho: 'COLESTEROL HDL', descPrestador: '02.02.01.028-7 / DOSAGEM DE COLESTEROL HDL', qtdEmpenho: 1200, saldoAnterior: 514, faturado: 81 },
-  { id: 17, item: "04", cat: 'Laboratorial', descEmpenho: 'COLESTEROL LDL', descPrestador: '02.02.01.029-5 / DOSAGEM DE COLESTEROL LDL', qtdEmpenho: 1200, saldoAnterior: 602, faturado: 160 },
-  { id: 19, item: "05", cat: 'Laboratorial', descEmpenho: 'CREATININA', descPrestador: '02.02.01.031-7 / DOSAGEM DE CREATININA', qtdEmpenho: 1200, saldoAnterior: 517, faturado: 178 },
-  { id: 27, item: "06", cat: 'Laboratorial', descEmpenho: 'CPK', descPrestador: '02.02.01.032-5 / DOSAGEM DE CREATINOFOSFOQUINASE', qtdEmpenho: 200, saldoAnterior: 194, faturado: 3 },
-  { id: 34, item: "07", cat: 'Laboratorial', descEmpenho: 'FERRO SÉRICO', descPrestador: '02.02.01.039-2 / DOSAGEM DE FERRO SERICO', qtdEmpenho: 200, saldoAnterior: 71, faturado: 28 },
-  { id: 38, item: "08", cat: 'Laboratorial', descEmpenho: 'GLICOSE', descPrestador: '02.02.01.047-3 / DOSAGEM DE GLICOSE', qtdEmpenho: 800, saldoAnterior: 109, faturado: 109 },
-  { id: 41, item: "09", cat: 'Laboratorial', descEmpenho: 'HEMOGRAMA COMPLETO', descPrestador: '02.02.02.038-0 / HEMOGRAMA COM CONTAGEM', qtdEmpenho: 2000, saldoAnterior: 1213, faturado: 194 },
-  { id: 49, item: "10", cat: 'Laboratorial', descEmpenho: 'PCR PROTEÍNA C REATIVA', descPrestador: '02.02.03.076-8 / PROTEINA C REATIVA', qtdEmpenho: 100, saldoAnterior: 14, faturado: 14 },
-  { id: 56, item: "11", cat: 'Laboratorial', descEmpenho: 'PSA TOTAL', descPrestador: '02.02.03.010-5 / DOSAGEM DE PSA TOTAL', qtdEmpenho: 600, saldoAnterior: 461, faturado: 33 },
-  { id: 58, item: "12", cat: 'Laboratorial', descEmpenho: 'SÓDIO', descPrestador: '02.02.01.063-5 / DOSAGEM DE SODIO', qtdEmpenho: 600, saldoAnterior: 432, faturado: 54 },
-  { id: 68, item: "13", cat: 'Laboratorial', descEmpenho: 'TRIGLICERÍDEOS', descPrestador: '02.02.01.067-8 / DOSAGEM DE TRIGLICERIDEOS', qtdEmpenho: 800, saldoAnterior: 114, faturado: 114 },
-  { id: 74, item: "14", cat: 'Laboratorial', descEmpenho: 'VSG / VHS', descPrestador: '02.02.02.015-0 / DETERMINACAO DE VHS', qtdEmpenho: 50, saldoAnterior: 23, faturado: 13 },
-  { id: 101, item: "15", cat: 'Imagem', descEmpenho: 'RAIO-X DE TÓRAX AP/PERFIL', descPrestador: '02.04.03.018-8 / RADIOGRAFIA TORACICA', qtdEmpenho: 800, saldoAnterior: 320, faturado: 45 },
-  { id: 102, item: "16", cat: 'Imagem', descEmpenho: 'ULTRASSONOGRAFIA DE ABDOME TOTAL', descPrestador: '02.05.02.004-6 / ULTRASSONOGRAFIA ABDOMINAL', qtdEmpenho: 500, saldoAnterior: 230, faturado: 50 },
-  { id: 103, item: "17", cat: 'Imagem', descEmpenho: 'ELETROCARDIOGRAMA (ECG)', descPrestador: '02.11.02.003-6 / ELETROCARDIOGRAMA', qtdEmpenho: 1000, saldoAnterior: 640, faturado: 0 }
+  { id: 1, item: "01", cat: 'Laboratorial', descEmpenho: 'Ácido Fólico (Vitamina B9)', descPrestador: '1 - AFOLI - ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 150, faturado: 7 },
+  { id: 2, item: "02", cat: 'Laboratorial', descEmpenho: 'Ácido Úrico', descPrestador: '1 - AUS - ACIDO URICO', qtdEmpenho: 400, saldoAnterior: 400, faturado: 8 },
+  { id: 3, item: "03", cat: 'Laboratorial', descEmpenho: 'Ácido Valproico', descPrestador: '1 - ACVAL - ACIDO VALPROICO', qtdEmpenho: 150, saldoAnterior: 150, faturado: 1 },
+  { id: 4, item: "04", cat: 'Laboratorial', descEmpenho: 'Albumina', descPrestador: 'ALBUMINA', qtdEmpenho: 150, saldoAnterior: 150, faturado: 0 },
+  { id: 5, item: "05", cat: 'Laboratorial', descEmpenho: 'Amilase', descPrestador: '1 - AMI - AMILASE', qtdEmpenho: 350, saldoAnterior: 350, faturado: 1 },
+  { id: 6, item: "06", cat: 'Laboratorial', descEmpenho: 'Analise de caracteres físicos, elemento e sedimentos na urina (EQU)', descPrestador: '1 - EQU - EXAME QUALITATIVO DE URINA', qtdEmpenho: 600, saldoAnterior: 600, faturado: 34 },
+  { id: 16, item: "16", cat: 'Laboratorial', descEmpenho: 'Colesterol HDL', descPrestador: '1 - HDL - COLESTEROL HDL', qtdEmpenho: 1200, saldoAnterior: 1200, faturado: 37 },
+  { id: 17, item: "17", cat: 'Laboratorial', descEmpenho: 'Colesterol LDL', descPrestador: '1 - LDL - COLESTEROL LDL', qtdEmpenho: 1200, saldoAnterior: 1200, faturado: 28 },
+  { id: 18, item: "18", cat: 'Laboratorial', descEmpenho: 'Colesterol Total', descPrestador: '1 - C - COLESTEROL TOTAL', qtdEmpenho: 600, saldoAnterior: 600, faturado: 38 },
+  { id: 19, item: "19", cat: 'Laboratorial', descEmpenho: 'Creatinina', descPrestador: '1 - CRE - CREATININA', qtdEmpenho: 1200, saldoAnterior: 1200, faturado: 34 },
+  { id: 27, item: "27", cat: 'Laboratorial', descEmpenho: 'Dosagem Creatinofosfoquinase (CPK)', descPrestador: 'CPK', qtdEmpenho: 200, saldoAnterior: 200, faturado: 0 },
+  { id: 28, item: "28", cat: 'Laboratorial', descEmpenho: 'EPF-Exame Parasitológico de fezes', descPrestador: '1 - EPF - EXAME PARASITOLOGICO DE FEZES', qtdEmpenho: 600, saldoAnterior: 600, faturado: 8 },
+  { id: 41, item: "41", cat: 'Laboratorial', descEmpenho: 'Hemograma Completo', descPrestador: '1 - H - HEMOGRAMA', qtdEmpenho: 2000, saldoAnterior: 2000, faturado: 51 }
 ];
 
 const app = {
@@ -95,7 +91,6 @@ const app = {
     }
   },
 
-  // MÓDULO DO GEMINI (IMPORTAÇÃO + GUIA COM OS 3 BOTÕES DE COPIAR)
   gemini: {
     openModal() {
       const modal = document.getElementById('modal-gemini-import');
@@ -135,7 +130,6 @@ const app = {
       }
     },
 
-    // FUNÇÃO QUE COPIA PARA A ÁREA DE TRANSFERÊNCIA COM FEEDBACK "COPIADO!"
     copyField(textElementId, buttonElementId) {
       const textEl = document.getElementById(textElementId);
       const btnEl = document.getElementById(buttonElementId);
@@ -156,7 +150,6 @@ const app = {
       });
     },
 
-    // PARSER INTELIGENTE E RESILIENTE DA TABELA DO GEMINI
     processPaste() {
       const rawText = document.getElementById('gemini-paste-area').value.trim();
       if (!rawText) {
@@ -169,17 +162,14 @@ const app = {
       let counter = 1;
 
       lines.forEach(line => {
-        // Remove barras do markdown (|) se o Gemini tiver respondido em formato de tabela
         let clean = line;
         if (clean.startsWith('|') && clean.endsWith('|')) {
           clean = clean.slice(1, -1).trim();
         }
 
-        // Divide por ponto e vírgula, barra pipe (|) ou tabulação
         let parts = clean.includes(';') ? clean.split(';') : (clean.includes('|') ? clean.split('|') : clean.split('\t'));
         parts = parts.map(p => p.trim());
 
-        // Pula linhas que são cabeçalhos
         const first = parts[0] ? parts[0].toLowerCase() : "";
         if (first.includes('item') || first.includes('---') || first.includes('categoria')) {
           return;
@@ -214,13 +204,11 @@ const app = {
         return;
       }
 
-      // Atualiza os exames do contrato ativo
       app.state.exams = newExams;
       app.data.saveLocalExams();
       this.closeModal();
       app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
 
-      // Grava tudo no Google Sheets de uma vez
       app.data.sendToCloud({
         action: "INITIAL_SEED",
         contract: app.state.activeContractTab,
@@ -231,7 +219,6 @@ const app = {
     }
   },
 
-  // MÓDULO DE AUTENTICAÇÃO COM PERFIS
   auditAuth: {
     checkSession() {
       const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
@@ -670,7 +657,6 @@ const app = {
 
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -693,7 +679,6 @@ const app = {
                     </div>
                 </button>
 
-                <!-- LINKS INSTITUCIONAIS -->
                 ${app.state.links.map(l => `
                     <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between">
                         <div>
@@ -803,7 +788,6 @@ const app = {
       `;
     },
 
-    // TELA 3B: DETALHE DO CONTRATO (COM O BOTÃO GEMINI E COLUNA DE EMPENHO EDITÁVEL EM CINZA)
     auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
@@ -838,7 +822,7 @@ const app = {
                 </div>
               </div>
 
-              <!-- BARRA DE AÇÕES COM O NOVO BOTÃO GEMINI IA -->
+              <!-- BARRA DE AÇÕES -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.gemini.openModal()" title="Importar dados extraídos pelo Gemini a partir de foto" class="px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition flex items-center gap-1.5">
                   <span>🤖</span> Importar com Gemini IA
@@ -910,7 +894,6 @@ const app = {
                     <th class="py-3 px-3 w-28">Categoria</th>
                     <th class="py-3 px-3 min-w-[200px]">Descrição no Empenho</th>
                     <th class="py-3 px-3 min-w-[200px]">Descrição / Cód. (Prestador)</th>
-                    <!-- COLUNA DESTACADA EM CINZA -->
                     <th class="py-3 px-3 text-right w-28 bg-slate-200/70 border-x border-slate-300">Qtd. Empenhada</th>
                     <th class="py-3 px-3 text-right w-28">Saldo Ant.</th>
                     <th class="py-3 px-3 text-right w-28 bg-blue-50 border-x border-blue-100">Faturado</th>
@@ -980,7 +963,6 @@ const app = {
         createdAt: createdAtStr
       };
 
-      // Se copiar o modelo, zera o faturamento inicial (faturado = 0)
       const initialExams = copyTemplate ? TEMPLATE_EXAMS.map(item => ({
         ...item,
         faturado: 0
@@ -1054,7 +1036,6 @@ const app = {
       return { saldoAtual, percConsumo, percRestante, style };
     },
 
-    // ATUALIZAÇÃO REATIVA DE QTD. EMPENHADA, SALDO E FATURADO
     updateVal(id, field, val) {
       const parsed = Math.max(0, parseInt(val, 10) || 0);
       const target = app.state.exams.find(x => x.id === id);
@@ -1062,7 +1043,6 @@ const app = {
 
       target[field] = parsed;
 
-      // Sugestão inteligente: se mudar a Qtd Empenhada e o Saldo Anterior for 0, sincroniza
       if (field === 'qtdEmpenho' && target.saldoAnterior === 0) {
         target.saldoAnterior = parsed;
       }
@@ -1143,28 +1123,24 @@ const app = {
           <td class="py-2.5 px-3 font-semibold text-slate-900">${item.descEmpenho}</td>
           <td class="py-2.5 px-3 text-slate-600 font-mono text-[11px]">${item.descPrestador}</td>
           
-          <!-- COLUNA DE QUANTIDADE EMPENHADA EDITÁVEL EM CINZA -->
           <td class="py-2.5 px-3 text-right bg-slate-100/90 border-x border-slate-200">
             <input type="number" min="0" value="${item.qtdEmpenho}" 
                    onchange="app.audit.updateVal(${item.id}, 'qtdEmpenho', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-slate-300 rounded bg-white shadow-xs focus:border-slate-600 font-bold text-slate-800">
           </td>
 
-          <!-- SALDO ANTERIOR EDITÁVEL -->
           <td class="py-2.5 px-3 text-right">
             <input type="number" min="0" value="${item.saldoAnterior}" 
                    onchange="app.audit.updateVal(${item.id}, 'saldoAnterior', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-slate-300 rounded bg-white shadow-xs focus:border-blue-500 font-semibold">
           </td>
 
-          <!-- FATURADO NO PERÍODO EDITÁVEL -->
           <td class="py-2.5 px-3 text-right bg-blue-50/70 border-x border-blue-100">
             <input type="number" min="0" value="${item.faturado}" 
                    onchange="app.audit.updateVal(${item.id}, 'faturado', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-blue-300 rounded bg-white shadow-xs focus:border-blue-600 font-bold text-blue-950">
           </td>
 
-          <!-- SALDO ATUAL CALCULADO -->
           <td class="py-2.5 px-3 text-right font-bold ${c.saldoAtual <= 0 ? 'text-red-700 font-black' : ''}">
             ${c.saldoAtual.toLocaleString('pt-BR')}
           </td>
@@ -1416,7 +1392,10 @@ const app = {
           app.state.links.splice(endIndex, 0, moving);
           app.data.saveLinksLocally();
           app.admin.renderLinksList();
-          await app.data.syncShortcutsToCloud();
+          await app.data.sendToCloud({
+            action: "SAVE_SHORTCUTS",
+            shortcuts: app.state.links
+          });
         });
         item.addEventListener('dragend', () => item.classList.remove('dragging'));
       });
@@ -1439,7 +1418,11 @@ const app = {
       app.data.saveLinksLocally();
       this.resetForm();
       this.renderLinksList();
-      await app.data.syncShortcutsToCloud();
+
+      await app.data.sendToCloud({
+        action: "SAVE_SHORTCUTS",
+        shortcuts: app.state.links
+      });
     },
 
     editLink(id) {
@@ -1469,7 +1452,11 @@ const app = {
         app.state.links = app.state.links.filter(l => l.id !== id);
         app.data.saveLinksLocally();
         this.renderLinksList();
-        await app.data.syncShortcutsToCloud();
+
+        await app.data.sendToCloud({
+          action: "SAVE_SHORTCUTS",
+          shortcuts: app.state.links
+        });
       }
     },
 
@@ -1527,6 +1514,7 @@ const app = {
         app.state.exams.push(examObj);
       }
 
+      app.state.exams.sort((a, b) => a.item - b.item);
       app.data.saveLocalExams();
       this.resetExamForm();
       this.renderExamsList();
