@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * Portal Integrado & Hub de Auditoria Multi-Contratos com Google Sheets
+ * PREFEITURA MUNICIPAL DE TORRES - ESTADO DO RIO GRANDE DO SUL
+ * Portal de Serviços Municipais & Auditoria da Saúde
  * Arquivo: app.js
  * ============================================================================
  */
@@ -19,7 +19,7 @@ const CONFIG = {
   }
 };
 
-// LINKS INSTITUCIONAIS: VACINAS CORRIGIDO (HTTPS) E POSICIONADO MAIS ABAIXO
+// LINKS INSTITUCIONAIS DA SAÚDE
 const INITIAL_LINKS = [
   { id: 2, title: 'ETP/TR', url: 'https://etp-tr.torres.rs.gov.br/', desc: 'Termos de Referência' },
   { id: 3, title: 'Betha Cloud', url: 'http://betha.cloud/', desc: 'Sistemas ERP' },
@@ -28,7 +28,7 @@ const INITIAL_LINKS = [
   { id: 1, title: 'Vacinas', url: 'https://vacinastorres.dpdns.org/', desc: 'Controle de Imunização' }
 ];
 
-// CONTRATOS PADRÃO COM DATA E HORA DE REGISTRO
+// CONTRATOS PADRÃO
 const DEFAULT_CONTRACTS = [
   {
     tabName: "Contrato_67_2026",
@@ -39,7 +39,7 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// MODELO PADRÃO DE PROCEDIMENTOS
+// MODELO DE PROCEDIMENTOS
 const TEMPLATE_EXAMS = [
   { id: 1, item: 1, cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
   { id: 6, item: 6, cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
@@ -62,7 +62,7 @@ const TEMPLATE_EXAMS = [
 
 const app = {
   state: {
-    view: 'landing',
+    view: 'landing', // 'landing', 'saude_links', 'auditoria_hub', 'auditoria_detalhe'
     links: [],
     contracts: [],
     activeContractTab: 'Contrato_67_2026',
@@ -110,7 +110,6 @@ const app = {
       localStorage.setItem(CONFIG.keys.links, JSON.stringify(app.state.links));
     },
 
-    // Consulta à nuvem (Contratos, Exames e Atalhos)
     async syncFromCloud(showFeedback = false) {
       if (!GOOGLE_API_URL) return;
       try {
@@ -120,7 +119,6 @@ const app = {
         const res = await response.json();
 
         if (res.status === "success") {
-          // Atualiza atalhos a partir da aba _Atalhos
           if (Array.isArray(res.shortcuts) && res.shortcuts.length > 0) {
             app.state.links = res.shortcuts;
             this.saveLinksLocally();
@@ -129,7 +127,6 @@ const app = {
             }
           }
 
-          // Atualiza lista de contratos
           if (Array.isArray(res.contracts) && res.contracts.length > 0) {
             app.state.contracts = res.contracts.map(c => {
               const local = app.state.contracts.find(l => l.tabName === c.tabName);
@@ -141,7 +138,6 @@ const app = {
             this.saveLocalContracts();
           }
 
-          // Atualiza exames do contrato ativo
           if (Array.isArray(res.exams) && res.exams.length > 0) {
             app.state.exams = res.exams;
             this.saveLocalExams();
@@ -184,7 +180,6 @@ const app = {
       }
     },
 
-    // Salva a lista inteira de atalhos na aba _Atalhos do Google Sheets
     async syncShortcutsToCloud() {
       app.ui.setSyncStatus(true, "Salvando atalhos no Google Sheets...");
       await this.sendToCloud({
@@ -237,20 +232,38 @@ const app = {
       window.location.hash = view;
     },
 
+    // NAVEGAÇÃO CONTEXTUAL NO CABEÇALHO
     updateActiveMenu() {
-      const activeNav = (app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe')
-        ? 'nav-btn-auditoria_exames'
-        : (app.state.view === 'saude_links' ? 'nav-btn-saude_links' : 'nav-btn-landing');
+      const nav = document.getElementById('main-nav');
+      if (!nav) return;
 
-      ['nav-btn-landing', 'nav-btn-saude_links', 'nav-btn-auditoria_exames'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (id === activeNav) {
-          el.className = 'nav-btn px-4 py-2 rounded-xl transition-all bg-blue-100 text-blue-950 font-black shadow-sm';
-        } else {
-          el.className = 'nav-btn px-4 py-2 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 font-semibold';
-        }
-      });
+      const isLanding = app.state.view === 'landing';
+
+      // 1. SE ESTIVER NA HOME DO MUNICÍPIO: EXIBE APENAS "INÍCIO"
+      if (isLanding) {
+        nav.innerHTML = `
+          <button onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all bg-blue-100 text-blue-950 font-black shadow-sm">
+            Início
+          </button>
+        `;
+        return;
+      }
+
+      // 2. SE ESTIVER DENTRO DO ECOSSISTEMA DA SAÚDE: EXIBE OS ACESSOS DA SAÚDE
+      const isPortal = app.state.view === 'saude_links';
+      const isAuditoria = app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe';
+
+      nav.innerHTML = `
+        <button onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 font-semibold">
+          Início
+        </button>
+        <button onclick="app.ui.navigate('saude_links')" class="nav-btn px-4 py-2 rounded-xl transition-all ${isPortal ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'}">
+          Portal da Saúde
+        </button>
+        <button onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-4 py-2 rounded-xl transition-all ${isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'}">
+          Auditoria de Contratos
+        </button>
+      `;
     },
 
     toggleAuthModal(show) {
@@ -302,12 +315,13 @@ const app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    // TELA 1: LANDING PAGE
+    // TELA 1: HOME MUNICIPAL COM GRADE DE SECRETARIAS (UX RESPONSIVO E MODERNO)
     landing(el) {
       el.innerHTML = `
-        <div class="flex-grow flex flex-col items-center justify-center p-6 fade-in">
-            <div class="mb-12 text-center">
-                <div class="w-32 h-32 md:w-48 md:h-48 bg-white rounded-full shadow-2xl flex items-center justify-center p-4 mb-6 mx-auto border-4 border-slate-100">
+        <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
+            <!-- IDENTIFICAÇÃO HERO COM LOGO OFICIAL -->
+            <div class="mb-10 text-center max-w-2xl">
+                <div class="w-28 h-28 md:w-36 md:h-36 bg-white rounded-full shadow-2xl flex items-center justify-center p-3 mb-6 mx-auto border-4 border-slate-100">
                     <img src="Logo_Torres_100x100.webp" 
                          alt="Prefeitura de Torres" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"
@@ -317,22 +331,96 @@ const app = {
                     </svg>
                 </div>
                 <h1 class="text-2xl md:text-4xl font-black text-torres-dark uppercase tracking-tight">Prefeitura Municipal de Torres</h1>
-                <div class="h-1 w-24 bg-blue-600 mx-auto mt-4 rounded-full"></div>
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-bold mt-1">Portal Integrado de Serviços e Secretarias</p>
+                <div class="h-1 w-20 bg-blue-600 mx-auto mt-3 rounded-full"></div>
             </div>
 
-            <button onclick="app.ui.navigate('saude_links')" class="card-landing bg-white p-10 rounded-[3rem] shadow-xl flex flex-col items-center max-w-sm w-full group">
-                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+            <!-- GRADE DE SECRETARIAS (SAÚDE ATIVA + SECRETARIAS EM DESENVOLVIMENTO) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
+                
+                <!-- 1. SECRETARIA DA SAÚDE (ATIVO COM ACESSO LIBERADO) -->
+                <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Disponível
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 transition">Secretaria da Saúde</h2>
+                        <p class="text-slate-500 font-medium text-xs leading-relaxed">Central de sistemas, ferramentas institucionais e auditoria de contratos e exames.</p>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-blue-600">
+                        <span>Acessar Portal da Saúde</span>
+                        <span class="group-hover:translate-x-1.5 transition">→</span>
+                    </div>
+                </button>
+
+                <!-- 2. SECRETARIA DE EDUCAÇÃO (EM DESENVOLVIMENTO) -->
+                <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
+                                Em Breve
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-700 mb-2">Educação</h2>
+                        <p class="text-slate-400 font-medium text-xs leading-relaxed">Gestão escolar, transporte de alunos, alimentação e vagas da rede municipal.</p>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
+                        Ambiente em Implantação
+                    </div>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 mb-2">Secretaria da Saúde</h2>
-                <p class="text-slate-400 font-medium text-center">Acesse a central de sistemas, links úteis e auditoria de contratos.</p>
-                <div class="mt-8 px-6 py-2.5 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">Clique para entrar</div>
-            </button>
+
+                <!-- 3. SECRETARIA DE TURISMO E CULTURA (EM DESENVOLVIMENTO) -->
+                <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
+                                Em Breve
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-700 mb-2">Turismo e Cultura</h2>
+                        <p class="text-slate-400 font-medium text-xs leading-relaxed">Calendário oficial de eventos, patrimônio histórico e cadastro turístico de Torres.</p>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
+                        Ambiente em Implantação
+                    </div>
+                </div>
+
+                <!-- 4. GABINETE E ADMINISTRAÇÃO (EM DESENVOLVIMENTO) -->
+                <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
+                                Em Breve
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-700 mb-2">Administração Geral</h2>
+                        <p class="text-slate-400 font-medium text-xs leading-relaxed">Protocolo municipal, transparência pública, certidões e recursos humanos.</p>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
+                        Ambiente em Implantação
+                    </div>
+                </div>
+
+            </div>
         </div>
       `;
     },
 
-    // TELA 2: PORTAL DE ACESSOS (CARD DE AUDITORIA HARMONIOSO NA GRADE COM BORDA AZUL)
+    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -356,7 +444,7 @@ const app = {
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                 
-                <!-- CARD DE DESTAQUE: AUDITORIA DE CONTRATOS (BORDA AZUL E SUTIL) -->
+                <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS (COM BORDA AZUL DE DESTAQUE) -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -415,13 +503,13 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
-    // TELA 3A: HUB DE SELEÇÃO DE CONTRATOS
+    // TELA 3A: HUB DE CONTRATOS
     auditoriaHub(el) {
       el.innerHTML = `
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
                 <div>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Auditoria & Fiscalização de Saúde</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Auditoria & Fiscalização da Saúde</span>
                     <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Contratos de Exames Cadastrados</h2>
                     <p class="text-xs sm:text-sm text-slate-500 mt-1">Selecione um contrato para auditar procedimentos e cotas ou cadastre um novo.</p>
                 </div>
@@ -511,7 +599,7 @@ const app = {
                 </div>
               </div>
 
-              <!-- BARRA DE AÇÕES LIMPA -->
+              <!-- BARRA DE AÇÕES -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.data.syncFromCloud(true)" title="Puxar dados atualizados desta aba no Google Sheets" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
                   <span>🔄</span> Sincronizar
@@ -571,7 +659,7 @@ const app = {
             </label>
           </div>
 
-          <!-- TABELA DE EXAMES -->
+          <!-- TABELA DE EXAMES COM SCROLL INTERNO -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -980,7 +1068,6 @@ const app = {
           app.state.links.splice(endIndex, 0, moving);
           app.data.saveLinksLocally();
           app.admin.renderLinksList();
-          // Grava a nova ordem dos cards no Google Sheets
           await app.data.syncShortcutsToCloud();
         });
         item.addEventListener('dragend', () => item.classList.remove('dragging'));
@@ -1004,8 +1091,6 @@ const app = {
       app.data.saveLinksLocally();
       this.resetForm();
       this.renderLinksList();
-
-      // Grava na aba _Atalhos da planilha do Google
       await app.data.syncShortcutsToCloud();
     },
 
@@ -1036,7 +1121,6 @@ const app = {
         app.state.links = app.state.links.filter(l => l.id !== id);
         app.data.saveLinksLocally();
         this.renderLinksList();
-
         await app.data.syncShortcutsToCloud();
       }
     },
