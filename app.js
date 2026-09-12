@@ -62,6 +62,7 @@ const TEMPLATE_EXAMS = [
 const app = {
   state: {
     view: 'landing',
+    previousView: 'landing',
     links: [],
     contracts: [],
     activeContractTab: 'Contrato_67_2026',
@@ -81,12 +82,20 @@ const app = {
     this.auditAuth.checkSession();
     this.router.init();
 
+    // Fecha modais com a tecla ESC
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        app.auditAuth.cancelLogin();
+        app.audit.closeNewContractModal();
+      }
+    });
+
     if (GOOGLE_API_URL) {
       this.data.syncFromCloud();
     }
   },
 
-  // MÓDULO DE AUTENTICAÇÃO DA AUDITORIA
+  // MÓDULO DE AUTENTICAÇÃO COM FECHAMENTO BLINDADO
   auditAuth: {
     checkSession() {
       const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
@@ -136,6 +145,19 @@ const app = {
       }
     },
 
+    // FUNÇÃO QUE RESOLVE O PROBLEMA DO CANCELAR
+    cancelLogin() {
+      this.closeLoginModal();
+      app.state.pendingView = null;
+
+      // Retorna para a tela em que o usuário estava antes de clicar
+      const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria'))
+        ? app.state.previousView
+        : 'saude_links';
+
+      app.ui.navigate(target);
+    },
+
     async handleLogin(e) {
       e.preventDefault();
       const u = document.getElementById('login-user').value.trim();
@@ -150,7 +172,6 @@ const app = {
         btn.textContent = "Verificando...";
         err.classList.add('hidden');
 
-        // Validação silenciosa no Google Sheets via Apps Script
         const url = `${GOOGLE_API_URL}?action=LOGIN&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
         const res = await fetch(url, { redirect: 'follow' });
         const data = await res.json();
@@ -163,7 +184,6 @@ const app = {
           this.updateBadge();
           this.closeLoginModal();
 
-          // Prossegue para a auditoria
           const target = app.state.pendingView || 'auditoria_hub';
           app.state.pendingView = null;
           app.router.go(target);
@@ -172,7 +192,7 @@ const app = {
           err.classList.remove('hidden');
         }
       } catch (error) {
-        // Fallback emergencial caso esteja sem internet
+        // Fallback offline de segurança
         if (u === "admin" && p === "admin123") {
           const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral (Offline)", perfil: "Administrador" };
           app.state.auth.isLogged = true;
@@ -183,7 +203,7 @@ const app = {
           const target = app.state.pendingView || 'auditoria_hub';
           app.router.go(target);
         } else {
-          err.textContent = "Erro ao conectar ao Google Sheets. Verifique a internet.";
+          err.textContent = "Erro ao conectar com a planilha. Verifique a internet.";
           err.classList.remove('hidden');
         }
       } finally {
@@ -323,10 +343,16 @@ const app = {
     },
 
     go(view) {
-      // BARREIRA DE ACESSO: SE TENTAR ENTRAR NA AUDITORIA SEM ESTAR LOGADO
+      // Bloqueio de acesso para quem não está logado
       if ((view === 'auditoria_hub' || view === 'auditoria_detalhe') && !app.state.auth.isLogged) {
         app.auditAuth.promptLogin(view);
         return;
+      }
+
+      // Se navegou para fora da auditoria, garante que o modal de login seja fechado
+      if (view !== 'auditoria_hub' && view !== 'auditoria_detalhe') {
+        app.auditAuth.closeLoginModal();
+        app.state.previousView = view;
       }
 
       app.state.view = view;
@@ -513,7 +539,7 @@ const app = {
 
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS (COM BORDA AZUL DE DESTAQUE) -->
+                <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -1012,7 +1038,6 @@ const app = {
 
   admin: {
     trigger(directToContract = false) {
-      // Se não estiver logado, pede a autenticação primeiro
       if (!app.state.auth.isLogged) {
         app.auditAuth.promptLogin('landing');
         return;
@@ -1067,7 +1092,6 @@ const app = {
       }
     },
 
-    // GESTÃO DE USUÁRIOS NA NUVEM (_Usuarios)
     async loadUsersList() {
       const tbody = document.getElementById('adm-users-list-tbody');
       if (!tbody) return;
