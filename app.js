@@ -239,9 +239,9 @@ const app = {
       if (!badge || !nameEl) return;
 
       if (app.state.auth.isLogged && app.state.auth.user) {
-        const perfil = app.state.auth.user.perfil || 'Operador';
-        const nome = app.state.auth.user.nome || app.state.auth.user.usuario;
-        nameEl.textContent = `${nome} (${perfil})`;
+        // PEGA DIRETAMENTE A COLUNA 'USUARIO' DA TABELA (Ex: "Usuário: admin")
+        const loginUsuario = app.state.auth.user.usuario || 'Admin';
+        nameEl.textContent = `Usuário: ${loginUsuario}`;
         badge.classList.remove('hidden');
       } else {
         badge.classList.add('hidden');
