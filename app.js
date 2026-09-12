@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * Portal Integrado & Auditoria com Autenticação e Controle de Perfis (RBAC)
+ * Portal Integrado & Auditoria com Autenticação, Gemini IA e Google Sheets
  * Arquivo: app.js
  * ============================================================================
  */
@@ -38,25 +38,25 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// MODELO DE PROCEDIMENTOS
+// MODELO DE PROCEDIMENTOS (SEQUENCIAL AUTOMÁTICO 01, 02, 03...)
 const TEMPLATE_EXAMS = [
-  { id: 1, item: 1, cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
-  { id: 6, item: 6, cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
-  { id: 16, item: 16, cat: 'Laboratorial', descEmpenho: 'COLESTEROL HDL', descPrestador: '02.02.01.028-7 / DOSAGEM DE COLESTEROL HDL', qtdEmpenho: 1200, saldoAnterior: 514, faturado: 81 },
-  { id: 17, item: 17, cat: 'Laboratorial', descEmpenho: 'COLESTEROL LDL', descPrestador: '02.02.01.029-5 / DOSAGEM DE COLESTEROL LDL', qtdEmpenho: 1200, saldoAnterior: 602, faturado: 160 },
-  { id: 19, item: 19, cat: 'Laboratorial', descEmpenho: 'CREATININA', descPrestador: '02.02.01.031-7 / DOSAGEM DE CREATININA', qtdEmpenho: 1200, saldoAnterior: 517, faturado: 178 },
-  { id: 27, item: 27, cat: 'Laboratorial', descEmpenho: 'CPK', descPrestador: '02.02.01.032-5 / DOSAGEM DE CREATINOFOSFOQUINASE', qtdEmpenho: 200, saldoAnterior: 194, faturado: 3 },
-  { id: 34, item: 34, cat: 'Laboratorial', descEmpenho: 'FERRO SÉRICO', descPrestador: '02.02.01.039-2 / DOSAGEM DE FERRO SERICO', qtdEmpenho: 200, saldoAnterior: 71, faturado: 28 },
-  { id: 38, item: 38, cat: 'Laboratorial', descEmpenho: 'GLICOSE', descPrestador: '02.02.01.047-3 / DOSAGEM DE GLICOSE', qtdEmpenho: 800, saldoAnterior: 109, faturado: 109 },
-  { id: 41, item: 41, cat: 'Laboratorial', descEmpenho: 'HEMOGRAMA COMPLETO', descPrestador: '02.02.02.038-0 / HEMOGRAMA COM CONTAGEM', qtdEmpenho: 2000, saldoAnterior: 1213, faturado: 194 },
-  { id: 49, item: 49, cat: 'Laboratorial', descEmpenho: 'PCR PROTEÍNA C REATIVA', descPrestador: '02.02.03.076-8 / PROTEINA C REATIVA', qtdEmpenho: 100, saldoAnterior: 14, faturado: 14 },
-  { id: 56, item: 56, cat: 'Laboratorial', descEmpenho: 'PSA TOTAL', descPrestador: '02.02.03.010-5 / DOSAGEM DE PSA TOTAL', qtdEmpenho: 600, saldoAnterior: 461, faturado: 33 },
-  { id: 58, item: 58, cat: 'Laboratorial', descEmpenho: 'SÓDIO', descPrestador: '02.02.01.063-5 / DOSAGEM DE SODIO', qtdEmpenho: 600, saldoAnterior: 432, faturado: 54 },
-  { id: 68, item: 68, cat: 'Laboratorial', descEmpenho: 'TRIGLICERÍDEOS', descPrestador: '02.02.01.067-8 / DOSAGEM DE TRIGLICERIDEOS', qtdEmpenho: 800, saldoAnterior: 114, faturado: 114 },
-  { id: 74, item: 74, cat: 'Laboratorial', descEmpenho: 'VSG / VHS', descPrestador: '02.02.02.015-0 / DETERMINACAO DE VHS', qtdEmpenho: 50, saldoAnterior: 23, faturado: 13 },
-  { id: 101, item: 101, cat: 'Imagem', descEmpenho: 'RAIO-X DE TÓRAX AP/PERFIL', descPrestador: '02.04.03.018-8 / RADIOGRAFIA TORACICA', qtdEmpenho: 800, saldoAnterior: 320, faturado: 45 },
-  { id: 102, item: 102, cat: 'Imagem', descEmpenho: 'ULTRASSONOGRAFIA DE ABDOME TOTAL', descPrestador: '02.05.02.004-6 / ULTRASSONOGRAFIA ABDOMINAL', qtdEmpenho: 500, saldoAnterior: 230, faturado: 50 },
-  { id: 103, item: 103, cat: 'Imagem', descEmpenho: 'ELETROCARDIOGRAMA (ECG)', descPrestador: '02.11.02.003-6 / ELETROCARDIOGRAMA', qtdEmpenho: 1000, saldoAnterior: 640, faturado: 0 }
+  { id: 1, item: "01", cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
+  { id: 6, item: "02", cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
+  { id: 16, item: "03", cat: 'Laboratorial', descEmpenho: 'COLESTEROL HDL', descPrestador: '02.02.01.028-7 / DOSAGEM DE COLESTEROL HDL', qtdEmpenho: 1200, saldoAnterior: 514, faturado: 81 },
+  { id: 17, item: "04", cat: 'Laboratorial', descEmpenho: 'COLESTEROL LDL', descPrestador: '02.02.01.029-5 / DOSAGEM DE COLESTEROL LDL', qtdEmpenho: 1200, saldoAnterior: 602, faturado: 160 },
+  { id: 19, item: "05", cat: 'Laboratorial', descEmpenho: 'CREATININA', descPrestador: '02.02.01.031-7 / DOSAGEM DE CREATININA', qtdEmpenho: 1200, saldoAnterior: 517, faturado: 178 },
+  { id: 27, item: "06", cat: 'Laboratorial', descEmpenho: 'CPK', descPrestador: '02.02.01.032-5 / DOSAGEM DE CREATINOFOSFOQUINASE', qtdEmpenho: 200, saldoAnterior: 194, faturado: 3 },
+  { id: 34, item: "07", cat: 'Laboratorial', descEmpenho: 'FERRO SÉRICO', descPrestador: '02.02.01.039-2 / DOSAGEM DE FERRO SERICO', qtdEmpenho: 200, saldoAnterior: 71, faturado: 28 },
+  { id: 38, item: "08", cat: 'Laboratorial', descEmpenho: 'GLICOSE', descPrestador: '02.02.01.047-3 / DOSAGEM DE GLICOSE', qtdEmpenho: 800, saldoAnterior: 109, faturado: 109 },
+  { id: 41, item: "09", cat: 'Laboratorial', descEmpenho: 'HEMOGRAMA COMPLETO', descPrestador: '02.02.02.038-0 / HEMOGRAMA COM CONTAGEM', qtdEmpenho: 2000, saldoAnterior: 1213, faturado: 194 },
+  { id: 49, item: "10", cat: 'Laboratorial', descEmpenho: 'PCR PROTEÍNA C REATIVA', descPrestador: '02.02.03.076-8 / PROTEINA C REATIVA', qtdEmpenho: 100, saldoAnterior: 14, faturado: 14 },
+  { id: 56, item: "11", cat: 'Laboratorial', descEmpenho: 'PSA TOTAL', descPrestador: '02.02.03.010-5 / DOSAGEM DE PSA TOTAL', qtdEmpenho: 600, saldoAnterior: 461, faturado: 33 },
+  { id: 58, item: "12", cat: 'Laboratorial', descEmpenho: 'SÓDIO', descPrestador: '02.02.01.063-5 / DOSAGEM DE SODIO', qtdEmpenho: 600, saldoAnterior: 432, faturado: 54 },
+  { id: 68, item: "13", cat: 'Laboratorial', descEmpenho: 'TRIGLICERÍDEOS', descPrestador: '02.02.01.067-8 / DOSAGEM DE TRIGLICERIDEOS', qtdEmpenho: 800, saldoAnterior: 114, faturado: 114 },
+  { id: 74, item: "14", cat: 'Laboratorial', descEmpenho: 'VSG / VHS', descPrestador: '02.02.02.015-0 / DETERMINACAO DE VHS', qtdEmpenho: 50, saldoAnterior: 23, faturado: 13 },
+  { id: 101, item: "15", cat: 'Imagem', descEmpenho: 'RAIO-X DE TÓRAX AP/PERFIL', descPrestador: '02.04.03.018-8 / RADIOGRAFIA TORACICA', qtdEmpenho: 800, saldoAnterior: 320, faturado: 45 },
+  { id: 102, item: "16", cat: 'Imagem', descEmpenho: 'ULTRASSONOGRAFIA DE ABDOME TOTAL', descPrestador: '02.05.02.004-6 / ULTRASSONOGRAFIA ABDOMINAL', qtdEmpenho: 500, saldoAnterior: 230, faturado: 50 },
+  { id: 103, item: "17", cat: 'Imagem', descEmpenho: 'ELETROCARDIOGRAMA (ECG)', descPrestador: '02.11.02.003-6 / ELETROCARDIOGRAMA', qtdEmpenho: 1000, saldoAnterior: 640, faturado: 0 }
 ];
 
 const app = {
@@ -86,6 +86,7 @@ const app = {
       if (e.key === 'Escape') {
         app.auditAuth.cancelLogin();
         app.audit.closeNewContractModal();
+        app.gemini.closeModal();
       }
     });
 
@@ -94,6 +95,143 @@ const app = {
     }
   },
 
+  // MÓDULO DO GEMINI (IMPORTAÇÃO + GUIA COM OS 3 BOTÕES DE COPIAR)
+  gemini: {
+    openModal() {
+      const modal = document.getElementById('modal-gemini-import');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        this.switchTab('paste');
+        document.getElementById('gemini-paste-area').value = '';
+        setTimeout(() => document.getElementById('gemini-paste-area').focus(), 80);
+      }
+    },
+
+    closeModal() {
+      const modal = document.getElementById('modal-gemini-import');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    switchTab(tab) {
+      const vPaste = document.getElementById('view-gemini-paste');
+      const vGuide = document.getElementById('view-gemini-guide');
+      const bPaste = document.getElementById('btn-tab-gemini-paste');
+      const bGuide = document.getElementById('btn-tab-gemini-guide');
+
+      if (tab === 'paste') {
+        vPaste.classList.remove('hidden');
+        vGuide.classList.add('hidden');
+        bPaste.className = "px-4 py-2 font-black text-xs uppercase tracking-wider rounded-xl bg-blue-100 text-blue-900";
+        bGuide.className = "px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-xl text-slate-500 hover:bg-slate-100 flex items-center gap-1.5";
+      } else {
+        vPaste.classList.add('hidden');
+        vGuide.classList.remove('hidden');
+        bGuide.className = "px-4 py-2 font-black text-xs uppercase tracking-wider rounded-xl bg-blue-100 text-blue-900 flex items-center gap-1.5";
+        bPaste.className = "px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-xl text-slate-500 hover:bg-slate-100";
+      }
+    },
+
+    // FUNÇÃO QUE COPIA PARA A ÁREA DE TRANSFERÊNCIA COM FEEDBACK "COPIADO!"
+    copyField(textElementId, buttonElementId) {
+      const textEl = document.getElementById(textElementId);
+      const btnEl = document.getElementById(buttonElementId);
+      if (!textEl || !btnEl) return;
+
+      const textToCopy = textEl.textContent.trim();
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalHtml = btnEl.innerHTML;
+        btnEl.innerHTML = "<span>✓</span> Copiado!";
+        btnEl.classList.add('copied');
+
+        setTimeout(() => {
+          btnEl.innerHTML = originalHtml;
+          btnEl.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert("Erro ao copiar. Selecione e copie manualmente.");
+      });
+    },
+
+    // PARSER INTELIGENTE E RESILIENTE DA TABELA DO GEMINI
+    processPaste() {
+      const rawText = document.getElementById('gemini-paste-area').value.trim();
+      if (!rawText) {
+        alert("Cole o texto extraído pelo Gemini na caixa de texto.");
+        return;
+      }
+
+      const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      const newExams = [];
+      let counter = 1;
+
+      lines.forEach(line => {
+        // Remove barras do markdown (|) se o Gemini tiver respondido em formato de tabela
+        let clean = line;
+        if (clean.startsWith('|') && clean.endsWith('|')) {
+          clean = clean.slice(1, -1).trim();
+        }
+
+        // Divide por ponto e vírgula, barra pipe (|) ou tabulação
+        let parts = clean.includes(';') ? clean.split(';') : (clean.includes('|') ? clean.split('|') : clean.split('\t'));
+        parts = parts.map(p => p.trim());
+
+        // Pula linhas que são cabeçalhos
+        const first = parts[0] ? parts[0].toLowerCase() : "";
+        if (first.includes('item') || first.includes('---') || first.includes('categoria')) {
+          return;
+        }
+
+        if (parts.length >= 3) {
+          const itemSeq = String(counter).padStart(2, '0');
+          const cat = parts[1] ? (parts[1].toLowerCase().includes('imag') ? 'Imagem' : 'Laboratorial') : 'Laboratorial';
+          const descEmp = parts[2] || `Procedimento ${itemSeq}`;
+          const descPrest = parts[3] || descEmp;
+          const qtd = parts[4] ? Math.max(0, parseInt(parts[4].replace(/\D/g, ''), 10) || 0) : 0;
+          const saldoAnt = parts[5] ? Math.max(0, parseInt(parts[5].replace(/\D/g, ''), 10) || 0) : qtd;
+          const fat = parts[6] ? Math.max(0, parseInt(parts[6].replace(/\D/g, ''), 10) || 0) : 0;
+
+          newExams.push({
+            id: Date.now() + counter,
+            item: itemSeq,
+            cat: cat,
+            descEmpenho: descEmp,
+            descPrestador: descPrest,
+            qtdEmpenho: qtd,
+            saldoAnterior: saldoAnt,
+            faturado: fat
+          });
+
+          counter++;
+        }
+      });
+
+      if (newExams.length === 0) {
+        alert("Não conseguimos identificar os dados. Certifique-se de que o texto tem colunas separadas por ponto e vírgula (;).");
+        return;
+      }
+
+      // Atualiza os exames do contrato ativo
+      app.state.exams = newExams;
+      app.data.saveLocalExams();
+      this.closeModal();
+      app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
+
+      // Grava tudo no Google Sheets de uma vez
+      app.data.sendToCloud({
+        action: "INITIAL_SEED",
+        contract: app.state.activeContractTab,
+        exams: app.state.exams
+      });
+
+      alert(`Sucesso! ${newExams.length} procedimentos foram importados, sequenciados (01, 02...) e salvos no Google Sheets!`);
+    }
+  },
+
+  // MÓDULO DE AUTENTICAÇÃO COM PERFIS
   auditAuth: {
     checkSession() {
       const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
@@ -426,7 +564,6 @@ const app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    // TELA 1: HOME MUNICIPAL COM NOMES PADRONIZADOS E SUBTÍTULO ATUALIZADO
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
@@ -445,10 +582,7 @@ const app = {
                 <div class="h-1 w-20 bg-blue-600 mx-auto mt-3 rounded-full"></div>
             </div>
 
-            <!-- GRADE COM NOMES 100% PADRONIZADOS -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
-                
-                <!-- 1. SAÚDE (DIRETO E PADRONIZADO) -->
                 <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -468,7 +602,6 @@ const app = {
                     </div>
                 </button>
 
-                <!-- 2. EDUCAÇÃO -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -483,7 +616,6 @@ const app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
-                <!-- 3. TURISMO E CULTURA -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -498,7 +630,6 @@ const app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
-                <!-- 4. ADMINISTRAÇÃO GERAL -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -517,7 +648,6 @@ const app = {
       `;
     },
 
-    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -599,12 +729,9 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
-    // TELA 3A: HUB DE CONTRATOS (COM SETA DISCRETA PARA VOLTAR AO PORTAL)
     auditoriaHub(el) {
       el.innerHTML = `
         <div class="container mx-auto px-6 py-6 sm:py-8 fade-in">
-            
-            <!-- SETA DISCRETA PARA VOLTAR AO PORTAL DE ACESSOS -->
             <div class="mb-4">
                 <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition group py-1">
                     <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -676,14 +803,13 @@ const app = {
       `;
     },
 
-    // TELA 3B: DETALHE DO CONTRATO
+    // TELA 3B: DETALHE DO CONTRATO (COM O BOTÃO GEMINI E COLUNA DE EMPENHO EDITÁVEL EM CINZA)
     auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
       el.innerHTML = `
         <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
           
-          <!-- SETA DISCRETA PARA VOLTAR À LISTA DE CONTRATOS -->
           <div class="mb-4">
               <button onclick="app.ui.navigate('auditoria_exames')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition group py-1">
                   <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -712,7 +838,12 @@ const app = {
                 </div>
               </div>
 
+              <!-- BARRA DE AÇÕES COM O NOVO BOTÃO GEMINI IA -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
+                <button onclick="app.gemini.openModal()" title="Importar dados extraídos pelo Gemini a partir de foto" class="px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition flex items-center gap-1.5">
+                  <span>🤖</span> Importar com Gemini IA
+                </button>
+
                 <button onclick="app.data.syncFromCloud(true)" title="Puxar dados atualizados desta aba no Google Sheets" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
                   <span>🔄</span> Sincronizar
                 </button>
@@ -729,11 +860,12 @@ const app = {
             </div>
           </div>
 
+          <!-- KPIS -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Empenhado</span>
               <p id="kpi-empenhado" class="text-2xl font-black text-slate-800 mt-1">0</p>
-              <span class="text-[10px] text-slate-400">Cotas deste contrato</span>
+              <span class="text-[10px] text-slate-400">Soma das cotas deste contrato</span>
             </div>
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Faturado no Período</span>
@@ -748,10 +880,11 @@ const app = {
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-100 bg-red-50/40">
               <span class="text-[10px] font-bold text-red-900 uppercase tracking-wider">Alerta Crítico (≥ 30%)</span>
               <p id="kpi-criticos" class="text-2xl font-black text-red-700 mt-1">0</p>
-              <span class="text-[10px] text-red-600">Requer atenção</span>
+              <span class="text-[10px] text-red-600">Requer atenção orçamentária</span>
             </div>
           </div>
 
+          <!-- FILTROS -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row justify-between gap-4 print:hidden">
             <div class="flex-1 flex flex-col sm:flex-row gap-3">
               <input type="text" id="filter-search" oninput="app.audit.filter()" placeholder="Buscar por código ou descrição nesta aba..." class="flex-1 px-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
@@ -767,6 +900,7 @@ const app = {
             </label>
           </div>
 
+          <!-- TABELA DE EXAMES COM QTD. EMPENHADA EDITÁVEL EM CINZA -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -776,7 +910,8 @@ const app = {
                     <th class="py-3 px-3 w-28">Categoria</th>
                     <th class="py-3 px-3 min-w-[200px]">Descrição no Empenho</th>
                     <th class="py-3 px-3 min-w-[200px]">Descrição / Cód. (Prestador)</th>
-                    <th class="py-3 px-3 text-right w-24">Qtd. Emp.</th>
+                    <!-- COLUNA DESTACADA EM CINZA -->
+                    <th class="py-3 px-3 text-right w-28 bg-slate-200/70 border-x border-slate-300">Qtd. Empenhada</th>
                     <th class="py-3 px-3 text-right w-28">Saldo Ant.</th>
                     <th class="py-3 px-3 text-right w-28 bg-blue-50 border-x border-blue-100">Faturado</th>
                     <th class="py-3 px-3 text-right w-24">Saldo Atual</th>
@@ -845,9 +980,15 @@ const app = {
         createdAt: createdAtStr
       };
 
+      // Se copiar o modelo, zera o faturamento inicial (faturado = 0)
+      const initialExams = copyTemplate ? TEMPLATE_EXAMS.map(item => ({
+        ...item,
+        faturado: 0
+      })) : [];
+
       app.state.contracts.push(newContractObj);
       app.state.activeContractTab = safeTabName;
-      app.state.exams = copyTemplate ? JSON.parse(JSON.stringify(TEMPLATE_EXAMS)) : [];
+      app.state.exams = initialExams;
 
       app.data.saveLocalContracts();
       app.data.saveLocalExams();
@@ -913,12 +1054,19 @@ const app = {
       return { saldoAtual, percConsumo, percRestante, style };
     },
 
+    // ATUALIZAÇÃO REATIVA DE QTD. EMPENHADA, SALDO E FATURADO
     updateVal(id, field, val) {
       const parsed = Math.max(0, parseInt(val, 10) || 0);
       const target = app.state.exams.find(x => x.id === id);
       if (!target) return;
 
       target[field] = parsed;
+
+      // Sugestão inteligente: se mudar a Qtd Empenhada e o Saldo Anterior for 0, sincroniza
+      if (field === 'qtdEmpenho' && target.saldoAnterior === 0) {
+        target.saldoAnterior = parsed;
+      }
+
       app.data.saveLocalExams();
       this.renderTable();
 
@@ -986,7 +1134,7 @@ const app = {
         tr.className = `border-b border-slate-200 transition-colors ${c.style.rowClass}`;
 
         tr.innerHTML = `
-          <td class="py-2.5 px-3 text-center font-bold">${item.item}</td>
+          <td class="py-2.5 px-3 text-center font-bold font-mono">${item.item}</td>
           <td class="py-2.5 px-3">
             <span class="inline-block text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-200/80 text-slate-700">
               ${item.cat}
@@ -994,20 +1142,29 @@ const app = {
           </td>
           <td class="py-2.5 px-3 font-semibold text-slate-900">${item.descEmpenho}</td>
           <td class="py-2.5 px-3 text-slate-600 font-mono text-[11px]">${item.descPrestador}</td>
-          <td class="py-2.5 px-3 text-right font-medium text-slate-600">${item.qtdEmpenho.toLocaleString('pt-BR')}</td>
           
+          <!-- COLUNA DE QUANTIDADE EMPENHADA EDITÁVEL EM CINZA -->
+          <td class="py-2.5 px-3 text-right bg-slate-100/90 border-x border-slate-200">
+            <input type="number" min="0" value="${item.qtdEmpenho}" 
+                   onchange="app.audit.updateVal(${item.id}, 'qtdEmpenho', this.value)"
+                   class="table-num w-20 text-right px-2 py-1 text-xs border border-slate-300 rounded bg-white shadow-xs focus:border-slate-600 font-bold text-slate-800">
+          </td>
+
+          <!-- SALDO ANTERIOR EDITÁVEL -->
           <td class="py-2.5 px-3 text-right">
             <input type="number" min="0" value="${item.saldoAnterior}" 
                    onchange="app.audit.updateVal(${item.id}, 'saldoAnterior', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-slate-300 rounded bg-white shadow-xs focus:border-blue-500 font-semibold">
           </td>
 
+          <!-- FATURADO NO PERÍODO EDITÁVEL -->
           <td class="py-2.5 px-3 text-right bg-blue-50/70 border-x border-blue-100">
             <input type="number" min="0" value="${item.faturado}" 
                    onchange="app.audit.updateVal(${item.id}, 'faturado', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-blue-300 rounded bg-white shadow-xs focus:border-blue-600 font-bold text-blue-950">
           </td>
 
+          <!-- SALDO ATUAL CALCULADO -->
           <td class="py-2.5 px-3 text-right font-bold ${c.saldoAtual <= 0 ? 'text-red-700 font-black' : ''}">
             ${c.saldoAtual.toLocaleString('pt-BR')}
           </td>
@@ -1259,10 +1416,7 @@ const app = {
           app.state.links.splice(endIndex, 0, moving);
           app.data.saveLinksLocally();
           app.admin.renderLinksList();
-          await app.data.sendToCloud({
-            action: "SAVE_SHORTCUTS",
-            shortcuts: app.state.links
-          });
+          await app.data.syncShortcutsToCloud();
         });
         item.addEventListener('dragend', () => item.classList.remove('dragging'));
       });
@@ -1285,11 +1439,7 @@ const app = {
       app.data.saveLinksLocally();
       this.resetForm();
       this.renderLinksList();
-
-      await app.data.sendToCloud({
-        action: "SAVE_SHORTCUTS",
-        shortcuts: app.state.links
-      });
+      await app.data.syncShortcutsToCloud();
     },
 
     editLink(id) {
@@ -1319,11 +1469,7 @@ const app = {
         app.state.links = app.state.links.filter(l => l.id !== id);
         app.data.saveLinksLocally();
         this.renderLinksList();
-
-        await app.data.sendToCloud({
-          action: "SAVE_SHORTCUTS",
-          shortcuts: app.state.links
-        });
+        await app.data.syncShortcutsToCloud();
       }
     },
 
@@ -1333,10 +1479,10 @@ const app = {
 
       tbody.innerHTML = app.state.exams.map(e => `
         <tr class="hover:bg-slate-50">
-          <td class="p-3 text-center font-bold">${e.item}</td>
+          <td class="p-3 text-center font-bold font-mono">${e.item}</td>
           <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold">${e.cat}</span></td>
           <td class="p-3 font-semibold text-slate-800">${e.descEmpenho}</td>
-          <td class="p-3 text-right">${e.qtdEmpenho}</td>
+          <td class="p-3 text-right font-bold text-slate-700 bg-slate-100/60">${e.qtdEmpenho}</td>
           <td class="p-3 text-right">${e.saldoAnterior}</td>
           <td class="p-3 text-center">
             <button onclick="app.admin.editExam(${e.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">Editar</button>
@@ -1348,7 +1494,7 @@ const app = {
 
     saveExam() {
       const id = document.getElementById('adm-exam-id').value;
-      const item = parseInt(document.getElementById('adm-exam-item').value, 10);
+      const item = document.getElementById('adm-exam-item').value.trim();
       const cat = document.getElementById('adm-exam-cat').value;
       const descEmpenho = document.getElementById('adm-exam-desc-emp').value.trim();
       const descPrestador = document.getElementById('adm-exam-desc-prest').value.trim();
@@ -1381,7 +1527,6 @@ const app = {
         app.state.exams.push(examObj);
       }
 
-      app.state.exams.sort((a, b) => a.item - b.item);
       app.data.saveLocalExams();
       this.resetExamForm();
       this.renderExamsList();
