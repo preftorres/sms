@@ -1,9 +1,12 @@
 /**
  * ============================================================================
  * PREFEITURA DE TORRES - SECRETARIA DA SAÚDE
- * Portal de Acessos & Módulo de Auditoria Contratual
+ * Portal de Acessos & Módulo de Auditoria Contratual com Sincronização em Nuvem
  * ============================================================================
  */
+
+// COLE AQUI A URL GERADA NA IMPLANTAÇÃO DO GOOGLE APPS SCRIPT:
+const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzB_7aIOl2t5Pq3nVBHJ7TyPd2vJsXBJ5HZ0mkg7Xn2mzewLPZ0brFBJB_rp5NfPkjwrw/exec"; 
 
 const CONFIG = {
   pass: 'admin123',
@@ -15,7 +18,6 @@ const CONFIG = {
   }
 };
 
-// LINKS PADRÃO EXATOS DO SEU ARQUIVO ORIGINAL
 const INITIAL_LINKS = [
   { id: 1, title: 'Vacinas', url: 'http://vaciastorres.dpdns.org', desc: 'Controle de Imunização' },
   { id: 2, title: 'ETP/TR', url: 'https://etp-tr.torres.rs.gov.br/', desc: 'Termos de Referência' },
@@ -24,14 +26,12 @@ const INITIAL_LINKS = [
   { id: 5, title: 'Webmail', url: 'http://webmail.torres.rs.gov.br/', desc: 'E-mail Institucional' }
 ];
 
-// INFORMAÇÕES CONTRATUAIS PADRÃO
 const INITIAL_CONTRACT = {
   num: '67/2026',
   empenhos: '3406/2026 e 3407/2026',
   prestador: 'M. B. Laboratório de Análises Clínicas Ltda'
 };
 
-// EXAMES OFICIAIS DOS EMPENHOS 3406 E 3407/2026 + IMAGEM
 const INITIAL_EXAMS = [
   { id: 1, item: 1, cat: 'Laboratorial', descEmpenho: 'ÁCIDO FÓLICO', descPrestador: '02.02.01.002-3 / DOSAGEM DE ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 107, faturado: 11 },
   { id: 6, item: 6, cat: 'Laboratorial', descEmpenho: 'ANÁLISE DE URINA (EQU)', descPrestador: '02.02.05.001-7 / URINÁLISE (EQU / EAS)', qtdEmpenho: 600, saldoAnterior: 44, faturado: 44 },
@@ -47,7 +47,6 @@ const INITIAL_EXAMS = [
   { id: 58, item: 58, cat: 'Laboratorial', descEmpenho: 'SÓDIO', descPrestador: '02.02.01.063-5 / DOSAGEM DE SODIO', qtdEmpenho: 600, saldoAnterior: 432, faturado: 54 },
   { id: 68, item: 68, cat: 'Laboratorial', descEmpenho: 'TRIGLICERÍDEOS', descPrestador: '02.02.01.067-8 / DOSAGEM DE TRIGLICERIDEOS', qtdEmpenho: 800, saldoAnterior: 114, faturado: 114 },
   { id: 74, item: 74, cat: 'Laboratorial', descEmpenho: 'VSG / VHS', descPrestador: '02.02.02.015-0 / DETERMINACAO DE VHS', qtdEmpenho: 50, saldoAnterior: 23, faturado: 13 },
-  // Exames Representativos de Imagem
   { id: 101, item: 101, cat: 'Imagem', descEmpenho: 'RAIO-X DE TÓRAX AP/PERFIL', descPrestador: '02.04.03.018-8 / RADIOGRAFIA TORACICA', qtdEmpenho: 800, saldoAnterior: 320, faturado: 45 },
   { id: 102, item: 102, cat: 'Imagem', descEmpenho: 'ULTRASSONOGRAFIA DE ABDOME TOTAL', descPrestador: '02.05.02.004-6 / ULTRASSONOGRAFIA ABDOMINAL', qtdEmpenho: 500, saldoAnterior: 230, faturado: 50 },
   { id: 103, item: 103, cat: 'Imagem', descEmpenho: 'ELETROCARDIOGRAMA (ECG)', descPrestador: '02.11.02.003-6 / ELETROCARDIOGRAMA', qtdEmpenho: 1000, saldoAnterior: 640, faturado: 0 }
@@ -55,12 +54,13 @@ const INITIAL_EXAMS = [
 
 const app = {
   state: {
-    view: 'landing', // 'landing', 'saude_links', 'auditoria_exames'
+    view: 'landing',
     links: [],
     contract: {},
     exams: [],
     isAdmin: false,
     clockTimer: null,
+    isSyncing: false,
     filters: { search: '', category: 'ALL', hideZero: false }
   },
 
@@ -68,6 +68,11 @@ const app = {
     this.data.load();
     this.admin.checkSession();
     this.router.init();
+    
+    // Se a URL do Google Sheets estiver preenchida, busca dados frescos da planilha
+    if (GOOGLE_API_URL) {
+      this.data.syncFromCloud();
+    }
   },
 
   data: {
@@ -92,6 +97,47 @@ const app = {
 
     saveExams() {
       localStorage.setItem(CONFIG.keys.exams, JSON.stringify(app.state.exams));
+    },
+
+    // LEITURA NA NUVEM (Google Sheets -> App)
+    async syncFromCloud() {
+      if (!GOOGLE_API_URL) return;
+      try {
+        app.ui.setSyncStatus(true, "Sincronizando com a planilha...");
+        const response = await fetch(GOOGLE_API_URL, { redirect: 'follow' });
+        const res = await response.json();
+        
+        if (res.status === "success" && Array.isArray(res.data) && res.data.length > 0) {
+          app.state.exams = res.data;
+          this.saveExams();
+          if (app.state.view === 'auditoria_exames') {
+            app.audit.renderTable();
+          }
+        }
+      } catch (err) {
+        console.warn("Modo Offline: Mantendo dados locais.", err);
+      } finally {
+        app.ui.setSyncStatus(false);
+      }
+    },
+
+    // GRAVAÇÃO NA NUVEM (App -> Google Sheets)
+    async sendToCloud(payload) {
+      if (!GOOGLE_API_URL) return;
+      try {
+        app.ui.setSyncStatus(true, "Gravando na planilha...");
+        // Envio como text/plain evita bloqueio de CORS com o Apps Script
+        await fetch(GOOGLE_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error("Erro ao sincronizar com Google Sheets:", err);
+      } finally {
+        setTimeout(() => app.ui.setSyncStatus(false), 800);
+      }
     }
   },
 
@@ -120,7 +166,6 @@ const app = {
       window.location.hash = view;
     },
 
-    // Apenas a página selecionada ganha o fundo azul claro
     updateActiveMenu(activeView) {
       const navButtons = [
         { id: 'nav-btn-landing', view: 'landing' },
@@ -133,10 +178,8 @@ const app = {
         if (!el) return;
 
         if (btn.view === activeView) {
-          // FUNDO AZUL CLARO NO ITEM ATIVO
           el.className = 'nav-btn px-4 py-2 rounded-xl transition-all bg-blue-100 text-blue-950 font-black shadow-sm';
         } else {
-          // PADRÃO TRANSPARENTE NOS DEMAIS
           el.className = 'nav-btn px-4 py-2 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 font-semibold';
         }
       });
@@ -150,6 +193,17 @@ const app = {
         const inp = document.getElementById('input-pass');
         inp.value = '';
         setTimeout(() => inp.focus(), 60);
+      }
+    },
+
+    setSyncStatus(isSyncing, text = "") {
+      const indicator = document.getElementById('cloud-sync-status');
+      if (!indicator) return;
+      if (isSyncing) {
+        indicator.textContent = `☁️ ${text}`;
+        indicator.classList.remove('hidden');
+      } else {
+        indicator.classList.add('hidden');
       }
     }
   },
@@ -175,11 +229,9 @@ const app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    // TELA 1: LANDING PAGE
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 fade-in">
-            <!-- LOGO DA PREFEITURA RESTAURADA -->
             <div class="mb-12 text-center">
                 <div class="w-32 h-32 md:w-48 md:h-48 bg-white rounded-full shadow-2xl flex items-center justify-center p-4 mb-6 mx-auto border-4 border-slate-100">
                     <img src="torres-rs-logo-300x139.webp" 
@@ -194,7 +246,6 @@ const app = {
                 <div class="h-1 w-24 bg-blue-600 mx-auto mt-4 rounded-full"></div>
             </div>
 
-            <!-- CARD DA SECRETARIA -->
             <button onclick="app.ui.navigate('saude_links')" class="card-landing bg-white p-10 rounded-[3rem] shadow-xl flex flex-col items-center max-w-sm w-full group">
                 <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
@@ -207,7 +258,6 @@ const app = {
       `;
     },
 
-    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -229,8 +279,6 @@ const app = {
         </div>
 
         <div class="container mx-auto px-6 py-10 fade-in">
-            
-            <!-- CARD DE DESTAQUE: AUDITORIA DE EXAMES -->
             <div class="mb-10 bg-gradient-to-r from-blue-900 to-indigo-950 text-white p-8 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div class="max-w-2xl">
                     <span class="inline-block px-3 py-1 bg-amber-400 text-slate-950 text-[10px] font-black uppercase rounded-full tracking-wider mb-2">
@@ -246,7 +294,6 @@ const app = {
                 </button>
             </div>
 
-            <!-- GRID COM OS LINKS EXATOS -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 ${app.state.links.map(l => `
                     <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group">
@@ -277,18 +324,17 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
-    // TELA 3: AUDITORIA E CONTROLE DE COTAS
     auditoriaExames(el) {
       el.innerHTML = `
         <div class="container mx-auto px-4 sm:px-6 py-8 fade-in">
           
-          <!-- BANNER CONTRATUAL -->
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:border-none print:shadow-none print:p-0">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div class="flex items-center gap-2">
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 uppercase">Prefeitura de Torres / SMS</span>
                   <span class="text-xs text-slate-400 font-bold">Exercício 2026</span>
+                  <span id="cloud-sync-status" class="hidden text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold"></span>
                 </div>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">
                   Auditoria de Cotas de Exames — Empenho x Execução
@@ -300,8 +346,10 @@ const app = {
                 </div>
               </div>
 
-              <!-- BOTÕES DE AÇÃO -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
+                <button onclick="app.data.syncFromCloud()" title="Atualizar dados da planilha" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                  🔄 Atualizar
+                </button>
                 <button onclick="app.audit.exportCSV()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow transition">
                   Exportar (.CSV)
                 </button>
@@ -320,7 +368,6 @@ const app = {
             </div>
           </div>
 
-          <!-- KPIS DE RESUMO -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Empenhado</span>
@@ -344,7 +391,6 @@ const app = {
             </div>
           </div>
 
-          <!-- FILTROS -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row justify-between gap-4 print:hidden">
             <div class="flex-1 flex flex-col sm:flex-row gap-3">
               <input type="text" id="filter-search" oninput="app.audit.filter()" placeholder="Buscar por código ou descrição..." class="flex-1 px-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
@@ -360,7 +406,6 @@ const app = {
             </label>
           </div>
 
-          <!-- TABELA COM SCROLL INTERNO E CABEÇALHO FIXO (STICKY) -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -411,7 +456,6 @@ const app = {
         percRestante = 0;
       }
 
-      // Regras de Cores Condicionais
       let style = {
         rowClass: 'bg-white hover:bg-slate-50',
         badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
@@ -455,6 +499,13 @@ const app = {
       target[field] = parsed;
       app.data.saveExams();
       this.renderTable();
+
+      // Grava no Google Sheets em segundo plano
+      app.data.sendToCloud({
+        action: "UPDATE_VALUES",
+        id: id,
+        [field]: parsed
+      });
     },
 
     filter() {
@@ -522,21 +573,18 @@ const app = {
           <td class="py-2.5 px-3 text-slate-600 font-mono text-[11px]">${item.descPrestador}</td>
           <td class="py-2.5 px-3 text-right font-medium text-slate-600">${item.qtdEmpenho.toLocaleString('pt-BR')}</td>
           
-          <!-- Saldo Anterior Editável -->
           <td class="py-2.5 px-3 text-right">
             <input type="number" min="0" value="${item.saldoAnterior}" 
                    onchange="app.audit.updateVal(${item.id}, 'saldoAnterior', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-slate-300 rounded bg-white shadow-xs focus:border-blue-500 font-semibold">
           </td>
 
-          <!-- Faturado Editável -->
           <td class="py-2.5 px-3 text-right bg-blue-50/70 border-x border-blue-100">
             <input type="number" min="0" value="${item.faturado}" 
                    onchange="app.audit.updateVal(${item.id}, 'faturado', this.value)"
                    class="table-num w-20 text-right px-2 py-1 text-xs border border-blue-300 rounded bg-white shadow-xs focus:border-blue-600 font-bold text-blue-950">
           </td>
 
-          <!-- Saldo Atual Calculado -->
           <td class="py-2.5 px-3 text-right font-bold ${c.saldoAtual <= 0 ? 'text-red-700 font-black' : ''}">
             ${c.saldoAtual.toLocaleString('pt-BR')}
           </td>
@@ -555,7 +603,7 @@ const app = {
     },
 
     resetToDefault() {
-      if (confirm("Deseja restaurar todos os exames e contratos para o padrão oficial? Alterações manuais serão perdidas.")) {
+      if (confirm("Deseja restaurar os exames e contratos padrão?")) {
         app.state.exams = JSON.parse(JSON.stringify(INITIAL_EXAMS));
         app.state.contract = JSON.parse(JSON.stringify(INITIAL_CONTRACT));
         app.data.saveExams();
@@ -665,7 +713,6 @@ const app = {
       }
     },
 
-    // --- Gestão de Links & Drag & Drop ---
     renderLinksList() {
       const list = document.getElementById('admin-list-draggable');
       if (!list) return;
@@ -761,7 +808,6 @@ const app = {
       }
     },
 
-    // --- Gestão de Contrato & Exames ---
     loadContractFields() {
       document.getElementById('adm-contract-num').value = app.state.contract.num;
       document.getElementById('adm-contract-empenhos').value = app.state.contract.empenhos;
@@ -809,36 +855,37 @@ const app = {
         return;
       }
 
+      let examObj = {
+        id: id ? Number(id) : Date.now(),
+        item,
+        cat,
+        descEmpenho,
+        descPrestador: descPrestador || descEmpenho,
+        qtdEmpenho,
+        saldoAnterior,
+        faturado: 0
+      };
+
       if (id) {
         const idx = app.state.exams.findIndex(x => x.id == id);
         if (idx !== -1) {
-          app.state.exams[idx] = {
-            ...app.state.exams[idx],
-            item,
-            cat,
-            descEmpenho,
-            descPrestador: descPrestador || descEmpenho,
-            qtdEmpenho,
-            saldoAnterior
-          };
+          examObj.faturado = app.state.exams[idx].faturado || 0;
+          app.state.exams[idx] = examObj;
         }
       } else {
-        app.state.exams.push({
-          id: Date.now(),
-          item,
-          cat,
-          descEmpenho,
-          descPrestador: descPrestador || descEmpenho,
-          qtdEmpenho,
-          saldoAnterior,
-          faturado: 0
-        });
+        app.state.exams.push(examObj);
       }
 
       app.state.exams.sort((a, b) => a.item - b.item);
       app.data.saveExams();
       this.resetExamForm();
       this.renderExamsList();
+
+      // Grava no Google Sheets
+      app.data.sendToCloud({
+        action: "SAVE_EXAM",
+        ...examObj
+      });
     },
 
     editExam(id) {
@@ -874,10 +921,15 @@ const app = {
         app.state.exams = app.state.exams.filter(x => x.id !== id);
         app.data.saveExams();
         this.renderExamsList();
+
+        // Remove na planilha do Google
+        app.data.sendToCloud({
+          action: "DELETE_EXAM",
+          id: id
+        });
       }
     }
   }
 };
 
-// Inicialização segura
 window.addEventListener('DOMContentLoaded', () => app.init());
