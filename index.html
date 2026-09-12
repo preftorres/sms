@@ -33,7 +33,6 @@
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
             
-            <!-- IDENTIFICAÇÃO GERAL DO MUNICÍPIO (Sem vincular à Saúde) -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="app.ui.navigate('landing')">
                 <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
                     <img src="Logo_Torres_100x100.webp" 
@@ -50,16 +49,18 @@
                 </div>
             </div>
 
-            <!-- NAVEGAÇÃO CONTEXTUAL (Renderizada dinamicamente pelo JavaScript) -->
-            <nav id="main-nav" class="flex items-center space-x-2 text-xs font-semibold">
-                <!-- Se estiver na Home: apenas "Início" -->
-                <!-- Se entrar na Saúde: "Início", "Portal da Saúde" e "Auditoria de Contratos" -->
-            </nav>
+            <nav id="main-nav" class="flex items-center space-x-2 text-xs font-semibold"></nav>
         </div>
     </header>
 
     <!-- BOTÃO ADMIN FLUTUANTE DISCRETO -->
-    <div class="fixed top-3.5 right-4 z-50 print:hidden">
+    <div class="fixed top-3.5 right-4 z-50 print:hidden flex items-center gap-2">
+        <div id="auth-user-badge" class="hidden text-[11px] font-bold bg-white/90 border border-slate-200 shadow-sm px-3 py-1.5 rounded-full text-slate-700 flex items-center gap-1.5 backdrop-blur-md">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span id="auth-user-name">Usuário</span>
+            <button onclick="app.auditAuth.logout()" title="Sair da Auditoria" class="ml-1 text-slate-400 hover:text-rose-600 font-black">✕</button>
+        </div>
+
         <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-2.5 glass-blur hover:bg-white rounded-full border border-slate-200 shadow-sm transition-all group">
             <svg class="h-5 w-5 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -69,6 +70,40 @@
 
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
+
+    <!-- MODAL DE LOGIN EXCLUSIVO DA AUDITORIA (VALIDAÇÃO NA PLANILHA GOOGLE) -->
+    <div id="modal-audit-login" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Secretaria da Saúde</span>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">Auditoria de Contratos</h3>
+                <p class="text-xs text-slate-500 mt-1">Informe seu usuário e senha autorizados para acessar o módulo de auditoria.</p>
+            </div>
+
+            <form onsubmit="app.auditAuth.handleLogin(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Usuário</label>
+                    <input id="login-user" type="text" required placeholder="Ex: admin" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Senha</label>
+                    <input id="login-pass" type="password" required placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono tracking-widest border outline-none focus:border-blue-500">
+                </div>
+
+                <p id="login-error-msg" class="hidden text-xs text-rose-600 font-bold text-center pt-1"></p>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.ui.navigate('landing')" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- MODAL DE NOVO CONTRATO -->
     <div id="modal-new-contract" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
@@ -112,36 +147,20 @@
         </div>
     </div>
 
-    <!-- MODAL DE AUTENTICAÇÃO ADMINISTRATIVA -->
-    <div id="modal-auth" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl">
-            <h3 class="text-2xl font-black text-slate-800 mb-2 text-center">Acesso Restrito</h3>
-            <p class="text-slate-500 text-center mb-6 text-xs">Digite a senha administrativa e tecle <b>Enter</b></p>
-            <input type="password" id="input-pass" 
-                   onkeydown="if(event.key === 'Enter') app.admin.verify()"
-                   class="w-full bg-slate-100 border-2 border-transparent p-4 rounded-2xl mb-4 outline-none focus:border-blue-500 text-center text-xl font-mono tracking-[0.4em]" 
-                   placeholder="••••">
-            <div class="flex gap-3">
-                <button onclick="app.ui.toggleAuthModal(false)" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
-                <button onclick="app.admin.verify()" class="flex-1 bg-torres-dark text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-800 transition-all shadow-md">Entrar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- PAINEL ADMINISTRATIVO -->
-    <div id="admin-panel" class="fixed inset-0 z-[110] hidden bg-slate-50 overflow-y-auto">
+    <!-- PAINEL ADMINISTRATIVO COM GESTÃO DE USUÁRIOS -->
+    <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Gestão de Sistemas</span>
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Gerenciador de Acessos & Procedimentos</h2>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Gerenciador de Acessos & Usuários</h2>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="app.admin.logout()" class="px-4 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200">Encerrar Sessão</button>
-                    <button onclick="app.admin.exit()" class="bg-torres-dark text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-slate-800 transition">Salvar e Fechar</button>
+                    <button onclick="app.admin.exit()" class="bg-torres-dark text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-slate-800 transition">Fechar</button>
                 </div>
             </div>
 
+            <!-- ABAS DO ADMIN (ATALHOS, PROCEDIMENTOS E USUÁRIOS) -->
             <div class="flex border-b border-slate-200 mb-8 gap-2">
                 <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600">
                     Atalhos do Portal
@@ -149,8 +168,12 @@
                 <button id="admin-tab-btn-contrato" onclick="app.admin.switchTab('contrato')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600">
                     Procedimentos do Contrato
                 </button>
+                <button id="admin-tab-btn-usuarios" onclick="app.admin.switchTab('usuarios')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600">
+                    Usuários da Auditoria (Google Sheets)
+                </button>
             </div>
 
+            <!-- ABA 1: ATALHOS -->
             <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -173,6 +196,7 @@
                 </div>
             </div>
 
+            <!-- ABA 2: PROCEDIMENTOS -->
             <div id="admin-view-contrato" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-3xl border shadow-sm">
                     <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame no Contrato Ativo</h3>
@@ -233,6 +257,67 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ABA 3: GESTÃO DE USUÁRIOS (CRIAR E EXCLUIR NA PLANILHA GOOGLE) -->
+            <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
+                <!-- Formulário de Novo Usuário -->
+                <div class="lg:col-span-4">
+                    <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
+                        <h3 class="font-bold text-base mb-4 text-slate-800">Cadastrar Novo Usuário</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nome Completo</label>
+                                <input id="user-field-nome" type="text" placeholder="Ex: Carlos Silva" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nome de Usuário (Login)</label>
+                                <input id="user-field-login" type="text" placeholder="Ex: carlos.saude" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Senha de Acesso</label>
+                                <input id="user-field-senha" type="password" placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Perfil / Cargo</label>
+                                <select id="user-field-perfil" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                                    <option value="Operador">Fiscal / Operador</option>
+                                    <option value="Administrador">Administrador Geral</option>
+                                </select>
+                            </div>
+                            <button onclick="app.admin.createUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs shadow transition">
+                                Gravar Usuário na Planilha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Usuários Ativos -->
+                <div class="lg:col-span-8">
+                    <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                            <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Usuários Cadastrados na Aba _Usuarios</h4>
+                            <button onclick="app.admin.loadUsersList()" class="text-xs font-bold text-blue-600 hover:underline">🔄 Atualizar Lista</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] border-b">
+                                    <tr>
+                                        <th class="p-3.5">Nome</th>
+                                        <th class="p-3.5">Usuário (Login)</th>
+                                        <th class="p-3.5">Perfil</th>
+                                        <th class="p-3.5">Data Cadastro</th>
+                                        <th class="p-3.5 text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adm-users-list-tbody" class="divide-y divide-slate-100 font-medium">
+                                    <!-- Renderizado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
