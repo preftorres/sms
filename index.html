@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal da Saúde e Auditoria - Prefeitura de Torres</title>
     
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
@@ -30,7 +29,7 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
 
-    <!-- CABEÇALHO GLOBAL (Menu com botão ativo em fundo azul claro) -->
+    <!-- CABEÇALHO GLOBAL -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="app.ui.navigate('landing')">
@@ -49,7 +48,6 @@
                 </div>
             </div>
 
-            <!-- BOTÕES DE NAVEGAÇÃO -->
             <nav id="main-nav" class="flex items-center space-x-2 text-xs font-semibold">
                 <button id="nav-btn-landing" onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all">
                     Início
@@ -64,7 +62,7 @@
         </div>
     </header>
 
-    <!-- BOTÃO ADMIN DISCRETO ORIGINAL -->
+    <!-- BOTÃO ADMIN FLUTUANTE DISCRETO -->
     <div class="fixed top-3.5 right-4 z-50 print:hidden">
         <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-2.5 glass-blur hover:bg-white rounded-full border border-slate-200 shadow-sm transition-all group">
             <svg class="h-5 w-5 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,22 +71,60 @@
         </button>
     </div>
 
-    <!-- ÁREA PRINCIPAL DA SPA -->
-    <div id="app-viewport" class="flex-grow flex flex-col">
-        <!-- O conteúdo será injetado aqui via app.render.all() -->
+    <!-- VIEWPORT DA SPA -->
+    <div id="app-viewport" class="flex-grow flex flex-col"></div>
+
+    <!-- MODAL DE NOVO CONTRATO (CRIA NOVA ABA NO GOOGLE SHEETS) -->
+    <div id="modal-new-contract" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                <div>
+                    <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Google Sheets Integrado</span>
+                    <h3 class="text-xl font-black text-slate-800">Adicionar Novo Contrato</h3>
+                </div>
+                <button onclick="app.audit.closeNewContractModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-6">Ao confirmar, o sistema criará automaticamente uma **nova aba na planilha do Google** pronta para receber este contrato.</p>
+
+            <div class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Contrato</label>
+                    <input id="new-contract-num" type="text" placeholder="Ex: 85/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Empenhos Vinculados</label>
+                    <input id="new-contract-empenhos" type="text" placeholder="Ex: 4120/2026 e 4121/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Credor / Laboratório Prestador</label>
+                    <input id="new-contract-prestador" type="text" placeholder="Ex: Laboratório Alpha Diagnósticos Ltda" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div class="pt-2">
+                    <label class="inline-flex items-center text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                        <input type="checkbox" id="new-contract-copy-template" checked class="w-4 h-4 rounded text-blue-600 mr-2 border-slate-300">
+                        Carregar lista base de procedimentos como modelo
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-8 flex gap-3">
+                <button onclick="app.audit.closeNewContractModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                <button onclick="app.audit.confirmCreateContract()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
+                    Criar Aba na Planilha
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- MODAL DE LOGIN (SENHA ORIGINAL: admin123) -->
+    <!-- MODAL DE AUTENTICAÇÃO -->
     <div id="modal-auth" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl">
             <h3 class="text-2xl font-black text-slate-800 mb-2 text-center">Acesso Restrito</h3>
             <p class="text-slate-500 text-center mb-6 text-xs">Digite a senha administrativa e tecle <b>Enter</b></p>
-            
             <input type="password" id="input-pass" 
                    onkeydown="if(event.key === 'Enter') app.admin.verify()"
                    class="w-full bg-slate-100 border-2 border-transparent p-4 rounded-2xl mb-4 outline-none focus:border-blue-500 text-center text-xl font-mono tracking-[0.4em]" 
                    placeholder="••••">
-            
             <div class="flex gap-3">
                 <button onclick="app.ui.toggleAuthModal(false)" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
                 <button onclick="app.admin.verify()" class="flex-1 bg-torres-dark text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-800 transition-all shadow-md">Entrar</button>
@@ -96,7 +132,7 @@
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO (FULLSCREEN COM ABAS) -->
+    <!-- PAINEL ADMINISTRATIVO -->
     <div id="admin-panel" class="fixed inset-0 z-[110] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -110,17 +146,16 @@
                 </div>
             </div>
 
-            <!-- NAVEGAÇÃO DE ABAS DO ADMIN -->
             <div class="flex border-b border-slate-200 mb-8 gap-2">
                 <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600">
                     Atalhos do Portal
                 </button>
                 <button id="admin-tab-btn-contrato" onclick="app.admin.switchTab('contrato')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600">
-                    Contrato & Exames
+                    Procedimentos do Contrato Ativo
                 </button>
             </div>
 
-            <!-- ABA 1: GERENCIAR LINKS (DRAG & DROP) -->
+            <!-- ABA DE LINKS -->
             <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -143,33 +178,10 @@
                 </div>
             </div>
 
-            <!-- ABA 2: GERENCIAR CONTRATOS & EXAMES -->
+            <!-- ABA DE CONTRATOS & PROCEDIMENTOS -->
             <div id="admin-view-contrato" class="hidden space-y-8">
-                <!-- Informações Contratuais -->
                 <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                    <h3 class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Dados Principais do Contrato</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nº do Contrato</label>
-                            <input id="adm-contract-num" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nº dos Empenhos</label>
-                            <input id="adm-contract-empenhos" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Credor / Prestador</label>
-                            <input id="adm-contract-prestador" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
-                        </div>
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <button onclick="app.admin.saveContractInfo()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow">Salvar Dados do Contrato</button>
-                    </div>
-                </div>
-
-                <!-- Adicionar / Editar Procedimento de Exame -->
-                <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                    <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame na Lista</h3>
+                    <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame no Contrato Selecionado</h3>
                     <input type="hidden" id="adm-exam-id">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
@@ -206,10 +218,9 @@
                     </div>
                 </div>
 
-                <!-- Lista de Procedimentos Cadastrados -->
                 <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
                     <div class="p-5 border-b border-slate-100 flex justify-between items-center">
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Procedimentos Cadastrados no Contrato</h4>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Procedimentos da Aba Selecionada</h4>
                     </div>
                     <div class="overflow-x-auto max-h-96">
                         <table class="w-full text-left text-xs">
@@ -228,11 +239,9 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- SCRIPT MODULAR -->
     <script src="app.js"></script>
 </body>
 </html>
