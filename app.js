@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * PREFEITURA MUNICIPAL DE TORRES - ESTADO DO RIO GRANDE DO SUL
- * Portal de Serviços Municipais & Auditoria da Saúde
+ * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
+ * Portal Integrado & Auditoria com Autenticação na Nuvem (Google Sheets)
  * Arquivo: app.js
  * ============================================================================
  */
@@ -9,13 +9,12 @@
 const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzB_7aIOl2t5Pq3nVBHJ7TyPd2vJsXBJ5HZ0mkg7Xn2mzewLPZ0brFBJB_rp5NfPkjwrw/exec";
 
 const CONFIG = {
-  pass: 'admin123',
   keys: {
     links: 'torres_links_v6',
     contractsList: 'torres_contracts_hub_v1',
     activeContractTab: 'torres_active_tab_v1',
     examsCache: 'torres_exams_cache_v1',
-    adminLogged: 'torres_is_admin_v1'
+    auditSession: 'torres_audit_logged_user'
   }
 };
 
@@ -62,23 +61,143 @@ const TEMPLATE_EXAMS = [
 
 const app = {
   state: {
-    view: 'landing', // 'landing', 'saude_links', 'auditoria_hub', 'auditoria_detalhe'
+    view: 'landing',
     links: [],
     contracts: [],
     activeContractTab: 'Contrato_67_2026',
     exams: [],
-    isAdmin: false,
+    users: [],
+    auth: {
+      isLogged: false,
+      user: null
+    },
     clockTimer: null,
+    pendingView: null,
     filters: { search: '', category: 'ALL', hideZero: false }
   },
 
   init() {
     this.data.loadLocal();
-    this.admin.checkSession();
+    this.auditAuth.checkSession();
     this.router.init();
 
     if (GOOGLE_API_URL) {
       this.data.syncFromCloud();
+    }
+  },
+
+  // MÓDULO DE AUTENTICAÇÃO DA AUDITORIA
+  auditAuth: {
+    checkSession() {
+      const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
+      if (saved) {
+        try {
+          app.state.auth.user = JSON.parse(saved);
+          app.state.auth.isLogged = true;
+          this.updateBadge();
+        } catch (e) {
+          this.logout();
+        }
+      }
+    },
+
+    updateBadge() {
+      const badge = document.getElementById('auth-user-badge');
+      const nameEl = document.getElementById('auth-user-name');
+      if (!badge || !nameEl) return;
+
+      if (app.state.auth.isLogged && app.state.auth.user) {
+        nameEl.textContent = app.state.auth.user.nome || app.state.auth.user.usuario;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    },
+
+    promptLogin(targetView = 'auditoria_hub') {
+      app.state.pendingView = targetView;
+      const modal = document.getElementById('modal-audit-login');
+      const err = document.getElementById('login-error-msg');
+      if (err) err.classList.add('hidden');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('login-user').value = '';
+        document.getElementById('login-pass').value = '';
+        setTimeout(() => document.getElementById('login-user').focus(), 80);
+      }
+    },
+
+    closeLoginModal() {
+      const modal = document.getElementById('modal-audit-login');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    async handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+      const err = document.getElementById('login-error-msg');
+      const btn = document.getElementById('btn-login-submit');
+
+      if (!u || !p) return;
+
+      try {
+        btn.disabled = true;
+        btn.textContent = "Verificando...";
+        err.classList.add('hidden');
+
+        // Validação silenciosa no Google Sheets via Apps Script
+        const url = `${GOOGLE_API_URL}?action=LOGIN&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        const res = await fetch(url, { redirect: 'follow' });
+        const data = await res.json();
+
+        if (data.status === "success" && data.user) {
+          app.state.auth.isLogged = true;
+          app.state.auth.user = data.user;
+          sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(data.user));
+
+          this.updateBadge();
+          this.closeLoginModal();
+
+          // Prossegue para a auditoria
+          const target = app.state.pendingView || 'auditoria_hub';
+          app.state.pendingView = null;
+          app.router.go(target);
+        } else {
+          err.textContent = data.message || "Usuário ou senha incorretos.";
+          err.classList.remove('hidden');
+        }
+      } catch (error) {
+        // Fallback emergencial caso esteja sem internet
+        if (u === "admin" && p === "admin123") {
+          const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral (Offline)", perfil: "Administrador" };
+          app.state.auth.isLogged = true;
+          app.state.auth.user = fallbackUser;
+          sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(fallbackUser));
+          this.updateBadge();
+          this.closeLoginModal();
+          const target = app.state.pendingView || 'auditoria_hub';
+          app.router.go(target);
+        } else {
+          err.textContent = "Erro ao conectar ao Google Sheets. Verifique a internet.";
+          err.classList.remove('hidden');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Entrar";
+      }
+    },
+
+    logout() {
+      app.state.auth.isLogged = false;
+      app.state.auth.user = null;
+      sessionStorage.removeItem(CONFIG.keys.auditSession);
+      this.updateBadge();
+      app.ui.navigate('landing');
     }
   },
 
@@ -141,8 +260,6 @@ const app = {
           if (Array.isArray(res.exams) && res.exams.length > 0) {
             app.state.exams = res.exams;
             this.saveLocalExams();
-          } else if (app.state.activeContractTab === 'Contrato_67_2026' && app.state.exams.length > 0) {
-            await this.seedActiveContract(false);
           }
 
           if (app.state.view === 'auditoria_detalhe') {
@@ -178,24 +295,6 @@ const app = {
       } finally {
         setTimeout(() => app.ui.setSyncStatus(false), 800);
       }
-    },
-
-    async syncShortcutsToCloud() {
-      app.ui.setSyncStatus(true, "Salvando atalhos no Google Sheets...");
-      await this.sendToCloud({
-        action: "SAVE_SHORTCUTS",
-        shortcuts: app.state.links
-      });
-    },
-
-    async seedActiveContract(showConfirm = true) {
-      if (!showConfirm || confirm(`Deseja enviar a base de exames para a aba "${app.state.activeContractTab}" no Google Sheets?`)) {
-        app.ui.setSyncStatus(true, "Enviando dados para a aba...");
-        await app.data.sendToCloud({
-          action: "INITIAL_SEED",
-          exams: app.state.exams
-        });
-      }
     }
   },
 
@@ -209,18 +308,28 @@ const app = {
       let hash = window.location.hash.replace('#', '').trim();
       if (hash === 'saude') hash = 'saude_links';
 
+      let targetView = 'landing';
+
       if (hash === 'auditoria_exames' || hash === 'auditoria') {
-        app.state.view = 'auditoria_hub';
+        targetView = 'auditoria_hub';
       } else if (hash.startsWith('auditoria_contrato=')) {
-        const tab = hash.split('=')[1];
-        app.state.activeContractTab = tab;
-        app.state.view = 'auditoria_detalhe';
+        app.state.activeContractTab = hash.split('=')[1];
+        targetView = 'auditoria_detalhe';
       } else if (['landing', 'saude_links'].includes(hash)) {
-        app.state.view = hash;
-      } else {
-        app.state.view = 'landing';
+        targetView = hash;
       }
 
+      this.go(targetView);
+    },
+
+    go(view) {
+      // BARREIRA DE ACESSO: SE TENTAR ENTRAR NA AUDITORIA SEM ESTAR LOGADO
+      if ((view === 'auditoria_hub' || view === 'auditoria_detalhe') && !app.state.auth.isLogged) {
+        app.auditAuth.promptLogin(view);
+        return;
+      }
+
+      app.state.view = view;
       app.ui.updateActiveMenu();
       app.render.all();
     }
@@ -232,14 +341,12 @@ const app = {
       window.location.hash = view;
     },
 
-    // NAVEGAÇÃO CONTEXTUAL NO CABEÇALHO
     updateActiveMenu() {
       const nav = document.getElementById('main-nav');
       if (!nav) return;
 
       const isLanding = app.state.view === 'landing';
 
-      // 1. SE ESTIVER NA HOME DO MUNICÍPIO: EXIBE APENAS "INÍCIO"
       if (isLanding) {
         nav.innerHTML = `
           <button onclick="app.ui.navigate('landing')" class="nav-btn px-4 py-2 rounded-xl transition-all bg-blue-100 text-blue-950 font-black shadow-sm">
@@ -249,7 +356,6 @@ const app = {
         return;
       }
 
-      // 2. SE ESTIVER DENTRO DO ECOSSISTEMA DA SAÚDE: EXIBE OS ACESSOS DA SAÚDE
       const isPortal = app.state.view === 'saude_links';
       const isAuditoria = app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe';
 
@@ -264,20 +370,6 @@ const app = {
           Auditoria de Contratos
         </button>
       `;
-    },
-
-    toggleAuthModal(show) {
-      const m = document.getElementById('modal-auth');
-      if (!m) return;
-      m.classList.toggle('hidden', !show);
-      m.classList.toggle('flex', show);
-      if (show) {
-        const inp = document.getElementById('input-pass');
-        if (inp) {
-          inp.value = '';
-          setTimeout(() => inp.focus(), 60);
-        }
-      }
     },
 
     setSyncStatus(isSyncing, text = "") {
@@ -315,11 +407,9 @@ const app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    // TELA 1: HOME MUNICIPAL COM GRADE DE SECRETARIAS (UX RESPONSIVO E MODERNO)
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
-            <!-- IDENTIFICAÇÃO HERO COM LOGO OFICIAL -->
             <div class="mb-10 text-center max-w-2xl">
                 <div class="w-28 h-28 md:w-36 md:h-36 bg-white rounded-full shadow-2xl flex items-center justify-center p-3 mb-6 mx-auto border-4 border-slate-100">
                     <img src="Logo_Torres_100x100.webp" 
@@ -335,10 +425,7 @@ const app = {
                 <div class="h-1 w-20 bg-blue-600 mx-auto mt-3 rounded-full"></div>
             </div>
 
-            <!-- GRADE DE SECRETARIAS (SAÚDE ATIVA + SECRETARIAS EM DESENVOLVIMENTO) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
-                
-                <!-- 1. SECRETARIA DA SAÚDE (ATIVO COM ACESSO LIBERADO) -->
                 <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -358,69 +445,52 @@ const app = {
                     </div>
                 </button>
 
-                <!-- 2. SECRETARIA DE EDUCAÇÃO (EM DESENVOLVIMENTO) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
-                                Em Breve
-                            </span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">Em Breve</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Educação</h2>
                         <p class="text-slate-400 font-medium text-xs leading-relaxed">Gestão escolar, transporte de alunos, alimentação e vagas da rede municipal.</p>
                     </div>
-                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
-                        Ambiente em Implantação
-                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
-                <!-- 3. SECRETARIA DE TURISMO E CULTURA (EM DESENVOLVIMENTO) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
-                                Em Breve
-                            </span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">Em Breve</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Turismo e Cultura</h2>
                         <p class="text-slate-400 font-medium text-xs leading-relaxed">Calendário oficial de eventos, patrimônio histórico e cadastro turístico de Torres.</p>
                     </div>
-                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
-                        Ambiente em Implantação
-                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
-                <!-- 4. GABINETE E ADMINISTRAÇÃO (EM DESENVOLVIMENTO) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
-                                Em Breve
-                            </span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">Em Breve</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Administração Geral</h2>
-                        <p class="text-slate-400 font-medium text-xs leading-relaxed">Protocolo municipal, transparência pública, certidões e recursos humanos.</p>
+                        <p class="text-slate-400 font-medium text-xs leading-relaxed">Protocolo municipal, transparência pública, certidões e processos eletrônicos.</p>
                     </div>
-                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
-                        Ambiente em Implantação
-                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
-
             </div>
         </div>
       `;
     },
 
-    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -443,7 +513,6 @@ const app = {
 
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                
                 <!-- CARD DESTAQUE: AUDITORIA DE CONTRATOS (COM BORDA AZUL DE DESTAQUE) -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
@@ -459,15 +528,15 @@ const app = {
                             </svg>
                         </div>
                         <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-blue-600 transition">Auditoria de Cotas de Exames</h3>
-                        <p class="text-sm text-slate-400 font-medium leading-tight">Acesse os contratos de exames, acompanhamento de empenhos e execução.</p>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Acesso protegido para auditoria de contratos, empenhos e execução.</p>
                     </div>
                     <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-                        <span>Acessar Painel</span>
+                        <span>Acessar Módulo</span>
                         <span class="group-hover:translate-x-1 transition">→</span>
                     </div>
                 </button>
 
-                <!-- LINKS SALVOS NO GOOGLE SHEETS -->
+                <!-- LINKS INSTITUCIONAIS -->
                 ${app.state.links.map(l => `
                     <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between">
                         <div>
@@ -503,7 +572,6 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
-    // TELA 3A: HUB DE CONTRATOS
     auditoriaHub(el) {
       el.innerHTML = `
         <div class="container mx-auto px-6 py-10 fade-in">
@@ -555,7 +623,6 @@ const app = {
                     </div>
                 `).join('')}
 
-                <!-- CARD "+ NOVO CONTRATO" -->
                 <button onclick="app.audit.openNewContractModal()" 
                    class="bg-white/60 hover:bg-white rounded-[2.5rem] p-8 border-2 border-dashed border-slate-300 hover:border-blue-500 shadow-xs hover:shadow-md transition-all flex flex-col items-center justify-center text-center group min-h-[280px]">
                     <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
@@ -570,13 +637,11 @@ const app = {
       `;
     },
 
-    // TELA 3B: DETALHE DO CONTRATO
     auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
       el.innerHTML = `
         <div class="container mx-auto px-4 sm:px-6 py-8 fade-in">
-          
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:border-none print:shadow-none print:p-0">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
@@ -599,7 +664,6 @@ const app = {
                 </div>
               </div>
 
-              <!-- BARRA DE AÇÕES -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.data.syncFromCloud(true)" title="Puxar dados atualizados desta aba no Google Sheets" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
                   <span>🔄</span> Sincronizar
@@ -610,16 +674,13 @@ const app = {
                 <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition">
                   Imprimir / PDF
                 </button>
-                ${app.state.isAdmin ? `
-                  <button onclick="app.admin.trigger(true)" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 shadow transition">
-                    ⚙️ Procedimentos
-                  </button>
-                ` : ''}
+                <button onclick="app.admin.trigger(true)" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 shadow transition">
+                  ⚙️ Procedimentos
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- KPIS -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Empenhado</span>
@@ -643,7 +704,6 @@ const app = {
             </div>
           </div>
 
-          <!-- FILTROS -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row justify-between gap-4 print:hidden">
             <div class="flex-1 flex flex-col sm:flex-row gap-3">
               <input type="text" id="filter-search" oninput="app.audit.filter()" placeholder="Buscar por código ou descrição nesta aba..." class="flex-1 px-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
@@ -659,7 +719,6 @@ const app = {
             </label>
           </div>
 
-          <!-- TABELA DE EXAMES COM SCROLL INTERNO -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -685,7 +744,6 @@ const app = {
               Nenhum exame cadastrado para este contrato.
             </div>
           </div>
-
         </div>
       `;
 
@@ -726,7 +784,6 @@ const app = {
       }
 
       const safeTabName = `Contrato_${num.replace(/[^a-zA-Z0-9]/g, '_')}`;
-
       const now = new Date();
       const dateStr = now.toLocaleDateString('pt-BR');
       const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -954,36 +1011,13 @@ const app = {
   },
 
   admin: {
-    checkSession() {
-      app.state.isAdmin = localStorage.getItem(CONFIG.keys.adminLogged) === 'true';
-    },
-
     trigger(directToContract = false) {
-      if (app.state.isAdmin) {
-        this.openPanel(directToContract);
-      } else {
-        app.ui.toggleAuthModal(true);
+      // Se não estiver logado, pede a autenticação primeiro
+      if (!app.state.auth.isLogged) {
+        app.auditAuth.promptLogin('landing');
+        return;
       }
-    },
-
-    verify() {
-      const input = document.getElementById('input-pass');
-      if (input && input.value === CONFIG.pass) {
-        app.state.isAdmin = true;
-        localStorage.setItem(CONFIG.keys.adminLogged, 'true');
-        app.ui.toggleAuthModal(false);
-        this.openPanel();
-      } else {
-        alert("Senha Inválida!");
-      }
-      if (input) input.value = '';
-    },
-
-    logout() {
-      app.state.isAdmin = false;
-      localStorage.removeItem(CONFIG.keys.adminLogged);
-      this.exit();
-      alert("Sessão administrativa finalizada.");
+      this.openPanel(directToContract);
     },
 
     openPanel(directToContract = false) {
@@ -998,6 +1032,7 @@ const app = {
       }
       this.renderLinksList();
       this.renderExamsList();
+      this.loadUsersList();
     },
 
     exit() {
@@ -1009,21 +1044,100 @@ const app = {
     switchTab(tab) {
       const viewLinks = document.getElementById('admin-view-links');
       const viewContrato = document.getElementById('admin-view-contrato');
+      const viewUsuarios = document.getElementById('admin-view-usuarios');
       const btnLinks = document.getElementById('admin-tab-btn-links');
       const btnContrato = document.getElementById('admin-tab-btn-contrato');
+      const btnUsuarios = document.getElementById('admin-tab-btn-usuarios');
 
-      if (!viewLinks || !viewContrato) return;
+      [viewLinks, viewContrato, viewUsuarios].forEach(v => v && v.classList.add('hidden'));
+      [btnLinks, btnContrato, btnUsuarios].forEach(b => {
+        if (b) b.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
+      });
 
-      if (tab === 'links') {
+      if (tab === 'links' && viewLinks) {
         viewLinks.classList.remove('hidden');
-        viewContrato.classList.add('hidden');
-        if (btnLinks) btnLinks.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
-        if (btnContrato) btnContrato.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
-      } else {
-        viewLinks.classList.add('hidden');
+        btnLinks.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+      } else if (tab === 'contrato' && viewContrato) {
         viewContrato.classList.remove('hidden');
-        if (btnContrato) btnContrato.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
-        if (btnLinks) btnLinks.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
+        btnContrato.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+      } else if (tab === 'usuarios' && viewUsuarios) {
+        viewUsuarios.classList.remove('hidden');
+        btnUsuarios.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+        this.loadUsersList();
+      }
+    },
+
+    // GESTÃO DE USUÁRIOS NA NUVEM (_Usuarios)
+    async loadUsersList() {
+      const tbody = document.getElementById('adm-users-list-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Consultando usuários no Google Sheets...</td></tr>`;
+
+      try {
+        const res = await fetch(`${GOOGLE_API_URL}?action=GET_USERS`, { redirect: 'follow' });
+        const data = await res.json();
+
+        if (data.status === "success" && Array.isArray(data.users)) {
+          app.state.users = data.users;
+          tbody.innerHTML = data.users.map(u => `
+            <tr class="hover:bg-slate-50">
+              <td class="p-3.5 font-bold text-slate-800">${u.nome || u.usuario}</td>
+              <td class="p-3.5 font-mono text-blue-700 font-bold">${u.usuario}</td>
+              <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700'}">${u.perfil}</span></td>
+              <td class="p-3.5 text-slate-400">${u.createdAt || "—"}</td>
+              <td class="p-3.5 text-center">
+                <button onclick="app.admin.deleteUser(${u.id}, '${u.usuario}')" class="text-rose-500 hover:text-rose-700 font-bold">Excluir</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-500">Erro ao carregar usuários da nuvem.</td></tr>`;
+      }
+    },
+
+    async createUser() {
+      const nome = document.getElementById('user-field-nome').value.trim();
+      const usuario = document.getElementById('user-field-login').value.trim().toLowerCase();
+      const senha = document.getElementById('user-field-senha').value.trim();
+      const perfil = document.getElementById('user-field-perfil').value;
+
+      if (!usuario || !senha) {
+        alert("Preencha ao menos o nome de usuário e a senha.");
+        return;
+      }
+
+      const now = new Date();
+      const createdAt = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+      app.ui.setSyncStatus(true, "Gravando novo usuário no Google Sheets...");
+
+      await app.data.sendToCloud({
+        action: "CREATE_USER",
+        usuario,
+        senha,
+        nome: nome || usuario,
+        perfil,
+        createdAt
+      });
+
+      document.getElementById('user-field-nome').value = '';
+      document.getElementById('user-field-login').value = '';
+      document.getElementById('user-field-senha').value = '';
+
+      alert(`Usuário "${usuario}" criado com sucesso na aba _Usuarios!`);
+      setTimeout(() => this.loadUsersList(), 1000);
+    },
+
+    async deleteUser(id, usuario) {
+      if (confirm(`Deseja excluir o usuário "${usuario}" da planilha?`)) {
+        app.ui.setSyncStatus(true, "Excluindo usuário...");
+        await app.data.sendToCloud({
+          action: "DELETE_USER",
+          id: id
+        });
+        setTimeout(() => this.loadUsersList(), 1000);
       }
     },
 
@@ -1068,7 +1182,10 @@ const app = {
           app.state.links.splice(endIndex, 0, moving);
           app.data.saveLinksLocally();
           app.admin.renderLinksList();
-          await app.data.syncShortcutsToCloud();
+          await app.data.sendToCloud({
+            action: "SAVE_SHORTCUTS",
+            shortcuts: app.state.links
+          });
         });
         item.addEventListener('dragend', () => item.classList.remove('dragging'));
       });
@@ -1091,7 +1208,11 @@ const app = {
       app.data.saveLinksLocally();
       this.resetForm();
       this.renderLinksList();
-      await app.data.syncShortcutsToCloud();
+
+      await app.data.sendToCloud({
+        action: "SAVE_SHORTCUTS",
+        shortcuts: app.state.links
+      });
     },
 
     editLink(id) {
@@ -1121,7 +1242,11 @@ const app = {
         app.state.links = app.state.links.filter(l => l.id !== id);
         app.data.saveLinksLocally();
         this.renderLinksList();
-        await app.data.syncShortcutsToCloud();
+
+        await app.data.sendToCloud({
+          action: "SAVE_SHORTCUTS",
+          shortcuts: app.state.links
+        });
       }
     },
 
