@@ -29,11 +29,10 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO GLOBAL UNIFICADO (FLEXBOX RESPONSIVO INTEGRADO) -->
+    <!-- CABEÇALHO GLOBAL UNIFICADO E RESPONSIVO -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             
-            <!-- IDENTIFICAÇÃO INSTITUCIONAL (SEM VÍNCULO ESPECÍFICO À SAÚDE) -->
             <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer min-w-0 flex-1 mr-2" onclick="app.ui.navigate('landing')">
                 <div class="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md shrink-0">
                     <img src="Logo_Torres_100x100.webp" 
@@ -50,19 +49,15 @@
                 </div>
             </div>
 
-            <!-- CONTROLES DO CABEÇALHO (NAVEGAÇÃO + BADGE DE USUÁRIO + CADEADO ADMIN) -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-                
                 <nav id="main-nav" class="flex items-center gap-1 sm:gap-2 text-xs font-semibold"></nav>
 
-                <!-- BADGE DO USUÁRIO LOGADO -->
                 <div id="auth-user-badge" class="hidden text-[10px] sm:text-xs font-bold bg-white/10 border border-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-white flex items-center gap-1.5 backdrop-blur-md">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
-                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[100px] sm:max-w-none">Usuário: Admin</span>
+                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[95px] sm:max-w-none">Usuário: admin</span>
                     <button onclick="app.auditAuth.logout()" title="Sair da Sessão" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">✕</button>
                 </div>
 
-                <!-- BOTÃO CADEADO ADMIN -->
                 <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-white/90 hover:text-white transition shadow-xs shrink-0">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -91,7 +86,7 @@
                 </div>
                 <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Secretaria da Saúde</span>
                 <h3 class="text-xl font-black text-slate-900 mt-0.5">Acesso Restrito</h3>
-                <p class="text-xs text-slate-500 mt-1">Informe suas credenciais autorizadas para acessar o módulo.</p>
+                <p class="text-xs text-slate-500 mt-1">Informe seu usuário e senha autorizados.</p>
             </div>
 
             <form onsubmit="app.auditAuth.handleLogin(event)" class="space-y-3.5">
@@ -114,9 +109,7 @@
         </div>
     </div>
 
-    <!-- 2. MODAIS DO MÓDULO DE DOTAÇÕES -->
-    
-    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (COMPRADOR) -->
+    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (COM SOLICITANTE DIGITÁVEL) -->
     <div id="modal-nova-dotacao" onclick="if(event.target === this) app.dotacoes.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -127,15 +120,21 @@
             </div>
 
             <form onsubmit="app.dotacoes.openConfirmModal(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo</label>
-                    <input id="dot-field-processo" type="text" required placeholder="Ex: 4702/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo</label>
+                        <input id="dot-field-processo" type="text" required placeholder="Ex: 4702/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Origem do Pedido</label>
+                        <input id="dot-field-origem" type="text" required placeholder="Ex: Farmácia Municipal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-emerald-500">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Origem do Pedido</label>
-                        <input id="dot-field-origem" type="text" required placeholder="Ex: Farmácia Municipal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-emerald-500">
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Solicitante (Quem pediu)</label>
+                        <input id="dot-field-solicitante" type="text" required placeholder="Ex: Dra. Mariana / ESF Praia da Cal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Quantidade em Unidades</label>
@@ -144,7 +143,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Objeto / Descrição Resumida</label>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Objeto / Descrição do Pedido</label>
                     <textarea id="dot-field-objeto" rows="3" required placeholder="Ex: Luvas cirúrgicas estéreis e máscaras descartáveis..." class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-emerald-500 resize-none"></textarea>
                 </div>
 
@@ -158,7 +157,7 @@
         </div>
     </div>
 
-    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO (REVISÃO ANTES DE GRAVAR) -->
+    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO (COMPRADOR VS SOLICITANTE) -->
     <div id="modal-conferencia-dotacao" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-amber-400 animate-fadeIn">
             <div class="text-center mb-5">
@@ -167,10 +166,9 @@
                 </div>
                 <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">Conferência Obrigatória</span>
                 <h3 class="text-lg font-black text-slate-900">Revise os Dados do Lançamento</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Certifique-se de que os números estão corretos antes de gravar no livro oficial.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Certifique-se de que tudo está correto antes de gravar no livro oficial.</p>
             </div>
 
-            <!-- CARTÃO DE RESUMO EM ALTO CONTRASTE -->
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2 mb-6">
                 <div class="flex justify-between border-b border-slate-200 pb-1.5">
                     <span class="text-slate-500 font-bold uppercase text-[10px]">Processo:</span>
@@ -181,6 +179,10 @@
                     <span id="conf-origem" class="font-bold text-slate-800"></span>
                 </div>
                 <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Solicitante (Quem pediu):</span>
+                    <span id="conf-solicitante" class="font-bold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
                     <span class="text-slate-500 font-bold uppercase text-[10px]">Quantidade:</span>
                     <span id="conf-quantidade" class="font-black text-blue-700"></span>
                 </div>
@@ -188,8 +190,8 @@
                     <span class="text-slate-500 font-bold uppercase text-[10px] block mb-0.5">Objeto:</span>
                     <p id="conf-objeto" class="text-slate-700 italic bg-white p-2 rounded-xl border border-slate-100"></p>
                 </div>
-                <div class="pt-1 text-[10px] text-slate-400 text-center">
-                    Responsável pelo envio: <b id="conf-comprador" class="text-slate-700"></b>
+                <div class="pt-2 text-[10px] text-slate-500 text-center border-t border-slate-200">
+                    Comprador responsável: <b id="conf-comprador" class="text-slate-800"></b>
                 </div>
             </div>
 
@@ -204,7 +206,58 @@
         </div>
     </div>
 
-    <!-- 2C. MODAL DE BAIXA CONTÁBIL DO GESTOR FINANCEIRO (CHECK COM DOCUMENTO OPCIONAL) -->
+    <!-- 2C. MODAL DE EDIÇÃO DE DOTAÇÃO (PARA ADMIN E GESTOR FINANCEIRO) -->
+    <div id="modal-editar-dotacao" onclick="if(event.target === this) app.dotacoes.closeEditModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">Acesso Especial</span>
+                <h3 class="text-xl font-black text-slate-900">Editar Pedido de Dotação</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Disponível para Administrador e Gestor Financeiro.</p>
+            </div>
+
+            <form onsubmit="app.dotacoes.confirmEdit(event)" class="space-y-3.5">
+                <input type="hidden" id="edit-dot-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo</label>
+                        <input id="edit-dot-processo" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Origem do Pedido</label>
+                        <input id="edit-dot-origem" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Solicitante (Quem pediu)</label>
+                        <input id="edit-dot-solicitante" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Quantidade em Unidades</label>
+                        <input id="edit-dot-quantidade" type="number" min="1" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Objeto / Descrição</label>
+                    <textarea id="edit-dot-objeto" rows="3" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-amber-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.dotacoes.closeEditModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3 rounded-xl font-black text-xs transition shadow-md">
+                        Salvar Correções
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2D. MODAL DE BAIXA CONTÁBIL DO GESTOR FINANCEIRO -->
     <div id="modal-baixa-dotacao" onclick="if(event.target === this) app.dotacoes.closeBaixaModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -238,9 +291,7 @@
         </div>
     </div>
 
-    <!-- 3. MODAIS DE AUDITORIA, CONTRATOS E GEMINI -->
-    
-    <!-- MODAL DO GEMINI -->
+    <!-- 3. MODAIS DO GEMINI E NOVO CONTRATO -->
     <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
         <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
             <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
@@ -392,7 +443,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- 4. PAINEL ADMINISTRATIVO COM OS 3 PERFIS (COMPRADOR, GESTOR FINANCEIRO, ADMIN) -->
+    <!-- 4. PAINEL ADMINISTRATIVO COM OS 3 PERFIS -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -417,7 +468,6 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </button>
             </div>
 
-            <!-- ABA 1: ATALHOS -->
             <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -440,7 +490,6 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </div>
             </div>
 
-            <!-- ABA 2: PROCEDIMENTOS -->
             <div id="admin-view-contrato" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-3xl border shadow-sm">
                     <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame no Contrato Ativo</h3>
@@ -502,7 +551,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </div>
             </div>
 
-            <!-- ABA 3: USUÁRIOS (COM A TRÍADE: COMPRADOR, GESTOR FINANCEIRO, ADMINISTRADOR) -->
+            <!-- ABA 3: USUÁRIOS COM OS 3 PERFIS -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -562,6 +611,9 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- CARREGAMENTO MODULAR DOS SCRIPTS (3 ARQUIVOS LEVES E ORGANIZADOS) -->
+    <script src="app-core.js"></script>
+    <script src="app-audit.js"></script>
+    <script src="app-dotacoes.js"></script>
 </body>
 </html>
