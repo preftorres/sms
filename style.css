@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STYLE.CSS - PREFEITURA DE TORRES
+   STYLE.CSS - PREFEITURA DE TORRES (DESIGN SYSTEM MUNICIPAL)
    ========================================================================== */
 
 body {
@@ -71,11 +71,26 @@ input[type="number"].table-num {
   appearance: textfield;
 }
 
-/* Feedback visual de cópia */
+/* Feedback visual de cópia nos 3 botões */
 .btn-copy.copied {
   background-color: #059669 !important;
   color: #ffffff !important;
   border-color: #059669 !important;
+}
+
+/* Badges de Status do Módulo de Dotações */
+.badge-dotacao-pendente {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  font-weight: 800;
+}
+
+.badge-dotacao-registrado {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  font-weight: 800;
 }
 
 /* ==========================================================================
@@ -92,6 +107,9 @@ input[type="number"].table-num {
   #modal-audit-login,
   #modal-new-contract,
   #modal-gemini-import,
+  #modal-nova-dotacao,
+  #modal-conferencia-dotacao,
+  #modal-baixa-dotacao,
   #admin-panel,
   .print\:hidden,
   button,
@@ -120,20 +138,20 @@ input[type="number"].table-num {
     position: static !important;
   }
 
-  #table-audit {
+  #table-audit,
+  #table-dotacoes {
     width: 100% !important;
     border-collapse: collapse !important;
     border: 1px solid #334155 !important;
   }
 
-  #table-audit th,
-  #table-audit td {
+  th, td {
     border: 0.5px solid #94a3b8 !important;
     padding: 3px 4px !important;
     font-size: 7pt !important;
   }
 
-  #table-audit thead th {
+  thead th {
     background-color: #f1f5f9 !important;
     color: #0f172a !important;
     font-weight: 800 !important;
