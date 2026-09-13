@@ -29,11 +29,11 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO GLOBAL UNIFICADO (100% RESPONSIVO, SEM ELEMENTOS FIXOS FLUTUANTES) -->
+    <!-- CABEÇALHO GLOBAL UNIFICADO (FLEXBOX RESPONSIVO INTEGRADO) -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             
-            <!-- LADO ESQUERDO: BRASÃO + TÍTULO PROTEGIDO CONTRA SOBREPOSIÇÃO -->
+            <!-- IDENTIFICAÇÃO INSTITUCIONAL (SEM VÍNCULO ESPECÍFICO À SAÚDE) -->
             <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer min-w-0 flex-1 mr-2" onclick="app.ui.navigate('landing')">
                 <div class="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md shrink-0">
                     <img src="Logo_Torres_100x100.webp" 
@@ -50,17 +50,16 @@
                 </div>
             </div>
 
-            <!-- LADO DIREITO: NAVEGAÇÃO + BADGE USUÁRIO + CADEADO ADMIN (INTEGRADOS NO FLUXO FLEX) -->
+            <!-- CONTROLES DO CABEÇALHO (NAVEGAÇÃO + BADGE DE USUÁRIO + CADEADO ADMIN) -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                 
-                <!-- MENU DE NAVEGAÇÃO CONTEXTUAL -->
                 <nav id="main-nav" class="flex items-center gap-1 sm:gap-2 text-xs font-semibold"></nav>
 
-                <!-- BADGE DO USUÁRIO LOGADO (NATIVO DO CABEÇALHO) -->
+                <!-- BADGE DO USUÁRIO LOGADO -->
                 <div id="auth-user-badge" class="hidden text-[10px] sm:text-xs font-bold bg-white/10 border border-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-white flex items-center gap-1.5 backdrop-blur-md">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
-                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[95px] sm:max-w-none">Usuário: admin</span>
-                    <button onclick="app.auditAuth.logout()" title="Sair da Auditoria" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">✕</button>
+                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[100px] sm:max-w-none">Usuário: Admin</span>
+                    <button onclick="app.auditAuth.logout()" title="Sair da Sessão" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">✕</button>
                 </div>
 
                 <!-- BOTÃO CADEADO ADMIN -->
@@ -77,7 +76,171 @@
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- MODAL DO GEMINI: IMPORTADOR + GUIA COM INSTRUÇÕES REAIS DE TORRES -->
+    <!-- ================================================================= -->
+    <!-- MODAIS DO SISTEMA                                                 -->
+    <!-- ================================================================= -->
+
+    <!-- 1. MODAL DE LOGIN (AUDITORIA E DOTAÇÕES) -->
+    <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Secretaria da Saúde</span>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">Acesso Restrito</h3>
+                <p class="text-xs text-slate-500 mt-1">Informe suas credenciais autorizadas para acessar o módulo.</p>
+            </div>
+
+            <form onsubmit="app.auditAuth.handleLogin(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Usuário</label>
+                    <input id="login-user" type="text" required placeholder="Ex: admin" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Senha</label>
+                    <input id="login-pass" type="password" required placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono tracking-widest border outline-none focus:border-blue-500">
+                </div>
+
+                <p id="login-error-msg" class="hidden text-xs text-rose-600 font-bold text-center pt-1"></p>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.auditAuth.cancelLogin()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                    <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MODAIS DO MÓDULO DE DOTAÇÕES -->
+    
+    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (COMPRADOR) -->
+    <div id="modal-nova-dotacao" onclick="if(event.target === this) app.dotacoes.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Livro Digital de Dotações</span>
+                <h3 class="text-xl font-black text-slate-900">Novo Lançamento de Pedido</h3>
+            </div>
+
+            <form onsubmit="app.dotacoes.openConfirmModal(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo</label>
+                    <input id="dot-field-processo" type="text" required placeholder="Ex: 4702/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Origem do Pedido</label>
+                        <input id="dot-field-origem" type="text" required placeholder="Ex: Farmácia Municipal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Quantidade em Unidades</label>
+                        <input id="dot-field-quantidade" type="number" min="1" required placeholder="Ex: 5000" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Objeto / Descrição Resumida</label>
+                    <textarea id="dot-field-objeto" rows="3" required placeholder="Ex: Luvas cirúrgicas estéreis e máscaras descartáveis..." class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-emerald-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.dotacoes.closeNewModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
+                        Avançar para Conferência →
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO (REVISÃO ANTES DE GRAVAR) -->
+    <div id="modal-conferencia-dotacao" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-amber-400 animate-fadeIn">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">Conferência Obrigatória</span>
+                <h3 class="text-lg font-black text-slate-900">Revise os Dados do Lançamento</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Certifique-se de que os números estão corretos antes de gravar no livro oficial.</p>
+            </div>
+
+            <!-- CARTÃO DE RESUMO EM ALTO CONTRASTE -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2 mb-6">
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Processo:</span>
+                    <span id="conf-processo" class="font-black text-slate-900 text-sm"></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Origem:</span>
+                    <span id="conf-origem" class="font-bold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Quantidade:</span>
+                    <span id="conf-quantidade" class="font-black text-blue-700"></span>
+                </div>
+                <div>
+                    <span class="text-slate-500 font-bold uppercase text-[10px] block mb-0.5">Objeto:</span>
+                    <p id="conf-objeto" class="text-slate-700 italic bg-white p-2 rounded-xl border border-slate-100"></p>
+                </div>
+                <div class="pt-1 text-[10px] text-slate-400 text-center">
+                    Responsável pelo envio: <b id="conf-comprador" class="text-slate-700"></b>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="app.dotacoes.cancelConfirm()" class="flex-1 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition">
+                    ✏️ Corrigir Dados
+                </button>
+                <button type="button" onclick="app.dotacoes.saveToCloud()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-black text-xs transition shadow-md">
+                    ✓ Gravar no Livro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2C. MODAL DE BAIXA CONTÁBIL DO GESTOR FINANCEIRO (CHECK COM DOCUMENTO OPCIONAL) -->
+    <div id="modal-baixa-dotacao" onclick="if(event.target === this) app.dotacoes.closeBaixaModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Gestão Financeira</span>
+                <h3 class="text-lg font-black text-slate-900">Confirmar Registro no Sistema</h3>
+                <p id="baixa-info-processo" class="text-xs text-slate-500 mt-1 font-semibold"></p>
+            </div>
+
+            <form onsubmit="app.dotacoes.confirmBaixa(event)" class="space-y-4">
+                <input type="hidden" id="baixa-target-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Nº do Empenho / Reserva / Registro <span class="text-slate-400 font-normal">(Opcional)</span>
+                    </label>
+                    <input id="baixa-field-doc" type="text" placeholder="Ex: 1234/2026 (ou deixe em branco)" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
+                        Confirmar Baixa ✅
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. MODAIS DE AUDITORIA, CONTRATOS E GEMINI -->
+    
+    <!-- MODAL DO GEMINI -->
     <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
         <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
             <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
@@ -187,43 +350,9 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- MODAL DE LOGIN DA AUDITORIA -->
-    <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
-            <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-
-            <div class="text-center mb-6">
-                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                </div>
-                <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Secretaria da Saúde</span>
-                <h3 class="text-xl font-black text-slate-900 mt-0.5">Auditoria de Contratos</h3>
-                <p class="text-xs text-slate-500 mt-1">Informe seu usuário e senha autorizados para acessar o módulo de auditoria.</p>
-            </div>
-
-            <form onsubmit="app.auditAuth.handleLogin(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Usuário</label>
-                    <input id="login-user" type="text" required placeholder="Ex: admin" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Senha</label>
-                    <input id="login-pass" type="password" required placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono tracking-widest border outline-none focus:border-blue-500">
-                </div>
-
-                <p id="login-error-msg" class="hidden text-xs text-rose-600 font-bold text-center pt-1"></p>
-
-                <div class="pt-3 flex gap-3">
-                    <button type="button" onclick="app.auditAuth.cancelLogin()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
-                    <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">Entrar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- MODAL DE NOVO CONTRATO -->
     <div id="modal-new-contract" onclick="if(event.target === this) app.audit.closeNewContractModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                 <div>
                     <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Gestão de Auditoria</span>
@@ -263,7 +392,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO -->
+    <!-- 4. PAINEL ADMINISTRATIVO COM OS 3 PERFIS (COMPRADOR, GESTOR FINANCEIRO, ADMIN) -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -284,7 +413,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                     Procedimentos do Contrato
                 </button>
                 <button id="admin-tab-btn-usuarios" onclick="app.admin.switchTab('usuarios')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600">
-                    Usuários da Auditoria (Google Sheets)
+                    Usuários e Perfis (Google Sheets)
                 </button>
             </div>
 
@@ -373,7 +502,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </div>
             </div>
 
-            <!-- ABA 3: USUÁRIOS -->
+            <!-- ABA 3: USUÁRIOS (COM A TRÍADE: COMPRADOR, GESTOR FINANCEIRO, ADMINISTRADOR) -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -385,17 +514,18 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nome de Usuário (Login)</label>
-                                <input id="user-field-login" type="text" placeholder="Ex: carlos.saude" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                                <input id="user-field-login" type="text" placeholder="Ex: carlos.compras" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Senha de Acesso</label>
                                 <input id="user-field-senha" type="password" placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono border outline-none focus:border-blue-500">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Perfil / Cargo</label>
-                                <select id="user-field-perfil" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
-                                    <option value="Operador">Fiscal / Operador</option>
-                                    <option value="Administrador">Administrador Geral</option>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Perfil / Nível de Acesso</label>
+                                <select id="user-field-perfil" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                                    <option value="Comprador">Comprador (Lança Pedidos de Dotação)</option>
+                                    <option value="Gestor Financeiro">Gestor Financeiro (Dá Baixa / Check Contábil)</option>
+                                    <option value="Administrador">Administrador Geral ("Deus" - Controle Total)</option>
                                 </select>
                             </div>
                             <button onclick="app.admin.createUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs shadow transition">
