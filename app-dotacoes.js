@@ -2,27 +2,36 @@
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
  * MÓDULO DE DOTAÇÕES: Livro Digital de Pedidos, Baixa Contábil e Rastreabilidade
- * Arquivo: app-dotacoes.js
+ * Arquivo: app-dotacoes.js (Com Memória de Correção Ativa)
  * ============================================================================
  */
 
 app.dotacoes = {
-  openNewModal() {
+  // Abertura com parâmetro para limpar apenas quando for um pedido novo
+  openNewModal(clearForm = true) {
     const modal = document.getElementById('modal-nova-dotacao');
     if (modal) {
-      modal.classList.remove('hidden'); modal.classList.add('flex');
-      document.getElementById('dot-field-processo').value = '';
-      document.getElementById('dot-field-origem').value = '';
-      document.getElementById('dot-field-solicitante').value = '';
-      document.getElementById('dot-field-quantidade').value = '';
-      document.getElementById('dot-field-objeto').value = '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (clearForm) {
+        document.getElementById('dot-field-processo').value = '';
+        document.getElementById('dot-field-origem').value = '';
+        document.getElementById('dot-field-solicitante').value = '';
+        document.getElementById('dot-field-quantidade').value = '';
+        document.getElementById('dot-field-objeto').value = '';
+      }
+
       setTimeout(() => document.getElementById('dot-field-processo').focus(), 80);
     }
   },
 
   closeNewModal() {
     const modal = document.getElementById('modal-nova-dotacao');
-    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
   },
 
   // MODAL DE DUPLA CONFERÊNCIA (COMPRADOR VS SOLICITANTE)
@@ -41,6 +50,7 @@ app.dotacoes = {
     const compradorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Comprador';
     const compradorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'comprador';
 
+    // Guarda temporariamente para conferência e para recuperar caso queira corrigir
     app.state.pendingDotacaoTemp = {
       processo, origem, solicitante, quantidade, objeto,
       comprador: compradorNome,
@@ -56,13 +66,37 @@ app.dotacoes = {
 
     this.closeNewModal();
     const confModal = document.getElementById('modal-conferencia-dotacao');
-    if (confModal) { confModal.classList.remove('hidden'); confModal.classList.add('flex'); }
+    if (confModal) {
+      confModal.classList.remove('hidden');
+      confModal.classList.add('flex');
+    }
   },
 
+  // RETORNA PARA O FORMULÁRIO PRESERVANDO 100% DOS DADOS DIGITADOS
   cancelConfirm() {
     const confModal = document.getElementById('modal-conferencia-dotacao');
-    if (confModal) { confModal.classList.add('hidden'); confModal.classList.remove('flex'); }
-    this.openNewModal();
+    if (confModal) {
+      confModal.classList.add('hidden');
+      confModal.classList.remove('flex');
+    }
+
+    // Reabre sem limpar os campos
+    const modal = document.getElementById('modal-nova-dotacao');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Garante que os dados digitados permaneçam nos campos
+      if (app.state.pendingDotacaoTemp) {
+        document.getElementById('dot-field-processo').value = app.state.pendingDotacaoTemp.processo || '';
+        document.getElementById('dot-field-origem').value = app.state.pendingDotacaoTemp.origem || '';
+        document.getElementById('dot-field-solicitante').value = app.state.pendingDotacaoTemp.solicitante || '';
+        document.getElementById('dot-field-quantidade').value = app.state.pendingDotacaoTemp.quantidade || '';
+        document.getElementById('dot-field-objeto').value = app.state.pendingDotacaoTemp.objeto || '';
+      }
+
+      setTimeout(() => document.getElementById('dot-field-processo').focus(), 80);
+    }
   },
 
   // GRAVAÇÃO NO TOPO (ORDEM DECRESCENTE)
@@ -70,7 +104,10 @@ app.dotacoes = {
     if (!app.state.pendingDotacaoTemp) return;
 
     const confModal = document.getElementById('modal-conferencia-dotacao');
-    if (confModal) { confModal.classList.add('hidden'); confModal.classList.remove('flex'); }
+    if (confModal) {
+      confModal.classList.add('hidden');
+      confModal.classList.remove('flex');
+    }
 
     const now = new Date();
     const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -86,10 +123,19 @@ app.dotacoes = {
       dataValidacao: ""
     };
 
-    // Insere na primeira posição
+    // Insere no início da lista (mais recente no topo)
     app.state.dotacoes.unshift(newRecord);
     app.data.saveLocalDotacoes();
+
+    // Limpa a memória temporária após o sucesso
     app.state.pendingDotacaoTemp = null;
+
+    // Limpa os campos do formulário para o próximo lançamento
+    document.getElementById('dot-field-processo').value = '';
+    document.getElementById('dot-field-origem').value = '';
+    document.getElementById('dot-field-solicitante').value = '';
+    document.getElementById('dot-field-quantidade').value = '';
+    document.getElementById('dot-field-objeto').value = '';
 
     if (app.state.view === 'dotacoes_hub') {
       app.render.dotacoesHub(document.getElementById('app-viewport'));
@@ -116,12 +162,18 @@ app.dotacoes = {
     document.getElementById('edit-dot-objeto').value = item.objeto;
 
     const modal = document.getElementById('modal-editar-dotacao');
-    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
   },
 
   closeEditModal() {
     const modal = document.getElementById('modal-editar-dotacao');
-    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
   },
 
   async confirmEdit(e) {
@@ -159,19 +211,23 @@ app.dotacoes = {
     if (!item) return;
 
     document.getElementById('baixa-target-id').value = id;
-    document.getElementById('baixa-info-processo').textContent = `Processo nº ${item.processo} (${item.origem} • Pedido por: ${item.solicitante})`;
+    document.getElementById('baixa-info-processo').textContent = `Processo nº ${item.processo} (${item.origem} • Solicitado por: ${item.solicitante})`;
     document.getElementById('baixa-field-doc').value = '';
 
     const m = document.getElementById('modal-baixa-dotacao');
     if (m) {
-      m.classList.remove('hidden'); m.classList.add('flex');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
       setTimeout(() => document.getElementById('baixa-field-doc').focus(), 80);
     }
   },
 
   closeBaixaModal() {
     const m = document.getElementById('modal-baixa-dotacao');
-    if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+    if (m) {
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
   },
 
   async confirmBaixa(e) {
@@ -319,7 +375,7 @@ app.render.dotacoesHub = function(el) {
                 <button onclick="app.data.syncFromCloud(true)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
                     🔄 Atualizar
                 </button>
-                <button onclick="app.dotacoes.openNewModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                <button onclick="app.dotacoes.openNewModal(true)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
                     <span class="text-sm">+</span> Nova Solicitação
                 </button>
             </div>
@@ -351,7 +407,7 @@ app.render.dotacoesHub = function(el) {
             </div>
         </div>
 
-        <!-- BARRA DE PESQUISA E FILTROS -->
+        <!-- BARRA DE PESQUISA E FILTROS (COM O SELETOR DE PENDENTES) -->
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="relative flex-1 w-full">
                 <input type="text" oninput="app.dotacoes.setSearch(this.value)" placeholder="Buscar por processo, solicitante, comprador ou objeto..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-emerald-500">
