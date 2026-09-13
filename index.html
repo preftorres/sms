@@ -29,7 +29,7 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO GLOBAL UNIFICADO E RESPONSIVO -->
+    <!-- CABEÇALHO GLOBAL UNIFICADO -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             
@@ -75,7 +75,7 @@
     <!-- MODAIS DO SISTEMA                                                 -->
     <!-- ================================================================= -->
 
-    <!-- 1. MODAL DE LOGIN (AUDITORIA E DOTAÇÕES) -->
+    <!-- 1. MODAL DE LOGIN -->
     <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -109,7 +109,7 @@
         </div>
     </div>
 
-    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (COM SOLICITANTE DIGITÁVEL) -->
+    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (PROCESSO DE 5 DÍGITOS) -->
     <div id="modal-nova-dotacao" onclick="if(event.target === this) app.dotacoes.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -122,8 +122,8 @@
             <form onsubmit="app.dotacoes.openConfirmModal(event)" class="space-y-3.5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo</label>
-                        <input id="dot-field-processo" type="text" required placeholder="Ex: 4702/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo (5 Dígitos)</label>
+                        <input id="dot-field-processo" type="text" maxlength="10" required placeholder="Ex: 19011" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500 font-mono">
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Origem do Pedido</label>
@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO (COMPRADOR VS SOLICITANTE) -->
+    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO -->
     <div id="modal-conferencia-dotacao" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-amber-400 animate-fadeIn">
             <div class="text-center mb-5">
@@ -172,7 +172,7 @@
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2 mb-6">
                 <div class="flex justify-between border-b border-slate-200 pb-1.5">
                     <span class="text-slate-500 font-bold uppercase text-[10px]">Processo:</span>
-                    <span id="conf-processo" class="font-black text-slate-900 text-sm"></span>
+                    <span id="conf-processo" class="font-black text-slate-900 text-sm font-mono"></span>
                 </div>
                 <div class="flex justify-between border-b border-slate-200 pb-1.5">
                     <span class="text-slate-500 font-bold uppercase text-[10px]">Origem:</span>
@@ -206,7 +206,7 @@
         </div>
     </div>
 
-    <!-- 2C. MODAL DE EDIÇÃO DE DOTAÇÃO (PARA ADMIN E GESTOR FINANCEIRO) -->
+    <!-- 2C. MODAL DE EDIÇÃO DE DOTAÇÃO (ADMIN E GESTOR FINANCEIRO) -->
     <div id="modal-editar-dotacao" onclick="if(event.target === this) app.dotacoes.closeEditModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -223,7 +223,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Processo</label>
-                        <input id="edit-dot-processo" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                        <input id="edit-dot-processo" type="text" required placeholder="Ex: 19011" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500 font-mono">
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Origem do Pedido</label>
@@ -285,6 +285,70 @@
                     <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
                     <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
                         Confirmar Baixa ✅
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2E. MODAL DE EXCLUSÃO BLINDADA (DIGITAÇÃO OBRIGATÓRIA + BLOQUEIO DE COLA) -->
+    <div id="modal-excluir-dotacao" onclick="if(event.target === this) app.dotacoes.closeDeleteModal()" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-rose-500 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-rose-600 tracking-wider">Ação Irreversível</span>
+                <h3 class="text-xl font-black text-slate-900">Excluir Solicitação de Dotação</h3>
+                <p class="text-xs text-slate-500 mt-1">Para confirmar a exclusão definitiva, você deve <b>digitar manualmente</b> o número do processo abaixo.</p>
+            </div>
+
+            <form onsubmit="app.dotacoes.confirmDelete(event)" class="space-y-4">
+                <input type="hidden" id="delete-dot-target-id">
+
+                <!-- CAMPO COM BLOQUEIO DE COLAR (onpaste="return false;") -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                        Digite o Processo: <span id="delete-dot-expected-num" class="text-rose-600 font-mono font-black text-xs"></span>
+                    </label>
+                    <input id="delete-dot-typed-processo" 
+                           type="text" 
+                           required 
+                           autocomplete="off"
+                           onpaste="app.dotacoes.blockPaste(event)"
+                           placeholder="Digite os 5 números aqui..." 
+                           class="w-full p-3.5 bg-slate-50 rounded-xl text-center text-sm font-black font-mono tracking-widest border-2 border-slate-300 focus:border-rose-500 outline-none">
+                    <span class="text-[10px] text-slate-400 block text-center mt-1">🚫 O recurso de colar (Ctrl+V) foi desativado por segurança.</span>
+                    <p id="delete-dot-error-msg" class="text-xs text-rose-600 font-bold text-center mt-1 hidden"></p>
+                </div>
+
+                <!-- CARTÃO VISUAL COM OS DADOS QUE SERÃO EXCLUÍDOS -->
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+                    <span class="text-[10px] font-black uppercase text-slate-400 block border-b pb-1">Resumo do item que será removido:</span>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Origem:</span>
+                        <span id="delete-preview-origem" class="font-bold"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Solicitante:</span>
+                        <span id="delete-preview-solicitante" class="font-bold"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Quantidade:</span>
+                        <span id="delete-preview-quantidade" class="font-black text-rose-700"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-bold block">Objeto:</span>
+                        <p id="delete-preview-objeto" class="italic text-slate-600 text-[11px]"></p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-black text-xs transition shadow-md">
+                        🗑️ Excluir Definitivo
                     </button>
                 </div>
             </form>
@@ -443,7 +507,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- 4. PAINEL ADMINISTRATIVO COM OS 3 PERFIS -->
+    <!-- 4. PAINEL ADMINISTRATIVO -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -468,6 +532,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </button>
             </div>
 
+            <!-- ABA 1: ATALHOS -->
             <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -490,6 +555,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </div>
             </div>
 
+            <!-- ABA 2: PROCEDIMENTOS -->
             <div id="admin-view-contrato" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-3xl border shadow-sm">
                     <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">Adicionar / Editar Exame no Contrato Ativo</h3>
@@ -551,7 +617,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </div>
             </div>
 
-            <!-- ABA 3: USUÁRIOS COM OS 3 PERFIS -->
+            <!-- ABA 3: USUÁRIOS -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -611,7 +677,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- CARREGAMENTO MODULAR DOS SCRIPTS (3 ARQUIVOS LEVES E ORGANIZADOS) -->
+    <!-- CARREGAMENTO DOS 3 ARQUIVOS MODULARES -->
     <script src="app-core.js"></script>
     <script src="app-audit.js"></script>
     <script src="app-dotacoes.js"></script>
