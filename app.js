@@ -1,8 +1,8 @@
 /**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * Portal Integrado & Auditoria com Autenticação, Gemini IA e Google Sheets
- * Arquivo: app.js
+ * Portal Integrado, Auditoria de Exames & Livro Digital de Dotações
+ * Arquivo: app.js (Completo)
  * ============================================================================
  */
 
@@ -14,6 +14,7 @@ const CONFIG = {
     contractsList: 'torres_contracts_hub_v1',
     activeContractTab: 'torres_active_tab_v1',
     examsCache: 'torres_exams_cache_v1',
+    dotacoesCache: 'torres_dotacoes_cache_v1',
     auditSession: 'torres_audit_logged_user'
   }
 };
@@ -38,7 +39,7 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// MODELO DE PROCEDIMENTOS (SEQUENCIAL 01, 02...)
+// MODELO DE PROCEDIMENTOS DE EXAME
 const TEMPLATE_EXAMS = [
   { id: 1, item: "01", cat: 'Laboratorial', descEmpenho: 'Ácido Fólico (Vitamina B9)', descPrestador: '1 - AFOLI - ACIDO FOLICO', qtdEmpenho: 150, saldoAnterior: 150, faturado: 7 },
   { id: 2, item: "02", cat: 'Laboratorial', descEmpenho: 'Ácido Úrico', descPrestador: '1 - AUS - ACIDO URICO', qtdEmpenho: 400, saldoAnterior: 400, faturado: 8 },
@@ -55,6 +56,40 @@ const TEMPLATE_EXAMS = [
   { id: 41, item: "41", cat: 'Laboratorial', descEmpenho: 'Hemograma Completo', descPrestador: '1 - H - HEMOGRAMA', qtdEmpenho: 2000, saldoAnterior: 2000, faturado: 51 }
 ];
 
+// DOTAÇÕES INICIAIS EXEMPLARES (LIVRO DIGITAL)
+const INITIAL_DOTACOES = [
+  {
+    id: 1,
+    processo: "4702/2026",
+    origem: "Farmácia Municipal",
+    objeto: "Medicamentos de Atenção Básica e Insulinas",
+    quantidade: 12000,
+    solicitante: "Carlos Silva",
+    solicitanteLogin: "carlos.compras",
+    dataSolicitacao: "13/09/2026 às 10:15",
+    status: "PENDENTE",
+    empenhoDoc: "",
+    validador: "",
+    validadorLogin: "",
+    dataValidacao: ""
+  },
+  {
+    id: 2,
+    processo: "4680/2026",
+    origem: "Posto Central",
+    objeto: "Luvas cirúrgicas estéreis e máscaras N95",
+    quantidade: 5000,
+    solicitante: "Mariana Costa",
+    solicitanteLogin: "mariana.compras",
+    dataSolicitacao: "13/09/2026 às 09:30",
+    status: "REGISTRADO",
+    empenhoDoc: "3890/2026",
+    validador: "Gestor Financeiro",
+    validadorLogin: "gestor.financeiro",
+    dataValidacao: "13/09/2026 às 11:20"
+  }
+];
+
 const app = {
   state: {
     view: 'landing',
@@ -63,6 +98,10 @@ const app = {
     contracts: [],
     activeContractTab: 'Contrato_67_2026',
     exams: [],
+    dotacoes: [],
+    dotacoesFilter: 'PENDENTES', // Padrão: exibe pendentes com destaque
+    dotacoesSearch: '',
+    pendingDotacaoTemp: null,
     users: [],
     auth: {
       isLogged: false,
@@ -78,11 +117,14 @@ const app = {
     this.auditAuth.checkSession();
     this.router.init();
 
+    // Fecha modais com a tecla ESC
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         app.auditAuth.cancelLogin();
         app.audit.closeNewContractModal();
         app.gemini.closeModal();
+        app.dotacoes.closeNewModal();
+        app.dotacoes.closeBaixaModal();
       }
     });
 
@@ -91,6 +133,397 @@ const app = {
     }
   },
 
+  // =========================================================================
+  // MÓDULO DE AUTENTICAÇÃO E PERFIS (RBAC)
+  // =========================================================================
+  auditAuth: {
+    checkSession() {
+      const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
+      if (saved) {
+        try {
+          app.state.auth.user = JSON.parse(saved);
+          app.state.auth.isLogged = true;
+          this.updateBadge();
+        } catch (e) {
+          this.logout();
+        }
+      }
+    },
+
+    updateBadge() {
+      const badge = document.getElementById('auth-user-badge');
+      const nameEl = document.getElementById('auth-user-name');
+      if (!badge || !nameEl) return;
+
+      if (app.state.auth.isLogged && app.state.auth.user) {
+        const loginUsuario = app.state.auth.user.usuario || 'admin';
+        nameEl.textContent = `Usuário: ${loginUsuario}`;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    },
+
+    promptLogin(targetView = 'auditoria_hub') {
+      app.state.pendingView = targetView;
+      const modal = document.getElementById('modal-audit-login');
+      const err = document.getElementById('login-error-msg');
+      if (err) err.classList.add('hidden');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('login-user').value = '';
+        document.getElementById('login-pass').value = '';
+        setTimeout(() => document.getElementById('login-user').focus(), 80);
+      }
+    },
+
+    closeLoginModal() {
+      const modal = document.getElementById('modal-audit-login');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    cancelLogin() {
+      this.closeLoginModal();
+      app.state.pendingView = null;
+      const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria') && app.state.previousView !== 'dotacoes_hub')
+        ? app.state.previousView
+        : 'saude_links';
+      app.ui.navigate(target);
+    },
+
+    async handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+      const err = document.getElementById('login-error-msg');
+      const btn = document.getElementById('btn-login-submit');
+
+      if (!u || !p) return;
+
+      try {
+        btn.disabled = true;
+        btn.textContent = "Verificando...";
+        err.classList.add('hidden');
+
+        const url = `${GOOGLE_API_URL}?action=LOGIN&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        const res = await fetch(url, { redirect: 'follow' });
+        const data = await res.json();
+
+        if (data.status === "success" && data.user) {
+          app.state.auth.isLogged = true;
+          app.state.auth.user = data.user;
+          sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(data.user));
+
+          this.updateBadge();
+          this.closeLoginModal();
+
+          const target = app.state.pendingView || 'auditoria_hub';
+          app.state.pendingView = null;
+          app.router.go(target);
+        } else {
+          err.textContent = data.message || "Usuário ou senha incorretos.";
+          err.classList.remove('hidden');
+        }
+      } catch (error) {
+        if (u === "admin" && p === "admin123") {
+          const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral (Offline)", perfil: "Administrador" };
+          app.state.auth.isLogged = true;
+          app.state.auth.user = fallbackUser;
+          sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(fallbackUser));
+          this.updateBadge();
+          this.closeLoginModal();
+          const target = app.state.pendingView || 'auditoria_hub';
+          app.router.go(target);
+        } else {
+          err.textContent = "Erro ao conectar com a planilha. Verifique a internet.";
+          err.classList.remove('hidden');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Entrar";
+      }
+    },
+
+    logout() {
+      app.state.auth.isLogged = false;
+      app.state.auth.user = null;
+      sessionStorage.removeItem(CONFIG.keys.auditSession);
+      this.updateBadge();
+      app.ui.navigate('landing');
+    }
+  },
+
+  // =========================================================================
+  // MÓDULO DE DOTAÇÕES (LIVRO DIGITAL DE PEDIDOS)
+  // =========================================================================
+  dotacoes: {
+    openNewModal() {
+      const modal = document.getElementById('modal-nova-dotacao');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('dot-field-processo').value = '';
+        document.getElementById('dot-field-origem').value = '';
+        document.getElementById('dot-field-quantidade').value = '';
+        document.getElementById('dot-field-objeto').value = '';
+        setTimeout(() => document.getElementById('dot-field-processo').focus(), 80);
+      }
+    },
+
+    closeNewModal() {
+      const modal = document.getElementById('modal-nova-dotacao');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    // ABRE MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO
+    openConfirmModal(e) {
+      e.preventDefault();
+      const processo = document.getElementById('dot-field-processo').value.trim();
+      const origem = document.getElementById('dot-field-origem').value.trim();
+      const quantidade = parseInt(document.getElementById('dot-field-quantidade').value, 10) || 0;
+      const objeto = document.getElementById('dot-field-objeto').value.trim();
+
+      if (!processo || !origem || !quantidade || !objeto) {
+        alert("Preencha todos os campos da dotação.");
+        return;
+      }
+
+      const compradorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Comprador';
+      const compradorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'operador';
+
+      // Guarda os dados para confirmação
+      app.state.pendingDotacaoTemp = {
+        processo,
+        origem,
+        quantidade,
+        objeto,
+        solicitante: compradorNome,
+        solicitanteLogin: compradorLogin
+      };
+
+      // Preenche o modal de conferência visual
+      document.getElementById('conf-processo').textContent = processo;
+      document.getElementById('conf-origem').textContent = origem;
+      document.getElementById('conf-quantidade').textContent = `${quantidade.toLocaleString('pt-BR')} unidades`;
+      document.getElementById('conf-objeto').textContent = objeto;
+      document.getElementById('conf-comprador').textContent = `${compradorNome} (${compradorLogin})`;
+
+      this.closeNewModal();
+      const confModal = document.getElementById('modal-conferencia-dotacao');
+      if (confModal) {
+        confModal.classList.remove('hidden');
+        confModal.classList.add('flex');
+      }
+    },
+
+    cancelConfirm() {
+      const confModal = document.getElementById('modal-conferencia-dotacao');
+      if (confModal) {
+        confModal.classList.add('hidden');
+        confModal.classList.remove('flex');
+      }
+      this.openNewModal();
+    },
+
+    // SALVA NO TOPO DA LISTA (ORDEM DECRESCENTE) E GRAVA NO GOOGLE SHEETS
+    async saveToCloud() {
+      if (!app.state.pendingDotacaoTemp) return;
+
+      const confModal = document.getElementById('modal-conferencia-dotacao');
+      if (confModal) {
+        confModal.classList.add('hidden');
+        confModal.classList.remove('flex');
+      }
+
+      const now = new Date();
+      const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+      const newRecord = {
+        id: Date.now(),
+        ...app.state.pendingDotacaoTemp,
+        dataSolicitacao: dataHoraStr,
+        status: "PENDENTE",
+        empenhoDoc: "",
+        validador: "",
+        validadorLogin: "",
+        dataValidacao: ""
+      };
+
+      // Inserção no início da lista (o mais recente sempre no topo)
+      app.state.dotacoes.unshift(newRecord);
+      app.data.saveLocalDotacoes();
+      app.state.pendingDotacaoTemp = null;
+
+      if (app.state.view === 'dotacoes_hub') {
+        app.render.dotacoesHub(document.getElementById('app-viewport'));
+      }
+
+      // Envia para a planilha Google
+      await app.data.sendToCloud({
+        action: "CREATE_DOTACAO",
+        dotacao: newRecord
+      });
+    },
+
+    // JANELA DE BAIXA DO GESTOR FINANCEIRO (CHECK ✅ COM CAMPO OPCIONAL)
+    openBaixaModal(id) {
+      if (!app.admin.canCheckDotacao()) {
+        alert("Apenas o Gestor Financeiro ou Administrador pode registrar a baixa contábil.");
+        return;
+      }
+
+      const item = app.state.dotacoes.find(d => d.id === id);
+      if (!item) return;
+
+      document.getElementById('baixa-target-id').value = id;
+      document.getElementById('baixa-info-processo').textContent = `Processo nº ${item.processo} (${item.origem} • ${item.solicitante})`;
+      document.getElementById('baixa-field-doc').value = '';
+
+      const m = document.getElementById('modal-baixa-dotacao');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        setTimeout(() => document.getElementById('baixa-field-doc').focus(), 80);
+      }
+    },
+
+    closeBaixaModal() {
+      const m = document.getElementById('modal-baixa-dotacao');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    },
+
+    async confirmBaixa(e) {
+      e.preventDefault();
+      const id = Number(document.getElementById('baixa-target-id').value);
+      const docNum = document.getElementById('baixa-field-doc').value.trim();
+
+      const item = app.state.dotacoes.find(d => d.id === id);
+      if (!item) return;
+
+      const gestorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Gestor Financeiro';
+      const gestorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'financeiro';
+      const now = new Date();
+      const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+      item.status = "REGISTRADO";
+      item.empenhoDoc = docNum || "Confirmado";
+      item.validador = gestorNome;
+      item.validadorLogin = gestorLogin;
+      item.dataValidacao = dataHoraStr;
+
+      app.data.saveLocalDotacoes();
+      this.closeBaixaModal();
+
+      if (app.state.view === 'dotacoes_hub') {
+        app.render.dotacoesHub(document.getElementById('app-viewport'));
+      }
+
+      await app.data.sendToCloud({
+        action: "UPDATE_DOTACAO_STATUS",
+        id: id,
+        status: "REGISTRADO",
+        empenhoDoc: item.empenhoDoc,
+        validador: gestorNome,
+        validadorLogin: gestorLogin,
+        dataValidacao: dataHoraStr
+      });
+    },
+
+    setFilter(status) {
+      app.state.dotacoesFilter = status;
+      if (app.state.view === 'dotacoes_hub') {
+        app.render.dotacoesHub(document.getElementById('app-viewport'));
+      }
+    },
+
+    setSearch(val) {
+      app.state.dotacoesSearch = val.toLowerCase().trim();
+      const tbody = document.getElementById('table-dotacoes-body');
+      if (tbody) {
+        tbody.innerHTML = app.dotacoes.renderTableRows();
+      }
+    },
+
+    renderTableRows() {
+      const filtered = app.state.dotacoes.filter(d => {
+        // Filtro de status (Todos, Pendentes, Registrados)
+        const matchStatus = (app.state.dotacoesFilter === 'TODOS') ||
+                            (app.state.dotacoesFilter === 'PENDENTES' && d.status === 'PENDENTE') ||
+                            (app.state.dotacoesFilter === 'REGISTRADOS' && d.status === 'REGISTRADO');
+
+        // Filtro de busca textual
+        const search = app.state.dotacoesSearch;
+        const matchSearch = !search ||
+                            d.processo.toLowerCase().includes(search) ||
+                            d.origem.toLowerCase().includes(search) ||
+                            d.objeto.toLowerCase().includes(search) ||
+                            d.solicitante.toLowerCase().includes(search) ||
+                            (d.empenhoDoc && d.empenhoDoc.toLowerCase().includes(search));
+
+        return matchStatus && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        return `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium text-xs">Nenhum registro de dotação encontrado para os filtros selecionados.</td></tr>`;
+      }
+
+      const canCheck = app.admin.canCheckDotacao();
+
+      return filtered.map(d => {
+        const isPend = d.status === 'PENDENTE';
+        return `
+          <tr class="border-b border-slate-200 transition ${isPend ? 'bg-amber-50/40 hover:bg-amber-100/40' : 'bg-white hover:bg-slate-50'}">
+            <td class="p-3.5 font-black text-slate-900 text-xs sm:text-sm font-mono">${d.processo}</td>
+            <td class="p-3.5">
+              <span class="block font-bold text-slate-800 text-xs">${d.origem}</span>
+              <span class="block text-[11px] text-slate-500 line-clamp-1 italic">${d.objeto}</span>
+            </td>
+            <td class="p-3.5 text-right font-black text-slate-900 text-xs sm:text-sm">${d.quantidade.toLocaleString('pt-BR')} un.</td>
+            <td class="p-3.5 text-xs text-slate-600">
+              <div class="flex items-center gap-1">
+                <span class="font-bold text-slate-800">${d.solicitante}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 block">${d.dataSolicitacao}</span>
+            </td>
+            <td class="p-3.5 text-center">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isPend ? 'badge-dotacao-pendente' : 'badge-dotacao-registrado'}">
+                ${isPend ? '⏳ Aguardando' : '✅ Registrado'}
+              </span>
+              ${!isPend && d.empenhoDoc ? `<span class="block text-[10px] text-emerald-800 font-mono font-bold mt-0.5">Doc: ${d.empenhoDoc}</span>` : ''}
+              ${!isPend && d.validador ? `<span class="block text-[9px] text-slate-400 mt-0.5">por ${d.validador}</span>` : ''}
+            </td>
+            <td class="p-3.5 text-center">
+              ${isPend && canCheck ? `
+                <button onclick="app.dotacoes.openBaixaModal(${d.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-xs transition whitespace-nowrap">
+                  ✅ Dar Baixa
+                </button>
+              ` : (isPend ? `
+                <span class="text-[10px] font-bold text-slate-400 italic">Na fila contábil</span>
+              ` : `
+                <span class="text-[11px] font-bold text-emerald-700 flex items-center justify-center gap-1">
+                  <span>✓</span> Baixado
+                </span>
+              `)}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  },
+
+  // =========================================================================
+  // MÓDULO DO GEMINI (IMPORTAÇÃO + GUIA COM OS 3 BOTÕES)
+  // =========================================================================
   gemini: {
     openModal() {
       const modal = document.getElementById('modal-gemini-import');
@@ -219,128 +652,9 @@ const app = {
     }
   },
 
-  auditAuth: {
-    checkSession() {
-      const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
-      if (saved) {
-        try {
-          app.state.auth.user = JSON.parse(saved);
-          app.state.auth.isLogged = true;
-          this.updateBadge();
-        } catch (e) {
-          this.logout();
-        }
-      }
-    },
-
-    // BADGE QUE EXIBE "Usuário: [nome_usuario]"
-    updateBadge() {
-      const badge = document.getElementById('auth-user-badge');
-      const nameEl = document.getElementById('auth-user-name');
-      if (!badge || !nameEl) return;
-
-      if (app.state.auth.isLogged && app.state.auth.user) {
-        const loginUsuario = app.state.auth.user.usuario || 'admin';
-        nameEl.textContent = `Usuário: ${loginUsuario}`;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    },
-
-    promptLogin(targetView = 'auditoria_hub') {
-      app.state.pendingView = targetView;
-      const modal = document.getElementById('modal-audit-login');
-      const err = document.getElementById('login-error-msg');
-      if (err) err.classList.add('hidden');
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.getElementById('login-user').value = '';
-        document.getElementById('login-pass').value = '';
-        setTimeout(() => document.getElementById('login-user').focus(), 80);
-      }
-    },
-
-    closeLoginModal() {
-      const modal = document.getElementById('modal-audit-login');
-      if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }
-    },
-
-    cancelLogin() {
-      this.closeLoginModal();
-      app.state.pendingView = null;
-      const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria'))
-        ? app.state.previousView
-        : 'saude_links';
-      app.ui.navigate(target);
-    },
-
-    async handleLogin(e) {
-      e.preventDefault();
-      const u = document.getElementById('login-user').value.trim();
-      const p = document.getElementById('login-pass').value.trim();
-      const err = document.getElementById('login-error-msg');
-      const btn = document.getElementById('btn-login-submit');
-
-      if (!u || !p) return;
-
-      try {
-        btn.disabled = true;
-        btn.textContent = "Verificando...";
-        err.classList.add('hidden');
-
-        const url = `${GOOGLE_API_URL}?action=LOGIN&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
-        const res = await fetch(url, { redirect: 'follow' });
-        const data = await res.json();
-
-        if (data.status === "success" && data.user) {
-          app.state.auth.isLogged = true;
-          app.state.auth.user = data.user;
-          sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(data.user));
-
-          this.updateBadge();
-          this.closeLoginModal();
-
-          const target = app.state.pendingView || 'auditoria_hub';
-          app.state.pendingView = null;
-          app.router.go(target);
-        } else {
-          err.textContent = data.message || "Usuário ou senha incorretos.";
-          err.classList.remove('hidden');
-        }
-      } catch (error) {
-        if (u === "admin" && p === "admin123") {
-          const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral (Offline)", perfil: "Administrador" };
-          app.state.auth.isLogged = true;
-          app.state.auth.user = fallbackUser;
-          sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(fallbackUser));
-          this.updateBadge();
-          this.closeLoginModal();
-          const target = app.state.pendingView || 'auditoria_hub';
-          app.router.go(target);
-        } else {
-          err.textContent = "Erro ao conectar com a planilha. Verifique a internet.";
-          err.classList.remove('hidden');
-        }
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Entrar";
-      }
-    },
-
-    logout() {
-      app.state.auth.isLogged = false;
-      app.state.auth.user = null;
-      sessionStorage.removeItem(CONFIG.keys.auditSession);
-      this.updateBadge();
-      app.ui.navigate('landing');
-    }
-  },
-
+  // =========================================================================
+  // GERENCIAMENTO DE DADOS (LOCALSTORAGE & GOOGLE SHEETS)
+  // =========================================================================
   data: {
     loadLocal() {
       const rawLinks = localStorage.getItem(CONFIG.keys.links);
@@ -354,6 +668,9 @@ const app = {
 
       const rawExamsCache = localStorage.getItem(`${CONFIG.keys.examsCache}_${app.state.activeContractTab}`);
       app.state.exams = rawExamsCache ? JSON.parse(rawExamsCache) : JSON.parse(JSON.stringify(TEMPLATE_EXAMS));
+
+      const rawDotacoes = localStorage.getItem(CONFIG.keys.dotacoesCache);
+      app.state.dotacoes = rawDotacoes ? JSON.parse(rawDotacoes) : JSON.parse(JSON.stringify(INITIAL_DOTACOES));
     },
 
     saveLocalExams() {
@@ -363,6 +680,10 @@ const app = {
     saveLocalContracts() {
       localStorage.setItem(CONFIG.keys.contractsList, JSON.stringify(app.state.contracts));
       localStorage.setItem(CONFIG.keys.activeContractTab, app.state.activeContractTab);
+    },
+
+    saveLocalDotacoes() {
+      localStorage.setItem(CONFIG.keys.dotacoesCache, JSON.stringify(app.state.dotacoes));
     },
 
     saveLinksLocally() {
@@ -378,6 +699,7 @@ const app = {
         const res = await response.json();
 
         if (res.status === "success") {
+          // 1. Atualiza atalhos
           if (Array.isArray(res.shortcuts) && res.shortcuts.length > 0) {
             app.state.links = res.shortcuts;
             this.saveLinksLocally();
@@ -386,6 +708,7 @@ const app = {
             }
           }
 
+          // 2. Atualiza contratos
           if (Array.isArray(res.contracts) && res.contracts.length > 0) {
             app.state.contracts = res.contracts.map(c => {
               const local = app.state.contracts.find(l => l.tabName === c.tabName);
@@ -397,9 +720,19 @@ const app = {
             this.saveLocalContracts();
           }
 
+          // 3. Atualiza exames do contrato ativo
           if (Array.isArray(res.exams) && res.exams.length > 0) {
             app.state.exams = res.exams;
             this.saveLocalExams();
+          }
+
+          // 4. Atualiza dotações se disponíveis na planilha
+          if (Array.isArray(res.dotacoes) && res.dotacoes.length > 0) {
+            app.state.dotacoes = res.dotacoes;
+            this.saveLocalDotacoes();
+            if (app.state.view === 'dotacoes_hub') {
+              app.render.dotacoesHub(document.getElementById('app-viewport'));
+            }
           }
 
           if (app.state.view === 'auditoria_detalhe') {
@@ -438,6 +771,9 @@ const app = {
     }
   },
 
+  // =========================================================================
+  // ROTEAMENTO SPA (ROUTER)
+  // =========================================================================
   router: {
     init() {
       window.addEventListener('hashchange', () => this.handleRoute());
@@ -455,6 +791,8 @@ const app = {
       } else if (hash.startsWith('auditoria_contrato=')) {
         app.state.activeContractTab = hash.split('=')[1];
         targetView = 'auditoria_detalhe';
+      } else if (hash === 'dotacoes' || hash === 'dotacoes_hub') {
+        targetView = 'dotacoes_hub';
       } else if (['landing', 'saude_links'].includes(hash)) {
         targetView = hash;
       }
@@ -463,12 +801,14 @@ const app = {
     },
 
     go(view) {
-      if ((view === 'auditoria_hub' || view === 'auditoria_detalhe') && !app.state.auth.isLogged) {
+      // Bloqueio de acesso para quem não está logado (Auditoria e Dotações)
+      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub');
+      if (isRestricted && !app.state.auth.isLogged) {
         app.auditAuth.promptLogin(view);
         return;
       }
 
-      if (view !== 'auditoria_hub' && view !== 'auditoria_detalhe') {
+      if (!isRestricted) {
         app.auditAuth.closeLoginModal();
         app.state.previousView = view;
       }
@@ -479,20 +819,22 @@ const app = {
     }
   },
 
+  // =========================================================================
+  // INTERFACE DO USUÁRIO (UI)
+  // =========================================================================
   ui: {
     navigate(view) {
       if (view === 'saude') view = 'saude_links';
       window.location.hash = view;
     },
 
-    // MENU CONTEXTUAL ENXUTO (SEM BOTÃO DUPLICADO "INÍCIO" NA HOME)
+    // MENU CONTEXTUAL ENXUTO
     updateActiveMenu() {
       const nav = document.getElementById('main-nav');
       if (!nav) return;
 
       const isLanding = app.state.view === 'landing';
 
-      // Na Home: cabeçalho limpo sem botões redundantes
       if (isLanding) {
         nav.innerHTML = '';
         return;
@@ -500,16 +842,20 @@ const app = {
 
       const isPortal = app.state.view === 'saude_links';
       const isAuditoria = app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe';
+      const isDotacoes = app.state.view === 'dotacoes_hub';
 
       nav.innerHTML = `
-        <button onclick="app.ui.navigate('landing')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
+        <button onclick="app.ui.navigate('landing')" class="nav-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
           Início
         </button>
-        <button onclick="app.ui.navigate('saude_links')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isPortal ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
+        <button onclick="app.ui.navigate('saude_links')" class="nav-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isPortal ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
           Saúde
         </button>
-        <button onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
+        <button onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
           Auditoria
+        </button>
+        <button onclick="app.ui.navigate('dotacoes')" class="nav-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isDotacoes ? 'bg-emerald-100 text-emerald-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
+          Dotações
         </button>
       `;
     },
@@ -526,6 +872,9 @@ const app = {
     }
   },
 
+  // =========================================================================
+  // RENDERIZADOR DE TELAS (RENDER)
+  // =========================================================================
   render: {
     all() {
       const vp = document.getElementById('app-viewport');
@@ -544,11 +893,14 @@ const app = {
         this.auditoriaHub(vp);
       } else if (app.state.view === 'auditoria_detalhe') {
         this.auditoriaDetalhe(vp);
+      } else if (app.state.view === 'dotacoes_hub') {
+        this.dotacoesHub(vp);
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
+    // TELA 1: HOME MUNICIPAL
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
@@ -568,6 +920,7 @@ const app = {
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
+                <!-- SAÚDE -->
                 <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -579,7 +932,7 @@ const app = {
                             </span>
                         </div>
                         <h2 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 transition">Saúde</h2>
-                        <p class="text-slate-500 font-medium text-xs leading-relaxed">Central de sistemas, ferramentas institucionais e auditoria de contratos e exames.</p>
+                        <p class="text-slate-500 font-medium text-xs leading-relaxed">Central de sistemas, ferramentas institucionais, dotações e auditoria de contratos.</p>
                     </div>
                     <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-blue-600">
                         <span>Acessar Saúde</span>
@@ -587,6 +940,7 @@ const app = {
                     </div>
                 </button>
 
+                <!-- EDUCAÇÃO -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -601,6 +955,7 @@ const app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
+                <!-- TURISMO E CULTURA -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -615,6 +970,7 @@ const app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
+                <!-- ADMINISTRAÇÃO GERAL -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -633,6 +989,7 @@ const app = {
       `;
     },
 
+    // TELA 2: PORTAL DE ACESSOS DA SAÚDE (COM CARDS DE AUDITORIA E DOTAÇÕES)
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -655,6 +1012,8 @@ const app = {
 
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                
+                <!-- CARD 1: AUDITORIA DE CONTRATOS (BORDA AZUL) -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -669,14 +1028,38 @@ const app = {
                             </svg>
                         </div>
                         <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-blue-600 transition">Auditoria de Cotas de Exames</h3>
-                        <p class="text-sm text-slate-400 font-medium leading-tight">Acesso protegido para auditoria de contratos, empenhos e execução.</p>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Acesso protegido para conferência de contratos de laboratório e execução.</p>
                     </div>
                     <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-                        <span>Acessar Módulo</span>
+                        <span>Acessar Auditoria</span>
                         <span class="group-hover:translate-x-1 transition">→</span>
                     </div>
                 </button>
 
+                <!-- CARD 2: CONTROLE DE DOTAÇÕES (LIVRO DIGITAL - BORDA ESMERALDA) -->
+                <button onclick="app.ui.navigate('dotacoes')" 
+                   class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-emerald-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-emerald-50/60">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Livro Digital
+                        </span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-emerald-600 transition">Controle de Dotações (Pedidos)</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Registro digital de pedidos de compras e baixa contábil pelo setor financeiro.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600">
+                        <span>Abrir Livro Digital</span>
+                        <span class="group-hover:translate-x-1 transition">→</span>
+                    </div>
+                </button>
+
+                <!-- LINKS INSTITUCIONAIS -->
                 ${app.state.links.map(l => `
                     <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between">
                         <div>
@@ -712,6 +1095,7 @@ const app = {
       app.state.clockTimer = setInterval(tick, 1000);
     },
 
+    // TELA 3A: HUB DE CONTRATOS (AUDITORIA)
     auditoriaHub(el) {
       el.innerHTML = `
         <div class="container mx-auto px-6 py-6 sm:py-8 fade-in">
@@ -786,6 +1170,7 @@ const app = {
       `;
     },
 
+    // TELA 3B: DETALHE DO CONTRATO
     auditoriaDetalhe(el) {
       const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
 
@@ -820,6 +1205,7 @@ const app = {
                 </div>
               </div>
 
+              <!-- BARRA DE AÇÕES -->
               <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <button onclick="app.gemini.openModal()" title="Importar dados extraídos pelo Gemini a partir de foto" class="px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition flex items-center gap-1.5">
                   <span>🤖</span> Importar com Gemini IA
@@ -834,13 +1220,16 @@ const app = {
                 <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition">
                   Imprimir / PDF
                 </button>
-                <button onclick="app.admin.trigger(true)" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 shadow transition">
-                  ⚙️ Procedimentos
-                </button>
+                ${app.admin.isAdminUser() ? `
+                  <button onclick="app.admin.trigger(true)" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 shadow transition">
+                    ⚙️ Procedimentos
+                  </button>
+                ` : ''}
               </div>
             </div>
           </div>
 
+          <!-- KPIS -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Empenhado</span>
@@ -864,6 +1253,7 @@ const app = {
             </div>
           </div>
 
+          <!-- FILTROS -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row justify-between gap-4 print:hidden">
             <div class="flex-1 flex flex-col sm:flex-row gap-3">
               <input type="text" id="filter-search" oninput="app.audit.filter()" placeholder="Buscar por código ou descrição nesta aba..." class="flex-1 px-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
@@ -879,6 +1269,7 @@ const app = {
             </label>
           </div>
 
+          <!-- TABELA DE EXAMES COM QTD. EMPENHADA EDITÁVEL EM CINZA -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
               <table id="table-audit" class="w-full text-left border-collapse text-xs">
@@ -908,9 +1299,119 @@ const app = {
       `;
 
       app.audit.renderTable();
+    },
+
+    // TELA 4: HUB DO LIVRO DIGITAL DE DOTAÇÕES (COM FILTRO SELETOR DE PENDENTES)
+    dotacoesHub(el) {
+      const pendentesCount = app.state.dotacoes.filter(d => d.status === 'PENDENTE').length;
+      const registradosCount = app.state.dotacoes.filter(d => d.status === 'REGISTRADO').length;
+
+      el.innerHTML = `
+        <div class="container mx-auto px-6 py-6 sm:py-8 fade-in">
+            
+            <div class="mb-4">
+                <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-600 transition group py-1">
+                    <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <span>Voltar para o Portal de Acessos</span>
+                </button>
+            </div>
+
+            <!-- CABEÇALHO DO MÓDULO -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Contabilidade & Suprimentos da Saúde</span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Livro Digital de Dotações</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Registro seguro de pedidos de compra e controle de baixa orçamentária.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="app.data.syncFromCloud(true)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
+                        🔄 Atualizar
+                    </button>
+                    <button onclick="app.dotacoes.openNewModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                        <span class="text-sm">+</span> Nova Solicitação
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARDS DE RESUMO -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Pedidos</span>
+                    <p class="text-2xl font-black text-slate-800 mt-1">${app.state.dotacoes.length}</p>
+                    <span class="text-[10px] text-slate-400">Processos lançados no livro</span>
+                </div>
+                
+                <!-- CARD DE PENDÊNCIAS EM DESTAQUE -->
+                <div onclick="app.dotacoes.setFilter('PENDENTES')" class="cursor-pointer bg-amber-50/60 p-5 rounded-2xl shadow-sm border border-amber-200 hover:bg-amber-100/60 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider">⏳ Aguardando Registro</span>
+                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">Fila Ativa</span>
+                    </div>
+                    <p class="text-2xl font-black text-amber-800 mt-1">${pendentesCount}</p>
+                    <span class="text-[10px] text-amber-700 font-bold">Clique para filtrar apenas pendentes</span>
+                </div>
+
+                <div onclick="app.dotacoes.setFilter('REGISTRADOS')" class="cursor-pointer bg-emerald-50/60 p-5 rounded-2xl shadow-sm border border-emerald-200 hover:bg-emerald-100/60 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider">✅ Baixas Realizadas</span>
+                    </div>
+                    <p class="text-2xl font-black text-emerald-800 mt-1">${registradosCount}</p>
+                    <span class="text-[10px] text-emerald-700 font-bold">Clique para filtrar concluídos</span>
+                </div>
+            </div>
+
+            <!-- BARRA DE PESQUISA E SELETOR DE PENDENTES (SOLICITADO) -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="relative flex-1 w-full">
+                    <input type="text" oninput="app.dotacoes.setSearch(this.value)" placeholder="Buscar por número do processo, origem, comprador ou objeto..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-emerald-500">
+                    <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                </div>
+
+                <!-- CAMPO SELETOR PARA MOSTRAR SOMENTE PENDENTES -->
+                <div class="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    <button onclick="app.dotacoes.setFilter('PENDENTES')" class="px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap ${app.state.dotacoesFilter === 'PENDENTES' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                        ⏳ Apenas Pendentes (${pendentesCount})
+                    </button>
+                    <button onclick="app.dotacoes.setFilter('REGISTRADOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.dotacoesFilter === 'REGISTRADOS' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                        ✅ Apenas Registrados
+                    </button>
+                    <button onclick="app.dotacoes.setFilter('TODOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.dotacoesFilter === 'TODOS' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                        Todos
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABELA DO LIVRO DIGITAL (NOVOS LANÇAMENTOS NO TOPO) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
+                    <table id="table-dotacoes" class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky-thead bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
+                            <tr>
+                                <th class="p-3.5 w-28">Nº Processo</th>
+                                <th class="p-3.5 min-w-[220px]">Origem & Objeto</th>
+                                <th class="p-3.5 text-right w-28">Quantidade</th>
+                                <th class="p-3.5 w-44">Solicitante (Comprador)</th>
+                                <th class="p-3.5 text-center w-36">Situação</th>
+                                <th class="p-3.5 text-center w-28">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-dotacoes-body" class="divide-y divide-slate-200 font-medium">
+                            ${app.dotacoes.renderTableRows()}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+      `;
     }
   },
 
+  // =========================================================================
+  // MÓDULO DA AUDITORIA DE EXAMES
+  // =========================================================================
   audit: {
     openContractDetail(tabName) {
       app.state.activeContractTab = tabName;
@@ -1185,11 +1686,24 @@ const app = {
     }
   },
 
+  // =========================================================================
+  // MÓDULO ADMINISTRATIVO & PERFIS (ADMIN, GESTOR FINANCEIRO, COMPRADOR)
+  // =========================================================================
   admin: {
     isAdminUser() {
       return app.state.auth.isLogged && 
              app.state.auth.user && 
              app.state.auth.user.perfil === 'Administrador';
+    },
+
+    isGestorFinanceiro() {
+      return app.state.auth.isLogged && 
+             app.state.auth.user && 
+             (app.state.auth.user.perfil === 'Gestor Financeiro' || app.state.auth.user.perfil === 'Administrador');
+    },
+
+    canCheckDotacao() {
+      return this.isGestorFinanceiro();
     },
 
     trigger(directToContract = false) {
@@ -1284,7 +1798,7 @@ const app = {
             <tr class="hover:bg-slate-50">
               <td class="p-3.5 font-bold text-slate-800">${u.nome || u.usuario}</td>
               <td class="p-3.5 font-mono text-blue-700 font-bold">${u.usuario}</td>
-              <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700'}">${u.perfil}</span></td>
+              <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700')}">${u.perfil}</span></td>
               <td class="p-3.5 text-slate-400">${u.createdAt || "—"}</td>
               <td class="p-3.5 text-center">
                 <button onclick="app.admin.deleteUser(${u.id}, '${u.usuario}')" class="text-rose-500 hover:text-rose-700 font-bold">Excluir</button>
@@ -1328,7 +1842,7 @@ const app = {
       document.getElementById('user-field-login').value = '';
       document.getElementById('user-field-senha').value = '';
 
-      alert(`Usuário "${usuario}" criado com sucesso na aba _Usuarios!`);
+      alert(`Usuário "${usuario}" (${perfil}) criado com sucesso na aba _Usuarios!`);
       setTimeout(() => this.loadUsersList(), 1000);
     },
 
@@ -1508,7 +2022,7 @@ const app = {
         app.state.exams.push(examObj);
       }
 
-      app.state.exams.sort((a, b) => a.item - b.item);
+      app.state.exams.sort((a, b) => a.item.localeCompare(b.item, undefined, { numeric: true }));
       app.data.saveLocalExams();
       this.resetExamForm();
       this.renderExamsList();
