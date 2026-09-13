@@ -37,6 +37,42 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
+// DOTAÇÕES INICIAIS EXEMPLARES COM PROCESSO DE 5 DÍGITOS
+const INITIAL_DOTACOES = [
+  {
+    id: 1,
+    processo: "19011",
+    origem: "Farmácia Municipal",
+    objeto: "Medicamentos de Atenção Básica e Insulinas",
+    quantidade: 12000,
+    solicitante: "Dra. Juliana / Farmácia",
+    comprador: "Carlos Silva",
+    compradorLogin: "carlos.compras",
+    dataSolicitacao: "13/09/2026 às 10:15",
+    status: "PENDENTE",
+    empenhoDoc: "",
+    validador: "",
+    validadorLogin: "",
+    dataValidacao: ""
+  },
+  {
+    id: 2,
+    processo: "18982",
+    origem: "Posto Central",
+    objeto: "Luvas cirúrgicas estéreis e máscaras N95",
+    quantidade: 5000,
+    solicitante: "Enf. Roberto / Posto Central",
+    comprador: "Mariana Costa",
+    compradorLogin: "mariana.compras",
+    dataSolicitacao: "13/09/2026 às 09:30",
+    status: "REGISTRADO",
+    empenhoDoc: "3890/2026",
+    validador: "Gestor Financeiro",
+    validadorLogin: "gestor.financeiro",
+    dataValidacao: "13/09/2026 às 11:20"
+  }
+];
+
 window.app = {
   state: {
     view: 'landing',
@@ -49,6 +85,7 @@ window.app = {
     dotacoesFilter: 'PENDENTES',
     dotacoesSearch: '',
     pendingDotacaoTemp: null,
+    deleteDotacaoTarget: null,
     users: [],
     auth: { isLogged: false, user: null },
     clockTimer: null,
@@ -61,6 +98,7 @@ window.app = {
     this.auditAuth.checkSession();
     this.router.init();
 
+    // Fecha todos os modais no ESC
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         app.auditAuth.cancelLogin();
@@ -70,6 +108,7 @@ window.app = {
           app.dotacoes.closeNewModal();
           app.dotacoes.closeEditModal();
           app.dotacoes.closeBaixaModal();
+          app.dotacoes.closeDeleteModal();
         }
       }
     });
@@ -216,8 +255,9 @@ window.app = {
       const rawExamsCache = localStorage.getItem(`${CONFIG.keys.examsCache}_${app.state.activeContractTab}`);
       app.state.exams = rawExamsCache ? JSON.parse(rawExamsCache) : [];
 
+      // Carrega dotações com fallback seguro para as iniciais
       const rawDotacoes = localStorage.getItem(CONFIG.keys.dotacoesCache);
-      app.state.dotacoes = rawDotacoes ? JSON.parse(rawDotacoes) : [];
+      app.state.dotacoes = rawDotacoes ? JSON.parse(rawDotacoes) : JSON.parse(JSON.stringify(INITIAL_DOTACOES));
     },
 
     saveLocalExams() {
@@ -265,7 +305,7 @@ window.app = {
             this.saveLocalExams();
           }
 
-          if (Array.isArray(res.dotacoes)) {
+          if (Array.isArray(res.dotacoes) && res.dotacoes.length > 0) {
             app.state.dotacoes = res.dotacoes;
             this.saveLocalDotacoes();
             if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
@@ -413,7 +453,7 @@ window.app = {
     },
 
     canEditDotacao() {
-      return this.isGestorFinanceiro(); // Admin e Gestor Financeiro podem editar
+      return this.isGestorFinanceiro();
     },
 
     trigger(directToContract = false) {
@@ -641,7 +681,7 @@ window.app = {
     }
   },
 
-  // RENDERIZAÇÃO DAS TELAS CENTRAIS
+  // RENDERIZAÇÃO CENTRAL
   render: {
     all() {
       const vp = document.getElementById('app-viewport');
@@ -668,7 +708,7 @@ window.app = {
                 <div class="w-28 h-28 md:w-36 md:h-36 bg-white rounded-full shadow-2xl flex items-center justify-center p-3 mb-6 mx-auto border-4 border-slate-100">
                     <img src="Logo_Torres_100x100.webp" 
                          alt="Prefeitura de Torres" 
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" 
                          class="max-w-full h-auto object-contain">
                     <svg class="w-14 h-14 text-blue-800 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -840,5 +880,4 @@ window.app = {
     }
   }
 };
-
 window.addEventListener('DOMContentLoaded', () => app.init());
