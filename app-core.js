@@ -37,7 +37,7 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// DOTAÇÕES INICIAIS EXEMPLARES COM PROCESSO DE 5 DÍGITOS
+// DOTAÇÕES INICIAIS EXEMPLARES (PROCESSO COM 5 DÍGITOS)
 const INITIAL_DOTACOES = [
   {
     id: 1,
@@ -98,7 +98,6 @@ window.app = {
     this.auditAuth.checkSession();
     this.router.init();
 
-    // Fecha todos os modais no ESC
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         app.auditAuth.cancelLogin();
@@ -118,7 +117,6 @@ window.app = {
     }
   },
 
-  // AUTENTICAÇÃO E PERFIS
   auditAuth: {
     checkSession() {
       const saved = sessionStorage.getItem(CONFIG.keys.auditSession);
@@ -240,7 +238,6 @@ window.app = {
     }
   },
 
-  // SINCRONIZAÇÃO E CACHE LOCAL
   data: {
     loadLocal() {
       const rawLinks = localStorage.getItem(CONFIG.keys.links);
@@ -255,7 +252,6 @@ window.app = {
       const rawExamsCache = localStorage.getItem(`${CONFIG.keys.examsCache}_${app.state.activeContractTab}`);
       app.state.exams = rawExamsCache ? JSON.parse(rawExamsCache) : [];
 
-      // Carrega dotações com fallback seguro para as iniciais
       const rawDotacoes = localStorage.getItem(CONFIG.keys.dotacoesCache);
       app.state.dotacoes = rawDotacoes ? JSON.parse(rawDotacoes) : JSON.parse(JSON.stringify(INITIAL_DOTACOES));
     },
@@ -305,7 +301,7 @@ window.app = {
             this.saveLocalExams();
           }
 
-          if (Array.isArray(res.dotacoes) && res.dotacoes.length > 0) {
+          if (Array.isArray(res.dotacoes)) {
             app.state.dotacoes = res.dotacoes;
             this.saveLocalDotacoes();
             if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
@@ -344,7 +340,6 @@ window.app = {
     }
   },
 
-  // ROTEADOR
   router: {
     init() {
       window.addEventListener('hashchange', () => this.handleRoute());
@@ -388,7 +383,6 @@ window.app = {
     }
   },
 
-  // INTERFACE
   ui: {
     navigate(view) {
       if (view === 'saude') view = 'saude_links';
@@ -437,7 +431,6 @@ window.app = {
     }
   },
 
-  // PERMISSÕES & ADMINISTRAÇÃO
   admin: {
     isAdminUser() {
       return app.state.auth.isLogged && app.state.auth.user && app.state.auth.user.perfil === 'Administrador';
@@ -521,6 +514,7 @@ window.app = {
       }
     },
 
+    // CARREGAMENTO COM BLINDAGEM CONTRA FALHAS E LOG DETALHADO
     async loadUsersList() {
       if (!this.isAdminUser()) return;
       const tbody = document.getElementById('adm-users-list-tbody');
@@ -545,9 +539,20 @@ window.app = {
               </td>
             </tr>
           `).join('');
+        } else {
+          throw new Error(data.message || "Resposta inválida do Google Sheets");
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-500">Erro ao carregar usuários da nuvem.</td></tr>`;
+        console.error("Erro na leitura de usuários:", err);
+        // Fallback para não deixar a tabela travada
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="p-4 text-center text-rose-500">
+              <b>Não foi possível carregar a lista em tempo real.</b><br>
+              <span class="text-slate-400 text-[11px]">Certifique-se de implantar a Nova Versão no Google Apps Script autorizando os serviços.</span>
+            </td>
+          </tr>
+        `;
       }
     },
 
@@ -681,7 +686,6 @@ window.app = {
     }
   },
 
-  // RENDERIZAÇÃO CENTRAL
   render: {
     all() {
       const vp = document.getElementById('app-viewport');
@@ -701,6 +705,7 @@ window.app = {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
+    // TELA 1: HOME MUNICIPAL COM O NOVO ACESSO MUNICIPAL DE ATAS/LICITAÇÕES "EM BREVE"
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
@@ -719,7 +724,10 @@ window.app = {
                 <div class="h-1 w-20 bg-blue-600 mx-auto mt-3 rounded-full"></div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
+            <!-- GRADE COM O NOVO ACESSO DE ATAS E LICITAÇÕES (EM BREVE) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl w-full">
+                
+                <!-- 1. SAÚDE (ACESSO ATIVO) -->
                 <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -729,7 +737,7 @@ window.app = {
                             <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">Disponível</span>
                         </div>
                         <h2 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 transition">Saúde</h2>
-                        <p class="text-slate-500 font-medium text-xs leading-relaxed">Central de sistemas, ferramentas institucionais, dotações e auditoria de contratos.</p>
+                        <p class="text-slate-500 font-medium text-xs leading-relaxed">Central de sistemas, ferramentas institucionais, livro de dotações e auditoria de contratos.</p>
                     </div>
                     <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-blue-600">
                         <span>Acessar Saúde</span>
@@ -737,13 +745,35 @@ window.app = {
                     </div>
                 </button>
 
+                <!-- 2. PESQUISA DE ATAS & LICITAÇÕES (MÓDULO MUNICIPAL EM BREVE) -->
+                <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
+                                EM BREVE
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-700 mb-2">Pesquisa de Atas & Licitações</h2>
+                        <p class="text-slate-400 font-medium text-xs leading-relaxed">Mural unificado para consulta de atas vigentes e processos em andamento entre todas as secretarias.</p>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
+                        Módulo Municipal em Implantação
+                    </div>
+                </div>
+
+                <!-- 3. EDUCAÇÃO (EM BREVE) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">Em Breve</span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">EM BREVE</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Educação</h2>
                         <p class="text-slate-400 font-medium text-xs leading-relaxed">Gestão escolar, transporte de alunos, alimentação e vagas da rede municipal.</p>
@@ -751,13 +781,14 @@ window.app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
+                <!-- 4. TURISMO E CULTURA (EM BREVE) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">Em Breve</span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">EM BREVE</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Turismo e Cultura</h2>
                         <p class="text-slate-400 font-medium text-xs leading-relaxed">Calendário oficial de eventos, patrimônio histórico e cadastro turístico de Torres.</p>
@@ -765,13 +796,14 @@ window.app = {
                     <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Ambiente em Implantação</div>
                 </div>
 
+                <!-- 5. ADMINISTRAÇÃO GERAL (EM BREVE) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">Em Breve</span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">EM BREVE</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Administração Geral</h2>
                         <p class="text-slate-400 font-medium text-xs leading-relaxed">Protocolo municipal, transparência pública, certidões e processos eletrônicos.</p>
@@ -880,4 +912,5 @@ window.app = {
     }
   }
 };
+
 window.addEventListener('DOMContentLoaded', () => app.init());
