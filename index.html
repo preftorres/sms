@@ -71,11 +71,7 @@
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- ================================================================= -->
-    <!-- MODAIS DO SISTEMA                                                 -->
-    <!-- ================================================================= -->
-
-    <!-- 1. MODAL DE LOGIN -->
+    <!-- MODAL DE LOGIN -->
     <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -109,7 +105,7 @@
         </div>
     </div>
 
-    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (PROCESSO DE 5 DÍGITOS) -->
+    <!-- FORMULÁRIO DE NOVA DOTAÇÃO -->
     <div id="modal-nova-dotacao" onclick="if(event.target === this) app.dotacoes.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -157,7 +153,7 @@
         </div>
     </div>
 
-    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO -->
+    <!-- MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO -->
     <div id="modal-conferencia-dotacao" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-amber-400 animate-fadeIn">
             <div class="text-center mb-5">
@@ -206,7 +202,7 @@
         </div>
     </div>
 
-    <!-- 2C. MODAL DE EDIÇÃO DE DOTAÇÃO (ADMIN E GESTOR FINANCEIRO) -->
+    <!-- MODAL DE EDIÇÃO DE DOTAÇÃO -->
     <div id="modal-editar-dotacao" onclick="if(event.target === this) app.dotacoes.closeEditModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -257,7 +253,7 @@
         </div>
     </div>
 
-    <!-- 2D. MODAL DE BAIXA CONTÁBIL DO GESTOR FINANCEIRO -->
+    <!-- MODAL DE BAIXA CONTÁBIL -->
     <div id="modal-baixa-dotacao" onclick="if(event.target === this) app.dotacoes.closeBaixaModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -291,7 +287,7 @@
         </div>
     </div>
 
-    <!-- 2E. MODAL DE EXCLUSÃO BLINDADA (DIGITAÇÃO OBRIGATÓRIA + BLOQUEIO DE COLA) -->
+    <!-- MODAL DE EXCLUSÃO BLINDADA -->
     <div id="modal-excluir-dotacao" onclick="if(event.target === this) app.dotacoes.closeDeleteModal()" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-rose-500 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -308,7 +304,6 @@
             <form onsubmit="app.dotacoes.confirmDelete(event)" class="space-y-4">
                 <input type="hidden" id="delete-dot-target-id">
 
-                <!-- CAMPO COM BLOQUEIO DE COLAR (onpaste="return false;") -->
                 <div>
                     <label class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
                         Digite o Processo: <span id="delete-dot-expected-num" class="text-rose-600 font-mono font-black text-xs"></span>
@@ -324,7 +319,6 @@
                     <p id="delete-dot-error-msg" class="text-xs text-rose-600 font-bold text-center mt-1 hidden"></p>
                 </div>
 
-                <!-- CARTÃO VISUAL COM OS DADOS QUE SERÃO EXCLUÍDOS -->
                 <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
                     <span class="text-[10px] font-black uppercase text-slate-400 block border-b pb-1">Resumo do item que será removido:</span>
                     <div class="flex justify-between text-slate-700">
@@ -355,7 +349,7 @@
         </div>
     </div>
 
-    <!-- 3. MODAIS DO GEMINI E NOVO CONTRATO -->
+    <!-- MODAL DO GEMINI -->
     <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
         <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
             <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
@@ -507,7 +501,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- 4. PAINEL ADMINISTRATIVO -->
+    <!-- PAINEL ADMINISTRATIVO -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -677,7 +671,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- CARREGAMENTO DOS 3 ARQUIVOS MODULARES -->
+    <!-- CARREGAMENTO MODULAR -->
     <script src="app-core.js"></script>
     <script src="app-audit.js"></script>
     <script src="app-dotacoes.js"></script>
