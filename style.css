@@ -71,14 +71,14 @@ input[type="number"].table-num {
   appearance: textfield;
 }
 
-/* Feedback visual de cópia nos 3 botões */
+/* Feedback de cópia nos 3 botões do Gemini */
 .btn-copy.copied {
   background-color: #059669 !important;
   color: #ffffff !important;
   border-color: #059669 !important;
 }
 
-/* Badges de Status do Módulo de Dotações */
+/* Badges de Status do Livro de Dotações */
 .badge-dotacao-pendente {
   background-color: #fef3c7;
   color: #92400e;
@@ -91,6 +91,31 @@ input[type="number"].table-num {
   color: #065f46;
   border: 1px solid #6ee7b7;
   font-weight: 800;
+}
+
+/* SEMÁFORO DE VENCIMENTOS DO PAINEL GERAL (LDO/LOA) */
+.semaforo-critico {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #f87171;
+}
+
+.semaforo-atencao {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.semaforo-vigente {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.semaforo-arquivado {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
 
 /* ==========================================================================
@@ -110,6 +135,9 @@ input[type="number"].table-num {
   #modal-nova-dotacao,
   #modal-conferencia-dotacao,
   #modal-baixa-dotacao,
+  #modal-excluir-dotacao,
+  #modal-novo-painel-contrato,
+  #modal-excluir-painel-contrato,
   #admin-panel,
   .print\:hidden,
   button,
@@ -139,7 +167,8 @@ input[type="number"].table-num {
   }
 
   #table-audit,
-  #table-dotacoes {
+  #table-dotacoes,
+  #table-painel-contratos {
     width: 100% !important;
     border-collapse: collapse !important;
     border: 1px solid #334155 !important;
