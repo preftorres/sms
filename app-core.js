@@ -1,8 +1,8 @@
 /**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
- * MÓDULO CORE: Configurações, Nuvem, Sessão, Roteador & Atalhos
- * Arquivo: app-core.js (Atualizado com o Card de Contratos na Saúde)
+ * MÓDULO CORE: Configurações, Nuvem, Roteador & Matriz de Permissões
+ * Arquivo: app-core.js
  * ============================================================================
  */
 
@@ -15,6 +15,7 @@ const CONFIG = {
     activeContractTab: 'torres_active_tab_v1',
     examsCache: 'torres_exams_cache_v1',
     dotacoesCache: 'torres_dotacoes_cache_v1',
+    permissions: 'torres_permissions_matrix_v1',
     auditSession: 'torres_audit_logged_user'
   }
 };
@@ -72,6 +73,34 @@ const INITIAL_DOTACOES = [
   }
 ];
 
+// MATRIZ PADRÃO INICIAL DE PERMISSÕES
+const DEFAULT_PERMISSIONS = {
+  'Comprador': {
+    'audit_edit_values': false,
+    'audit_create_contract': false,
+    'audit_manage_procedures': false,
+    'dotacoes_create': true,
+    'dotacoes_check': false,
+    'dotacoes_edit': false,
+    'dotacoes_delete': false,
+    'panel_create': false,
+    'panel_edit': false,
+    'panel_archive': false
+  },
+  'Gestor Financeiro': {
+    'audit_edit_values': true,
+    'audit_create_contract': false,
+    'audit_manage_procedures': false,
+    'dotacoes_create': true,
+    'dotacoes_check': true,
+    'dotacoes_edit': true,
+    'dotacoes_delete': false,
+    'panel_create': true,
+    'panel_edit': true,
+    'panel_archive': true
+  }
+};
+
 window.app = {
   state: {
     view: 'landing',
@@ -92,6 +121,7 @@ window.app = {
     panelSearch: '',
     deletePanelTarget: null,
     users: [],
+    permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS)),
     auth: { isLogged: false, user: null },
     clockTimer: null,
     pendingView: null,
@@ -124,6 +154,21 @@ window.app = {
 
     if (GOOGLE_API_URL) {
       this.data.syncFromCloud();
+    }
+  },
+
+  // MOTOR DE PERMISSÕES DINÂMICO
+  permissions: {
+    can(actionKey) {
+      if (!app.state.auth.isLogged || !app.state.auth.user) return false;
+
+      // Administrador Geral é "Deus": 100% de acesso incondicional
+      if (app.state.auth.user.perfil === 'Administrador') return true;
+
+      const userRole = app.state.auth.user.perfil || 'Comprador';
+      const roleMap = (app.state.permissions && app.state.permissions[userRole]) || DEFAULT_PERMISSIONS[userRole];
+
+      return !!(roleMap && roleMap[actionKey]);
     }
   },
 
@@ -264,6 +309,9 @@ window.app = {
 
       const rawDotacoes = localStorage.getItem(CONFIG.keys.dotacoesCache);
       app.state.dotacoes = rawDotacoes ? JSON.parse(rawDotacoes) : JSON.parse(JSON.stringify(INITIAL_DOTACOES));
+
+      const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
+      app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
     },
 
     saveLocalExams() {
@@ -277,6 +325,10 @@ window.app = {
 
     saveLocalDotacoes() {
       localStorage.setItem(CONFIG.keys.dotacoesCache, JSON.stringify(app.state.dotacoes));
+    },
+
+    saveLocalPermissions() {
+      localStorage.setItem(CONFIG.keys.permissions, JSON.stringify(app.state.permissions));
     },
 
     saveLinksLocally() {
@@ -311,13 +363,12 @@ window.app = {
             this.saveLocalExams();
           }
 
-          if (Array.isArray(res.dotacoes) && res.dotacoes.length > 0) {
+          if (Array.isArray(res.dotacoes)) {
             app.state.dotacoes = res.dotacoes;
             this.saveLocalDotacoes();
             if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
           }
 
-          // Atualiza lista dos 42 contratos gerais da LDO
           if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
             app.state.panelContracts = res.panelContracts;
             if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
@@ -358,7 +409,7 @@ window.app = {
     }
   },
 
-  // ROTEADOR (INCLUINDO CONTRATOS_HUB)
+  // ROTEADOR
   router: {
     init() {
       window.addEventListener('hashchange', () => this.handleRoute());
@@ -457,7 +508,7 @@ window.app = {
     }
   },
 
-  // PERMISSÕES & ADMINISTRAÇÃO
+  // ADMINISTRAÇÃO & MATRIZ DE PERMISSÕES
   admin: {
     isAdminUser() {
       return app.state.auth.isLogged && app.state.auth.user && app.state.auth.user.perfil === 'Administrador';
@@ -466,14 +517,6 @@ window.app = {
     isGestorFinanceiro() {
       return app.state.auth.isLogged && app.state.auth.user && 
              (app.state.auth.user.perfil === 'Gestor Financeiro' || app.state.auth.user.perfil === 'Administrador');
-    },
-
-    canCheckDotacao() {
-      return this.isGestorFinanceiro();
-    },
-
-    canEditDotacao() {
-      return this.isGestorFinanceiro();
     },
 
     trigger(directToContract = false) {
@@ -490,18 +533,30 @@ window.app = {
       panel.classList.remove('hidden');
 
       const isMasterAdmin = this.isAdminUser();
+
+      // Abas exclusivas de Administrador Geral ("Deus")
       const btnUsuarios = document.getElementById('admin-tab-btn-usuarios');
       const viewUsuarios = document.getElementById('admin-view-usuarios');
-      
+      const btnPermissoes = document.getElementById('admin-tab-btn-permissoes');
+      const viewPermissoes = document.getElementById('admin-view-permissoes');
+
       if (btnUsuarios) btnUsuarios.style.display = isMasterAdmin ? 'inline-block' : 'none';
-      if (!isMasterAdmin && viewUsuarios) viewUsuarios.classList.add('hidden');
+      if (btnPermissoes) btnPermissoes.style.display = isMasterAdmin ? 'inline-block' : 'none';
+
+      if (!isMasterAdmin) {
+        if (viewUsuarios) viewUsuarios.classList.add('hidden');
+        if (viewPermissoes) viewPermissoes.classList.add('hidden');
+      }
 
       if (directToContract) this.switchTab('contrato');
       else this.switchTab('links');
 
       this.renderLinksList();
       if (app.audit) app.audit.renderExamsListAdmin();
-      if (isMasterAdmin) this.loadUsersList();
+      if (isMasterAdmin) {
+        this.loadUsersList();
+        this.renderPermissionsMatrix();
+      }
     },
 
     exit() {
@@ -511,7 +566,7 @@ window.app = {
     },
 
     switchTab(tab) {
-      if (tab === 'usuarios' && !this.isAdminUser()) {
+      if ((tab === 'usuarios' || tab === 'permissoes') && !this.isAdminUser()) {
         this.switchTab('contrato');
         return;
       }
@@ -519,26 +574,87 @@ window.app = {
       const vLinks = document.getElementById('admin-view-links');
       const vContrato = document.getElementById('admin-view-contrato');
       const vUsuarios = document.getElementById('admin-view-usuarios');
+      const vPerms = document.getElementById('admin-view-permissoes');
+
       const bLinks = document.getElementById('admin-tab-btn-links');
       const bContrato = document.getElementById('admin-tab-btn-contrato');
       const bUsuarios = document.getElementById('admin-tab-btn-usuarios');
+      const bPerms = document.getElementById('admin-tab-btn-permissoes');
 
-      [vLinks, vContrato, vUsuarios].forEach(v => v && v.classList.add('hidden'));
-      [bLinks, bContrato, bUsuarios].forEach(b => {
-        if (b) b.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600";
+      [vLinks, vContrato, vUsuarios, vPerms].forEach(v => v && v.classList.add('hidden'));
+      [bLinks, bContrato, bUsuarios, bPerms].forEach(b => {
+        if (b) b.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap";
       });
 
       if (tab === 'links' && vLinks) {
         vLinks.classList.remove('hidden');
-        bLinks.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+        bLinks.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
       } else if (tab === 'contrato' && vContrato) {
         vContrato.classList.remove('hidden');
-        bContrato.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+        bContrato.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
       } else if (tab === 'usuarios' && vUsuarios) {
         vUsuarios.classList.remove('hidden');
-        bUsuarios.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600";
+        bUsuarios.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
         this.loadUsersList();
+      } else if (tab === 'permissoes' && vPerms) {
+        vPerms.classList.remove('hidden');
+        bPerms.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
+        this.renderPermissionsMatrix();
       }
+    },
+
+    // RENDERIZAÇÃO DA MATRIZ DE PERMISSÕES
+    renderPermissionsMatrix() {
+      const perms = app.state.permissions || DEFAULT_PERMISSIONS;
+      const keys = [
+        'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
+        'dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete',
+        'panel_create', 'panel_edit', 'panel_archive'
+      ];
+
+      keys.forEach(k => {
+        const compEl = document.getElementById(`perm-comprador-${k}`);
+        const gestEl = document.getElementById(`perm-gestor-${k}`);
+
+        if (compEl) compEl.checked = !!(perms['Comprador'] && perms['Comprador'][k]);
+        if (gestEl) gestEl.checked = !!(perms['Gestor Financeiro'] && perms['Gestor Financeiro'][k]);
+      });
+    },
+
+    // SALVA AS PERMISSÕES NA MEMÓRIA E NA NUVEM
+    async savePermissions() {
+      if (!this.isAdminUser()) return alert("Apenas Administrador Geral tem permissão para alterar a matriz.");
+
+      const keys = [
+        'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
+        'dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete',
+        'panel_create', 'panel_edit', 'panel_archive'
+      ];
+
+      const newPerms = {
+        'Comprador': {},
+        'Gestor Financeiro': {}
+      };
+
+      keys.forEach(k => {
+        const compEl = document.getElementById(`perm-comprador-${k}`);
+        const gestEl = document.getElementById(`perm-gestor-${k}`);
+
+        newPerms['Comprador'][k] = compEl ? compEl.checked : false;
+        newPerms['Gestor Financeiro'][k] = gestEl ? gestEl.checked : false;
+      });
+
+      app.state.permissions = newPerms;
+      app.data.saveLocalPermissions();
+
+      app.ui.setSyncStatus(true, "Salvando permissões...");
+
+      await app.data.sendToCloud({
+        action: "SAVE_PERMISSIONS",
+        permissions: newPerms
+      });
+
+      alert("✓ Matriz de Permissões salva com sucesso! Os perfis agora seguem estritamente essas regras.");
     },
 
     async loadUsersList() {
@@ -566,18 +682,10 @@ window.app = {
             </tr>
           `).join('');
         } else {
-          throw new Error(data.message || "Resposta inválida do Google Sheets");
+          throw new Error(data.message || "Resposta inválida");
         }
       } catch (err) {
-        console.error("Erro na leitura de usuários:", err);
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="p-4 text-center text-rose-500">
-              <b>Não foi possível carregar a lista em tempo real.</b><br>
-              <span class="text-slate-400 text-[11px]">Certifique-se de implantar a Nova Versão no Google Apps Script autorizando os serviços.</span>
-            </td>
-          </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-500">Erro ao carregar usuários. Certifique-se de autorizar a função ensureUsersStructure no Apps Script.</td></tr>`;
       }
     },
 
@@ -833,7 +941,7 @@ window.app = {
       `;
     },
 
-    // TELA 2: PORTAL DE ACESSOS DA SAÚDE (AGORA COM OS 3 CARDS DE GESTÃO LADO A LADO!)
+    // TELA 2: PORTAL DE ACESSOS DA SAÚDE
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -857,7 +965,7 @@ window.app = {
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
-                <!-- CARD 1: AUDITORIA DE COTAS DE EXAMES (BORDA AZUL) -->
+                <!-- CARD 1: AUDITORIA DE COTAS -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -876,7 +984,7 @@ window.app = {
                     </div>
                 </button>
 
-                <!-- CARD 2: CONTROLE DE DOTAÇÕES - LIVRO DIGITAL (BORDA ESMERALDA) -->
+                <!-- CARD 2: DOTAÇÕES -->
                 <button onclick="app.ui.navigate('dotacoes')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-emerald-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-emerald-50/60">
                     <div class="absolute top-4 right-5">
@@ -895,7 +1003,7 @@ window.app = {
                     </div>
                 </button>
 
-                <!-- CARD 3: PAINEL GERAL DE CONTRATOS & VENCIMENTOS (R$ 14,2M • LDO/LOA) -->
+                <!-- CARD 3: PAINEL GERAL DE CONTRATOS (LDO/LOA) -->
                 <button onclick="app.ui.navigate('contratos')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-indigo-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-indigo-50/60">
                     <div class="absolute top-4 right-5">
