@@ -2,7 +2,7 @@
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
  * MÓDULO CORE: Configurações, Nuvem, Sessão, Roteador & Atalhos
- * Arquivo: app-core.js
+ * Arquivo: app-core.js (Atualizado com o Card de Contratos na Saúde)
  * ============================================================================
  */
 
@@ -37,7 +37,6 @@ const DEFAULT_CONTRACTS = [
   }
 ];
 
-// DOTAÇÕES INICIAIS EXEMPLARES (PROCESSO COM 5 DÍGITOS)
 const INITIAL_DOTACOES = [
   {
     id: 1,
@@ -86,6 +85,12 @@ window.app = {
     dotacoesSearch: '',
     pendingDotacaoTemp: null,
     deleteDotacaoTarget: null,
+    panelContracts: [],
+    panelContractsFilter: 'ATIVOS',
+    panelFiscalFilter: 'TODOS',
+    panelViewMode: 'CARDS',
+    panelSearch: '',
+    deletePanelTarget: null,
     users: [],
     auth: { isLogged: false, user: null },
     clockTimer: null,
@@ -108,6 +113,11 @@ window.app = {
           app.dotacoes.closeEditModal();
           app.dotacoes.closeBaixaModal();
           app.dotacoes.closeDeleteModal();
+        }
+        if (app.contratos) {
+          app.contratos.closeNewModal();
+          app.contratos.closeEditModal();
+          app.contratos.closeDeleteModal();
         }
       }
     });
@@ -170,7 +180,7 @@ window.app = {
     cancelLogin() {
       this.closeLoginModal();
       app.state.pendingView = null;
-      const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria') && app.state.previousView !== 'dotacoes_hub')
+      const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria') && app.state.previousView !== 'dotacoes_hub' && app.state.previousView !== 'contratos_hub')
         ? app.state.previousView
         : 'saude_links';
       app.ui.navigate(target);
@@ -301,10 +311,18 @@ window.app = {
             this.saveLocalExams();
           }
 
-          if (Array.isArray(res.dotacoes)) {
+          if (Array.isArray(res.dotacoes) && res.dotacoes.length > 0) {
             app.state.dotacoes = res.dotacoes;
             this.saveLocalDotacoes();
             if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
+          }
+
+          // Atualiza lista dos 42 contratos gerais da LDO
+          if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
+            app.state.panelContracts = res.panelContracts;
+            if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
+              app.render.contratosHub(document.getElementById('app-viewport'));
+            }
           }
 
           if (app.state.view === 'auditoria_detalhe') app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
@@ -340,6 +358,7 @@ window.app = {
     }
   },
 
+  // ROTEADOR (INCLUINDO CONTRATOS_HUB)
   router: {
     init() {
       window.addEventListener('hashchange', () => this.handleRoute());
@@ -358,6 +377,8 @@ window.app = {
         targetView = 'auditoria_detalhe';
       } else if (hash === 'dotacoes' || hash === 'dotacoes_hub') {
         targetView = 'dotacoes_hub';
+      } else if (hash === 'contratos' || hash === 'painel_contratos' || hash === 'contratos_hub') {
+        targetView = 'contratos_hub';
       } else if (['landing', 'saude_links'].includes(hash)) {
         targetView = hash;
       }
@@ -366,7 +387,7 @@ window.app = {
     },
 
     go(view) {
-      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub');
+      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub');
       if (isRestricted && !app.state.auth.isLogged) {
         app.auditAuth.promptLogin(view);
         return;
@@ -383,6 +404,7 @@ window.app = {
     }
   },
 
+  // INTERFACE
   ui: {
     navigate(view) {
       if (view === 'saude') view = 'saude_links';
@@ -402,6 +424,7 @@ window.app = {
       const isPortal = app.state.view === 'saude_links';
       const isAuditoria = app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe';
       const isDotacoes = app.state.view === 'dotacoes_hub';
+      const isContratos = app.state.view === 'contratos_hub';
 
       nav.innerHTML = `
         <button onclick="app.ui.navigate('landing')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
@@ -415,6 +438,9 @@ window.app = {
         </button>
         <button onclick="app.ui.navigate('dotacoes')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isDotacoes ? 'bg-emerald-100 text-emerald-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
           Dotações
+        </button>
+        <button onclick="app.ui.navigate('contratos')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isContratos ? 'bg-indigo-100 text-indigo-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
+          Contratos LDO
         </button>
       `;
     },
@@ -431,6 +457,7 @@ window.app = {
     }
   },
 
+  // PERMISSÕES & ADMINISTRAÇÃO
   admin: {
     isAdminUser() {
       return app.state.auth.isLogged && app.state.auth.user && app.state.auth.user.perfil === 'Administrador';
@@ -514,7 +541,6 @@ window.app = {
       }
     },
 
-    // CARREGAMENTO COM BLINDAGEM CONTRA FALHAS E LOG DETALHADO
     async loadUsersList() {
       if (!this.isAdminUser()) return;
       const tbody = document.getElementById('adm-users-list-tbody');
@@ -544,7 +570,6 @@ window.app = {
         }
       } catch (err) {
         console.error("Erro na leitura de usuários:", err);
-        // Fallback para não deixar a tabela travada
         tbody.innerHTML = `
           <tr>
             <td colspan="5" class="p-4 text-center text-rose-500">
@@ -701,11 +726,12 @@ window.app = {
       else if (app.state.view === 'auditoria_hub' && app.render.auditoriaHub) app.render.auditoriaHub(vp);
       else if (app.state.view === 'auditoria_detalhe' && app.render.auditoriaDetalhe) app.render.auditoriaDetalhe(vp);
       else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(vp);
+      else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(vp);
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    // TELA 1: HOME MUNICIPAL COM O NOVO ACESSO MUNICIPAL DE ATAS/LICITAÇÕES "EM BREVE"
+    // TELA 1: HOME MUNICIPAL
     landing(el) {
       el.innerHTML = `
         <div class="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 fade-in">
@@ -724,10 +750,8 @@ window.app = {
                 <div class="h-1 w-20 bg-blue-600 mx-auto mt-3 rounded-full"></div>
             </div>
 
-            <!-- GRADE COM O NOVO ACESSO DE ATAS E LICITAÇÕES (EM BREVE) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl w-full">
-                
-                <!-- 1. SAÚDE (ACESSO ATIVO) -->
+                <!-- 1. SAÚDE -->
                 <button onclick="app.ui.navigate('saude_links')" class="card-landing text-left bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-transparent hover:border-blue-500 flex flex-col justify-between group">
                     <div>
                         <div class="flex items-center justify-between mb-5">
@@ -745,25 +769,19 @@ window.app = {
                     </div>
                 </button>
 
-                <!-- 2. PESQUISA DE ATAS & LICITAÇÕES (MÓDULO MUNICIPAL EM BREVE) -->
+                <!-- 2. PESQUISA DE ATAS & LICITAÇÕES (EM BREVE) -->
                 <div class="bg-white/80 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-between opacity-85 select-none">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center">
-                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                </svg>
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">
-                                EM BREVE
-                            </span>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200">EM BREVE</span>
                         </div>
                         <h2 class="text-xl font-bold text-slate-700 mb-2">Pesquisa de Atas & Licitações</h2>
                         <p class="text-slate-400 font-medium text-xs leading-relaxed">Mural unificado para consulta de atas vigentes e processos em andamento entre todas as secretarias.</p>
                     </div>
-                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">
-                        Módulo Municipal em Implantação
-                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-[11px] font-bold text-slate-400">Módulo Municipal em Implantação</div>
                 </div>
 
                 <!-- 3. EDUCAÇÃO (EM BREVE) -->
@@ -815,6 +833,7 @@ window.app = {
       `;
     },
 
+    // TELA 2: PORTAL DE ACESSOS DA SAÚDE (AGORA COM OS 3 CARDS DE GESTÃO LADO A LADO!)
     saudeLinks(el) {
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -836,8 +855,9 @@ window.app = {
         </div>
 
         <div class="container mx-auto px-6 py-10 fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                <!-- CARD AUDITORIA -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- CARD 1: AUDITORIA DE COTAS DE EXAMES (BORDA AZUL) -->
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -856,7 +876,7 @@ window.app = {
                     </div>
                 </button>
 
-                <!-- CARD DOTAÇÕES -->
+                <!-- CARD 2: CONTROLE DE DOTAÇÕES - LIVRO DIGITAL (BORDA ESMERALDA) -->
                 <button onclick="app.ui.navigate('dotacoes')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-emerald-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-emerald-50/60">
                     <div class="absolute top-4 right-5">
@@ -871,6 +891,25 @@ window.app = {
                     </div>
                     <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600">
                         <span>Abrir Livro Digital</span>
+                        <span class="group-hover:translate-x-1 transition">→</span>
+                    </div>
+                </button>
+
+                <!-- CARD 3: PAINEL GERAL DE CONTRATOS & VENCIMENTOS (R$ 14,2M • LDO/LOA) -->
+                <button onclick="app.ui.navigate('contratos')" 
+                   class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-indigo-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-indigo-50/60">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-900 border border-indigo-200">Governança LDO</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        </div>
+                        <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-indigo-600 transition">Painel de Contratos (LDO)</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Mural inteligente dos 42 contratos contínuos (R$ 14,2M), semáforo de alerta e apoio à LOA.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600">
+                        <span>Acessar Mural Geral</span>
                         <span class="group-hover:translate-x-1 transition">→</span>
                     </div>
                 </button>
