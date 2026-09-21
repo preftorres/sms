@@ -29,10 +29,11 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO GLOBAL UNIFICADO -->
+    <!-- CABEÇALHO GLOBAL UNIFICADO (100% RESPONSIVO) -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             
+            <!-- LADO ESQUERDO: BRASÃO + TÍTULO PROTEGIDO -->
             <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer min-w-0 flex-1 mr-2" onclick="app.ui.navigate('landing')">
                 <div class="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md shrink-0">
                     <img src="Logo_Torres_100x100.webp" 
@@ -49,15 +50,18 @@
                 </div>
             </div>
 
+            <!-- LADO DIREITO: CONTROLES INTEGRADOS -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                 <nav id="main-nav" class="flex items-center gap-1 sm:gap-2 text-xs font-semibold"></nav>
 
+                <!-- BADGE DO USUÁRIO LOGADO -->
                 <div id="auth-user-badge" class="hidden text-[10px] sm:text-xs font-bold bg-white/10 border border-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-white flex items-center gap-1.5 backdrop-blur-md">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
                     <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[95px] sm:max-w-none">Usuário: admin</span>
                     <button onclick="app.auditAuth.logout()" title="Sair da Sessão" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">✕</button>
                 </div>
 
+                <!-- BOTÃO CADEADO ADMIN -->
                 <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-white/90 hover:text-white transition shadow-xs shrink-0">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -71,7 +75,11 @@
     <!-- VIEWPORT DA SPA -->
     <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- MODAL DE LOGIN -->
+    <!-- ================================================================= -->
+    <!-- MODAIS DO SISTEMA                                                 -->
+    <!-- ================================================================= -->
+
+    <!-- 1. MODAL DE LOGIN (AUDITORIA, DOTAÇÕES E CONTRATOS) -->
     <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -105,7 +113,9 @@
         </div>
     </div>
 
-    <!-- FORMULÁRIO DE NOVA DOTAÇÃO -->
+    <!-- 2. MODAIS DO LIVRO DE DOTAÇÕES -->
+    
+    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO -->
     <div id="modal-nova-dotacao" onclick="if(event.target === this) app.dotacoes.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -153,7 +163,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO -->
+    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO -->
     <div id="modal-conferencia-dotacao" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-amber-400 animate-fadeIn">
             <div class="text-center mb-5">
@@ -202,7 +212,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE DOTAÇÃO -->
+    <!-- 2C. MODAL DE EDIÇÃO DE DOTAÇÃO -->
     <div id="modal-editar-dotacao" onclick="if(event.target === this) app.dotacoes.closeEditModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -253,7 +263,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE BAIXA CONTÁBIL -->
+    <!-- 2D. MODAL DE BAIXA CONTÁBIL DO GESTOR FINANCEIRO -->
     <div id="modal-baixa-dotacao" onclick="if(event.target === this) app.dotacoes.closeBaixaModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -287,7 +297,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE EXCLUSÃO BLINDADA -->
+    <!-- 2E. MODAL DE EXCLUSÃO BLINDADA DE DOTAÇÃO -->
     <div id="modal-excluir-dotacao" onclick="if(event.target === this) app.dotacoes.closeDeleteModal()" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-rose-500 animate-fadeIn relative">
             <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -298,7 +308,7 @@
                 </div>
                 <span class="text-[10px] font-black uppercase text-rose-600 tracking-wider">Ação Irreversível</span>
                 <h3 class="text-xl font-black text-slate-900">Excluir Solicitação de Dotação</h3>
-                <p class="text-xs text-slate-500 mt-1">Para confirmar a exclusão definitiva, você deve <b>digitar manualmente</b> o número do processo abaixo.</p>
+                <p class="text-xs text-slate-500 mt-1">Para autorizar a exclusão, <b>digite manualmente</b> o número do processo.</p>
             </div>
 
             <form onsubmit="app.dotacoes.confirmDelete(event)" class="space-y-4">
@@ -349,7 +359,198 @@
         </div>
     </div>
 
-    <!-- MODAL DO GEMINI -->
+    <!-- 3. MODAIS DO PAINEL GERAL DE CONTRATOS (R$ 14,2M • LDO) -->
+
+    <!-- 3A. NOVO CONTRATO NO MURAL -->
+    <div id="modal-novo-painel-contrato" onclick="if(event.target === this) app.contratos.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.contratos.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Gestão Contratual LDO/LOA</span>
+                <h3 class="text-xl font-black text-slate-900">Novo Contrato no Mural</h3>
+            </div>
+
+            <form onsubmit="app.contratos.saveNewContract(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nome da Empresa / Prestador</label>
+                    <input id="panel-new-empresa" type="text" required placeholder="Ex: ELO SERVIÇOS DE SAÚDE LTDA" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Contrato (CTT)</label>
+                        <input id="panel-new-ctt" type="text" required placeholder="Ex: 377/2024" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Valor Anual Total (R$)</label>
+                        <input id="panel-new-valor" type="number" step="0.01" min="0" required placeholder="Ex: 3747715.20" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Data Exata de Vencimento</label>
+                        <input id="panel-new-venc-iso" type="date" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Fiscal Responsável</label>
+                        <select id="panel-new-fiscal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                            <option value="NAIARA">NAIARA</option>
+                            <option value="SANDRO">SANDRO</option>
+                            <option value="FRAN">FRAN</option>
+                            <option value="LASIER">LASIER</option>
+                            <option value="ADRI">ADRI</option>
+                            <option value="PREFEITURA">PREFEITURA GERAL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Descrição do Prazo / Vigência</label>
+                    <input id="panel-new-prazo-txt" type="text" required placeholder="Ex: 12 Meses até 04/10/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Objeto Resumido</label>
+                    <textarea id="panel-new-objeto" rows="2" placeholder="Ex: Prestação de serviços médicos hospitalares..." class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-blue-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.contratos.closeNewModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
+                        Cadastrar no Mural
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3B. EDITAR CONTRATO DO MURAL -->
+    <div id="modal-editar-painel-contrato" onclick="if(event.target === this) app.contratos.closeEditModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.contratos.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">Gestão e Fiscalização</span>
+                <h3 class="text-xl font-black text-slate-900">Editar Dados do Contrato</h3>
+            </div>
+
+            <form onsubmit="app.contratos.confirmEdit(event)" class="space-y-3.5">
+                <input type="hidden" id="panel-edit-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Empresa / Fornecedor</label>
+                    <input id="panel-edit-empresa" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº Contrato</label>
+                        <input id="panel-edit-ctt" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Valor Contratual (R$)</label>
+                        <input id="panel-edit-valor" type="number" step="0.01" min="0" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Vencimento (Data)</label>
+                        <input id="panel-edit-venc-iso" type="date" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Fiscal</label>
+                        <select id="panel-edit-fiscal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                            <option value="NAIARA">NAIARA</option>
+                            <option value="SANDRO">SANDRO</option>
+                            <option value="FRAN">FRAN</option>
+                            <option value="LASIER">LASIER</option>
+                            <option value="ADRI">ADRI</option>
+                            <option value="PREFEITURA">PREFEITURA GERAL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Texto de Vigência</label>
+                    <input id="panel-edit-prazo-txt" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Objeto Resumido</label>
+                    <textarea id="panel-edit-objeto" rows="2" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-amber-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.contratos.closeEditModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3 rounded-xl font-black text-xs transition shadow-md">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3C. EXCLUSÃO BLINDADA DE CONTRATO (SÓ ADMIN "DEUS") -->
+    <div id="modal-excluir-painel-contrato" onclick="if(event.target === this) app.contratos.closeDeleteModal()" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-rose-600 animate-fadeIn relative">
+            <button type="button" onclick="app.contratos.closeDeleteModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-rose-600 tracking-wider">Ação Extrema (Apenas Administrador)</span>
+                <h3 class="text-xl font-black text-slate-900">Excluir Contrato do Painel</h3>
+                <p class="text-xs text-slate-500 mt-1">Contratos encerrados devem ser <b>Arquivados</b>. A exclusão é reservada para cadastros incorretos.</p>
+            </div>
+
+            <form onsubmit="app.contratos.confirmDelete(event)" class="space-y-4">
+                <input type="hidden" id="panel-delete-target-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                        Digite o CTT: <span id="panel-delete-expected-ctt" class="text-rose-600 font-mono font-black text-xs"></span>
+                    </label>
+                    <input id="panel-delete-typed-ctt" 
+                           type="text" 
+                           required 
+                           autocomplete="off"
+                           onpaste="app.contratos.blockPaste(event)"
+                           placeholder="Digite o número exato do contrato..." 
+                           class="w-full p-3.5 bg-slate-50 rounded-xl text-center text-xs font-black font-mono tracking-wider border-2 border-slate-300 focus:border-rose-500 outline-none">
+                    <span class="text-[10px] text-slate-400 block text-center mt-1">🚫 O recurso de colar (Ctrl+V) foi desativado por segurança.</span>
+                    <p id="panel-delete-error-msg" class="text-xs text-rose-600 font-bold text-center mt-1 hidden"></p>
+                </div>
+
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Empresa:</span>
+                        <span id="panel-delete-preview-empresa" class="font-bold truncate max-w-[200px]"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Valor:</span>
+                        <span id="panel-delete-preview-valor" class="font-black text-rose-700"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Fiscal:</span>
+                        <span id="panel-delete-preview-fiscal" class="font-bold"></span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="app.contratos.closeDeleteModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-black text-xs transition shadow-md">
+                        🗑️ Confirmar Exclusão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. MODAL DO GEMINI -->
     <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
         <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
             <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
@@ -459,7 +660,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- MODAL DE NOVO CONTRATO -->
+    <!-- 5. MODAL DE NOVO CONTRATO DE EXAMES (AUDITORIA) -->
     <div id="modal-new-contract" onclick="if(event.target === this) app.audit.closeNewContractModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
@@ -471,7 +672,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
             </div>
             <p class="text-xs text-slate-500 mb-6">Uma nova aba será criada na planilha do Google para este contrato com data e hora de registro.</p>
 
-            <div class="space-y-3.5">
+            <form onsubmit="app.audit.confirmCreateContract()" class="space-y-3.5">
                 <div>
                     <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Contrato</label>
                     <input id="new-contract-num" type="text" placeholder="Ex: 85/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
@@ -490,18 +691,18 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                         Carregar lista base de procedimentos (com faturamento zerado)
                     </label>
                 </div>
-            </div>
 
-            <div class="mt-8 flex gap-3">
-                <button onclick="app.audit.closeNewContractModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
-                <button onclick="app.audit.confirmCreateContract()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
-                    Criar e Abrir Contrato
-                </button>
-            </div>
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="app.audit.closeNewContractModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
+                        Criar e Abrir Contrato
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO -->
+    <!-- 6. PAINEL ADMINISTRATIVO COM OS 3 PERFIS -->
     <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
@@ -611,7 +812,7 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
                 </div>
             </div>
 
-            <!-- ABA 3: USUÁRIOS -->
+            <!-- ABA 3: USUÁRIOS COM OS 3 PERFIS -->
             <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4">
                     <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
@@ -671,9 +872,10 @@ IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens de abertura ou
         </div>
     </div>
 
-    <!-- CARREGAMENTO MODULAR -->
+    <!-- CARREGAMENTO DOS 4 SCRIPTS MODULARES -->
     <script src="app-core.js"></script>
     <script src="app-audit.js"></script>
     <script src="app-dotacoes.js"></script>
+    <script src="app-contratos.js"></script>
 </body>
 </html>
