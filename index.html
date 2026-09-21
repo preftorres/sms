@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Municipal - Prefeitura de Torres</title>
     
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script>
@@ -30,17 +25,15 @@
         }
     </script>
 
-    <!-- ESTILOS MODULARES (TELA E IMPRESSÃO SEPARADOS) -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/print.css" media="print">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- CABEÇALHO GLOBAL UNIFICADO (FLEXBOX RESPONSIVO INTEGRADO) -->
+    <!-- CABEÇALHO GLOBAL UNIFICADO (100% RESPONSIVO) -->
     <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
         <div class="container mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             
-            <!-- IDENTIFICAÇÃO INSTITUCIONAL DA CIDADE DE TORRES -->
+            <!-- LADO ESQUERDO: BRASÃO + TÍTULO PROTEGIDO -->
             <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer min-w-0 flex-1 mr-2" onclick="app.ui.navigate('landing')">
                 <div class="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md shrink-0">
                     <img src="Logo_Torres_100x100.webp" 
@@ -52,23 +45,31 @@
                     </svg>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <span class="hidden sm:block text-[9px] uppercase font-bold tracking-widest text-blue-400 leading-none">Estado do Rio Grande do Sul</span>
-                    <h1 class="text-xs sm:text-base font-black tracking-tight leading-tight truncate">Prefeitura Municipal de Torres</h1>
+                    <span class="hidden sm:block text-[9px] uppercase font-bold tracking-widest text-blue-400 leading-none">
+                        Estado do Rio Grande do Sul
+                    </span>
+                    <h1 class="text-xs sm:text-base font-black tracking-tight leading-tight truncate">
+                        Prefeitura Municipal de Torres
+                    </h1>
                 </div>
             </div>
 
-            <!-- CONTROLES DO CABEÇALHO: MENU DINÂMICO + BADGE USUÁRIO + CADEADO ADMIN -->
+            <!-- LADO DIREITO: NAVEGAÇÃO + BADGE USUÁRIO + CADEADO ADMIN -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                 <nav id="main-nav" class="flex items-center gap-1 sm:gap-2 text-xs font-semibold"></nav>
 
-                <!-- BADGE DO USUÁRIO ATIVO -->
+                <!-- BADGE DO USUÁRIO LOGADO -->
                 <div id="auth-user-badge" class="hidden text-[10px] sm:text-xs font-bold bg-white/10 border border-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-white flex items-center gap-1.5 backdrop-blur-md">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
-                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[95px] sm:max-w-none">Usuário: admin</span>
-                    <button onclick="app.auditAuth.logout()" title="Sair da Sessão" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">✕</button>
+                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[95px] sm:max-w-none">
+                        Usuário: admin
+                    </span>
+                    <button onclick="app.auditAuth.logout()" title="Sair da Sessão" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">
+                        ✕
+                    </button>
                 </div>
 
-                <!-- BOTÃO CADEADO ADMINISTRATIVO -->
+                <!-- BOTÃO CADEADO ADMIN -->
                 <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-white/90 hover:text-white transition shadow-xs shrink-0">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -79,17 +80,1074 @@
         </div>
     </header>
 
-    <!-- ÁREA PRINCIPAL DA SPA (INJEÇÃO DAS TELAS) -->
-    <main id="app-viewport" class="flex-grow flex flex-col"></main>
+    <!-- VIEWPORT DA SPA -->
+    <div id="app-viewport" class="flex-grow flex flex-col"></div>
 
-    <!-- CONTAINER DINÂMICO DE MODAIS (INJETADOS SOB DEMANDA) -->
-    <div id="modal-host"></div>
+    <!-- ================================================================= -->
+    <!-- MODAIS DO SISTEMA                                                 -->
+    <!-- ================================================================= -->
 
-    <!-- CARREGAMENTO MODULAR DOS SCRIPTS (PASTA js/) -->
-    <script src="js/app-dados.js"></script>
-    <script src="js/app-core.js"></script>
-    <script src="js/app-audit.js"></script>
-    <script src="js/app-dotacoes.js"></script>
-    <script src="js/app-contratos.js"></script>
+    <!-- 1. MODAL DE LOGIN (AUDITORIA, DOTAÇÕES E CONTRATOS) -->
+    <div id="modal-audit-login" onclick="if(event.target === this) app.auditAuth.cancelLogin()" class="fixed inset-0 z-[115] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.auditAuth.cancelLogin()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">
+                    Secretaria da Saúde
+                </span>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">
+                    Acesso Restrito
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Informe seu usuário e senha autorizados.
+                </p>
+            </div>
+
+            <form onsubmit="app.auditAuth.handleLogin(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Usuário
+                    </label>
+                    <input id="login-user" type="text" required placeholder="Ex: admin" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Senha
+                    </label>
+                    <input id="login-pass" type="password" required placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono tracking-widest border outline-none focus:border-blue-500">
+                </div>
+
+                <p id="login-error-msg" class="hidden text-xs text-rose-600 font-bold text-center pt-1"></p>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.auditAuth.cancelLogin()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition">
+                        Cancelar
+                    </button>
+                    <button id="btn-login-submit" type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2A. FORMULÁRIO DE NOVA DOTAÇÃO (PROCESSO DE 5 DÍGITOS) -->
+    <div id="modal-nova-dotacao" onclick="if(event.target === this) app.dotacoes.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-emerald-600 tracking-wider">
+                    Livro Digital de Dotações
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                    Novo Lançamento de Pedido
+                </h3>
+            </div>
+
+            <form onsubmit="app.dotacoes.openConfirmModal(event)" class="space-y-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Nº do Processo (5 Dígitos)
+                        </label>
+                        <input id="dot-field-processo" type="text" maxlength="10" required placeholder="Ex: 19011" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Origem do Pedido
+                        </label>
+                        <input id="dot-field-origem" type="text" required placeholder="Ex: Farmácia Municipal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Solicitante (Quem pediu)
+                        </label>
+                        <input id="dot-field-solicitante" type="text" required placeholder="Ex: Dra. Mariana / ESF Praia da Cal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Quantidade em Unidades
+                        </label>
+                        <input id="dot-field-quantidade" type="number" min="1" required placeholder="Ex: 5000" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Objeto / Descrição do Pedido
+                    </label>
+                    <textarea id="dot-field-objeto" rows="3" required placeholder="Ex: Luvas cirúrgicas estéreis e máscaras descartáveis..." class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-emerald-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.dotacoes.closeNewModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
+                        Avançar para Conferência →
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2B. MODAL DE DUPLA CONFERÊNCIA ANTI-ERRO -->
+    <div id="modal-conferencia-dotacao" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-amber-400 animate-fadeIn">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">
+                    Conferência Obrigatória
+                </span>
+                <h3 class="text-lg font-black text-slate-900">
+                    Revise os Dados do Lançamento
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Certifique-se de que tudo está correto antes de gravar no livro oficial.
+                </p>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2 mb-6">
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Processo:</span>
+                    <span id="conf-processo" class="font-black text-slate-900 text-sm font-mono"></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Origem:</span>
+                    <span id="conf-origem" class="font-bold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Solicitante:</span>
+                    <span id="conf-solicitante" class="font-bold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span class="text-slate-500 font-bold uppercase text-[10px]">Quantidade:</span>
+                    <span id="conf-quantidade" class="font-black text-blue-700"></span>
+                </div>
+                <div>
+                    <span class="text-slate-500 font-bold uppercase text-[10px] block mb-0.5">Objeto:</span>
+                    <p id="conf-objeto" class="text-slate-700 italic bg-white p-2 rounded-xl border border-slate-100"></p>
+                </div>
+                <div class="pt-2 text-[10px] text-slate-500 text-center border-t border-slate-200">
+                    Comprador responsável: <b id="conf-comprador" class="text-slate-800"></b>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="app.dotacoes.cancelConfirm()" class="flex-1 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition">
+                    ✏️ Corrigir Dados
+                </button>
+                <button type="button" onclick="app.dotacoes.saveToCloud()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-black text-xs transition shadow-md">
+                    ✓ Gravar no Livro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2C. MODAL DE EDIÇÃO DE DOTAÇÃO (ADMIN E GESTOR FINANCEIRO) -->
+    <div id="modal-editar-dotacao" onclick="if(event.target === this) app.dotacoes.closeEditModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">
+                    Acesso Especial
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                    Editar Pedido de Dotação
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Disponível para Administrador e Gestor Financeiro.
+                </p>
+            </div>
+
+            <form onsubmit="app.dotacoes.confirmEdit(event)" class="space-y-3.5">
+                <input type="hidden" id="edit-dot-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Nº do Processo
+                        </label>
+                        <input id="edit-dot-processo" type="text" required placeholder="Ex: 19011" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Origem do Pedido
+                        </label>
+                        <input id="edit-dot-origem" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Solicitante (Quem pediu)
+                        </label>
+                        <input id="edit-dot-solicitante" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Quantidade em Unidades
+                        </label>
+                        <input id="edit-dot-quantidade" type="number" min="1" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Objeto / Descrição
+                    </label>
+                    <textarea id="edit-dot-objeto" rows="3" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-amber-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.dotacoes.closeEditModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3 rounded-xl font-black text-xs transition shadow-md">
+                        Salvar Correções
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2D. MODAL DE BAIXA CONTÁBIL DO GESTOR FINANCEIRO -->
+    <div id="modal-baixa-dotacao" onclick="if(event.target === this) app.dotacoes.closeBaixaModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-sm shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-emerald-600 tracking-wider">
+                    Gestão Financeira
+                </span>
+                <h3 class="text-lg font-black text-slate-900">
+                    Confirmar Registro no Sistema
+                </h3>
+                <p id="baixa-info-processo" class="text-xs text-slate-500 mt-1 font-semibold"></p>
+            </div>
+
+            <form onsubmit="app.dotacoes.confirmBaixa(event)" class="space-y-4">
+                <input type="hidden" id="baixa-target-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Nº do Empenho / Reserva / Registro <span class="text-slate-400 font-normal">(Opcional)</span>
+                    </label>
+                    <input id="baixa-field-doc" type="text" placeholder="Ex: 1234/2026 (ou deixe em branco)" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
+                        Confirmar Baixa ✅
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2E. MODAL DE EXCLUSÃO BLINDADA DE DOTAÇÃO (BLOQUEIO DE COLAR) -->
+    <div id="modal-excluir-dotacao" onclick="if(event.target === this) app.dotacoes.closeDeleteModal()" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-rose-500 animate-fadeIn relative">
+            <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-rose-600 tracking-wider">
+                    Ação Irreversível
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                    Excluir Solicitação de Dotação
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Para confirmar a exclusão definitiva, você deve <b>digitar manualmente</b> o número do processo abaixo.
+                </p>
+            </div>
+
+            <form onsubmit="app.dotacoes.confirmDelete(event)" class="space-y-4">
+                <input type="hidden" id="delete-dot-target-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                        Digite o Processo: <span id="delete-dot-expected-num" class="text-rose-600 font-mono font-black text-xs"></span>
+                    </label>
+                    <input id="delete-dot-typed-processo" 
+                           type="text" 
+                           required 
+                           autocomplete="off"
+                           onpaste="app.dotacoes.blockPaste(event)"
+                           placeholder="Digite os 5 números aqui..." 
+                           class="w-full p-3.5 bg-slate-50 rounded-xl text-center text-sm font-black font-mono tracking-widest border-2 border-slate-300 focus:border-rose-500 outline-none">
+                    <span class="text-[10px] text-slate-400 block text-center mt-1">
+                        🚫 O recurso de colar (Ctrl+V) foi desativado por segurança.
+                    </span>
+                    <p id="delete-dot-error-msg" class="text-xs text-rose-600 font-bold text-center mt-1 hidden"></p>
+                </div>
+
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+                    <span class="text-[10px] font-black uppercase text-slate-400 block border-b pb-1">
+                        Resumo do item que será removido:
+                    </span>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Origem:</span>
+                        <span id="delete-preview-origem" class="font-bold"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Solicitante:</span>
+                        <span id="delete-preview-solicitante" class="font-bold"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Quantidade:</span>
+                        <span id="delete-preview-quantidade" class="font-black text-rose-700"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-bold block">Objeto:</span>
+                        <p id="delete-preview-objeto" class="italic text-slate-600 text-[11px]"></p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-black text-xs transition shadow-md">
+                        🗑️ Excluir Definitivo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3A. NOVO CONTRATO NO MURAL GERAL (R$ 14,2M) -->
+    <div id="modal-novo-painel-contrato" onclick="if(event.target === this) app.contratos.closeNewModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.contratos.closeNewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">
+                    Gestão Contratual LDO/LOA
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                    Novo Contrato no Mural
+                </h3>
+            </div>
+
+            <form onsubmit="app.contratos.saveNewContract(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Empresa / Fornecedor
+                    </label>
+                    <input id="panel-new-empresa" type="text" required placeholder="Ex: ELO SERVIÇOS DE SAÚDE LTDA" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Nº Contrato (CTT)
+                        </label>
+                        <input id="panel-new-ctt" type="text" required placeholder="Ex: 377/2024" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Valor Anual (R$)
+                        </label>
+                        <input id="panel-new-valor" type="number" step="0.01" min="0" required placeholder="Ex: 3747715.20" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Vencimento (Data)
+                        </label>
+                        <input id="panel-new-venc-iso" type="date" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Fiscal
+                        </label>
+                        <select id="panel-new-fiscal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                            <option value="NAIARA">NAIARA</option>
+                            <option value="SANDRO">SANDRO</option>
+                            <option value="FRAN">FRAN</option>
+                            <option value="LASIER">LASIER</option>
+                            <option value="ADRI">ADRI</option>
+                            <option value="PREFEITURA">PREFEITURA GERAL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Texto de Vigência
+                    </label>
+                    <input id="panel-new-prazo-txt" type="text" required placeholder="Ex: 12 Meses até 04/10/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Objeto Resumido
+                    </label>
+                    <textarea id="panel-new-objeto" rows="2" placeholder="Ex: Serviços médicos hospitalares..." class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-blue-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.contratos.closeNewModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">
+                        Cadastrar no Mural
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3B. EDITAR PAINEL CONTRATO -->
+    <div id="modal-editar-painel-contrato" onclick="if(event.target === this) app.contratos.closeEditModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <button type="button" onclick="app.contratos.closeEditModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="mb-5 pb-2 border-b border-slate-100">
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">
+                    Gestão e Fiscalização
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                    Editar Dados do Contrato
+                </h3>
+            </div>
+
+            <form onsubmit="app.contratos.confirmEdit(event)" class="space-y-3.5">
+                <input type="hidden" id="panel-edit-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Empresa
+                    </label>
+                    <input id="panel-edit-empresa" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Nº CTT
+                        </label>
+                        <input id="panel-edit-ctt" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Valor (R$)
+                        </label>
+                        <input id="panel-edit-valor" type="number" step="0.01" min="0" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Vencimento (Data)
+                        </label>
+                        <input id="panel-edit-venc-iso" type="date" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Fiscal
+                        </label>
+                        <select id="panel-edit-fiscal" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-amber-500">
+                            <option value="NAIARA">NAIARA</option>
+                            <option value="SANDRO">SANDRO</option>
+                            <option value="FRAN">FRAN</option>
+                            <option value="LASIER">LASIER</option>
+                            <option value="ADRI">ADRI</option>
+                            <option value="PREFEITURA">PREFEITURA GERAL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Vigência
+                    </label>
+                    <input id="panel-edit-prazo-txt" type="text" required class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                        Objeto
+                    </label>
+                    <textarea id="panel-edit-objeto" rows="2" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border outline-none focus:border-amber-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="app.contratos.closeEditModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3 rounded-xl font-black text-xs transition shadow-md">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3C. MODAL EXCLUIR PAINEL CONTRATO (SÓ ADMIN "DEUS") -->
+    <div id="modal-excluir-painel-contrato" onclick="if(event.target === this) app.contratos.closeDeleteModal()" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-7 sm:p-9 w-full max-w-md shadow-2xl border-2 border-rose-600 animate-fadeIn relative">
+            <button type="button" onclick="app.contratos.closeDeleteModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">
+                ✕
+            </button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <span class="text-[10px] font-black uppercase text-rose-600 tracking-wider">
+                    Ação Extrema (Apenas Administrador)
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                    Excluir Contrato do Painel
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Para confirmar a exclusão, <b>digite manualmente</b> o número do contrato.
+                </p>
+            </div>
+
+            <form onsubmit="app.contratos.confirmDelete(event)" class="space-y-4">
+                <input type="hidden" id="panel-delete-target-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                        Digite o CTT: <span id="panel-delete-expected-ctt" class="text-rose-600 font-mono font-black text-xs"></span>
+                    </label>
+                    <input id="panel-delete-typed-ctt" 
+                           type="text" 
+                           required 
+                           autocomplete="off" 
+                           onpaste="app.contratos.blockPaste(event)" 
+                           placeholder="Digite o número exato..." 
+                           class="w-full p-3.5 bg-slate-50 rounded-xl text-center text-xs font-black font-mono tracking-wider border-2 border-slate-300 focus:border-rose-500 outline-none">
+                    <span class="text-[10px] text-slate-400 block text-center mt-1">
+                        🚫 O recurso de colar (Ctrl+V) foi desativado por segurança.
+                    </span>
+                    <p id="panel-delete-error-msg" class="text-xs text-rose-600 font-bold text-center mt-1 hidden"></p>
+                </div>
+
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Empresa:</span>
+                        <span id="panel-delete-preview-empresa" class="font-bold truncate max-w-[200px]"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Valor:</span>
+                        <span id="panel-delete-preview-valor" class="font-black text-rose-700"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-700">
+                        <span class="text-slate-500 font-bold">Fiscal:</span>
+                        <span id="panel-delete-preview-fiscal" class="font-bold"></span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="app.contratos.closeDeleteModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-black text-xs transition shadow-md">
+                        🗑️ Confirmar Exclusão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. MODAL DO GEMINI -->
+    <div id="modal-gemini-import" onclick="if(event.target === this) app.gemini.closeModal()" class="fixed inset-0 z-[125] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white rounded-[2.5rem] p-6 sm:p-9 w-full max-w-3xl shadow-2xl border border-slate-100 animate-fadeIn my-8 relative">
+            <button type="button" onclick="app.gemini.closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-xl">
+                ✕
+            </button>
+
+            <div class="flex border-b border-slate-200 pb-3 mb-6 gap-3">
+                <button id="btn-tab-gemini-paste" onclick="app.gemini.switchTab('paste')" class="px-4 py-2 font-black text-xs uppercase tracking-wider rounded-xl bg-blue-100 text-blue-900">
+                    📋 Colar Dados do Gemini
+                </button>
+                <button id="btn-tab-gemini-guide" onclick="app.gemini.switchTab('guide')" class="px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-xl text-slate-500 hover:bg-slate-100 flex items-center gap-1.5">
+                    <span>💡</span> Como Criar o Gem (Passo a Passo)
+                </button>
+            </div>
+
+            <div id="view-gemini-paste" class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-black text-slate-900">
+                        Importar Tabela Extraída pelo Gemini
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Cole abaixo o texto gerado pelo seu Gem.
+                    </p>
+                </div>
+
+                <textarea id="gemini-paste-area" rows="8" placeholder="Cole aqui a resposta gerada pelo Gem..." class="w-full p-4 bg-slate-50 border-2 border-slate-200 focus:border-blue-500 rounded-2xl text-xs font-mono outline-none resize-none"></textarea>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <button type="button" onclick="app.gemini.switchTab('guide')" class="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
+                        <span>❓</span> Como configurar o Gem no Gemini?
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="app.gemini.closeModal()" class="px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="app.gemini.processPaste()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition">
+                            Processar e Preencher Tabela →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-gemini-guide" class="hidden space-y-5">
+                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                    <h4 class="text-xs font-black uppercase text-blue-900 flex items-center gap-1.5">
+                        <span>🎯</span> Passo 1 de 2: Abrir a tela de criação no Gemini
+                    </h4>
+                    <p class="text-xs text-blue-800 mt-1">
+                        Abra o Gemini no computador ou celular, clique no menu em <b>Gems</b> e depois em <b>Novo Gem</b>.
+                    </p>
+                </div>
+
+                <h4 class="text-xs font-black uppercase text-slate-700 pt-1 flex items-center gap-1.5">
+                    <span>📋</span> Passo 2 de 2: Copie e cole nos 3 campos do Gemini
+                </h4>
+
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex-1">
+                        <span class="text-[10px] font-black uppercase text-slate-400 block">1º Campo: Nome</span>
+                        <p id="gem-text-name" class="text-sm font-black text-slate-900 mt-0.5">Auditor de Exames - Torres</p>
+                    </div>
+                    <button id="btn-copy-name" onclick="app.gemini.copyField('gem-text-name', 'btn-copy-name')" class="btn-copy px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
+                        <span>📄</span> Copiar Nome
+                    </button>
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex-1">
+                        <span class="text-[10px] font-black uppercase text-slate-400 block">2º Campo: Descrição</span>
+                        <p id="gem-text-desc" class="text-xs font-medium text-slate-700 mt-0.5">Auditor de contas públicas que cruza contratos municipais e relatórios de laboratórios credenciados de Torres/RS.</p>
+                    </div>
+                    <button id="btn-copy-desc" onclick="app.gemini.copyField('gem-text-desc', 'btn-copy-desc')" class="btn-copy px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
+                        <span>📄</span> Copiar Descrição
+                    </button>
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black uppercase text-slate-400">3º Campo: Instruções</span>
+                        <button id="btn-copy-instructions" onclick="app.gemini.copyField('gem-text-instructions', 'btn-copy-instructions')" class="btn-copy px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
+                            <span>📋</span> Copiar Instruções Completas
+                        </button>
+                    </div>
+                    <div class="max-h-40 overflow-y-auto custom-scroll p-3 bg-white rounded-xl border border-slate-200">
+                        <pre id="gem-text-instructions" class="text-[11px] font-mono text-slate-600 whitespace-pre-wrap">Você é um auditor especialista em saúde pública da Prefeitura Municipal de Torres/RS.
+Sua função é ler imagens de Termos de Contrato/Empenho municipal e Relatórios Estatísticos/Faturas de Laboratórios credenciados (como o Laboratório Biomédico Ltda).
+Ao receber as imagens:
+1. Identifique os procedimentos e cruze a "Especificação" e "Quantidade" do Contrato com a "Qtde Total" faturada pelo laboratório.
+2. Formate a saída EXCLUSIVAMENTE em linhas separadas por ponto e vírgula (;), no seguinte padrão:
+Item;Categoria;Descricao_Empenho;Descricao_Prestador;Qtd_Empenho;Saldo_Anterior;Faturado
+Regras:
+- Item: Use sempre 2 dígitos sequenciais (01, 02, 03...).
+- Categoria: "Laboratorial" ou "Imagem".
+- Descricao_Empenho: Nome oficial na tabela do Contrato.
+- Descricao_Prestador: Código e nome no relatório do laboratório.
+- Qtd_Empenho: Quantidade contratada.
+- Saldo_Anterior: Quantidade inicial disponível.
+- Faturado: O valor da coluna "Qtde Total" do relatório. Se não constar, preencha 0.
+IMPORTANTE: Responda APENAS com as linhas de dados, sem mensagens extras.</pre>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-between items-center">
+                    <span class="text-xs text-slate-400">Cole os 3 campos e clique em <b>Salvar</b> no Gemini.</span>
+                    <button type="button" onclick="app.gemini.switchTab('paste')" class="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl">
+                        Voltar para colar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MODAL NOVO CONTRATO EXAMES -->
+    <div id="modal-new-contract" onclick="if(event.target === this) app.audit.closeNewContractModal()" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 w-full max-w-lg shadow-2xl border border-slate-100 animate-fadeIn relative">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                <div>
+                    <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">Gestão de Auditoria</span>
+                    <h3 class="text-xl font-black text-slate-800">Novo Contrato de Exames</h3>
+                </div>
+                <button onclick="app.audit.closeNewContractModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <form onsubmit="app.audit.confirmCreateContract()" class="space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nº do Contrato</label>
+                    <input id="new-contract-num" type="text" placeholder="Ex: 85/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Empenhos</label>
+                    <input id="new-contract-empenhos" type="text" placeholder="Ex: 4120/2026" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Credor / Prestador</label>
+                    <input id="new-contract-prestador" type="text" placeholder="Ex: Laboratório Alpha Ltda" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                </div>
+                <div class="pt-2">
+                    <label class="inline-flex items-center text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" id="new-contract-copy-template" class="w-4 h-4 rounded text-blue-600 mr-2 border-slate-300">
+                        Carregar lista base com faturamento zerado
+                    </label>
+                </div>
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="app.audit.closeNewContractModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition shadow-md">Criar e Abrir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. PAINEL ADMINISTRATIVO COM AS 4 ABAS (INCLUINDO A MATRIZ DE PERMISSÕES) -->
+    <div id="admin-panel" class="fixed inset-0 z-[130] hidden bg-slate-50 overflow-y-auto">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-slate-200 gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Gestão de Sistemas</span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Gerenciador de Acessos & Permissões</h2>
+                </div>
+                <button onclick="app.admin.exit()" class="bg-torres-dark text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-slate-800 transition">
+                    Fechar
+                </button>
+            </div>
+
+            <!-- BOTÕES DAS 4 ABAS -->
+            <div class="flex border-b border-slate-200 mb-8 gap-2 overflow-x-auto pb-1">
+                <button id="admin-tab-btn-links" onclick="app.admin.switchTab('links')" class="px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">
+                    Atalhos do Portal
+                </button>
+                <button id="admin-tab-btn-contrato" onclick="app.admin.switchTab('contrato')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">
+                    Procedimentos do Contrato
+                </button>
+                <button id="admin-tab-btn-usuarios" onclick="app.admin.switchTab('usuarios')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">
+                    Usuários (Google Sheets)
+                </button>
+                <button id="admin-tab-btn-permissoes" onclick="app.admin.switchTab('permissoes')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">
+                    ⚙️ Matriz de Permissões
+                </button>
+            </div>
+
+            <!-- ABA 1: ATALHOS -->
+            <div id="admin-view-links" class="grid lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4">
+                    <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
+                        <h3 id="form-title-label" class="font-bold text-base mb-4 text-slate-800">
+                            Novo Atalho
+                        </h3>
+                        <div class="space-y-3">
+                            <input type="hidden" id="edit-id">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Título do Link</label>
+                                <input id="field-title" type="text" placeholder="Nome do Link" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">URL (Endereço)</label>
+                                <input id="field-url" type="text" placeholder="URL (http://...)" class="w-full p-3 bg-slate-50 rounded-xl text-xs border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Descrição</label>
+                                <textarea id="field-desc" placeholder="Descrição rápida" rows="3" class="w-full p-3 bg-slate-50 rounded-xl outline-none border focus:border-blue-500 resize-none text-xs"></textarea>
+                            </div>
+                            <button id="btn-save" onclick="app.admin.saveLink()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-xs shadow hover:bg-blue-700 transition">
+                                Salvar Sistema
+                            </button>
+                            <button id="btn-cancel-edit" onclick="app.admin.resetForm()" class="hidden w-full text-slate-400 py-1.5 text-xs font-bold hover:text-slate-600">
+                                Cancelar Edição
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-8">
+                    <div id="admin-list-draggable" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- ABA 2: PROCEDIMENTOS -->
+            <div id="admin-view-contrato" class="hidden space-y-8">
+                <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                    <h3 id="adm-exam-form-title" class="font-bold text-sm text-slate-800 uppercase tracking-wide mb-4">
+                        Adicionar / Editar Exame no Contrato Ativo
+                    </h3>
+                    <input type="hidden" id="adm-exam-id">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Item Nº (Ex: 01)</label>
+                            <input id="adm-exam-item" type="text" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Categoria</label>
+                            <select id="adm-exam-cat" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
+                                <option value="Laboratorial">Laboratorial</option>
+                                <option value="Imagem">Imagem</option>
+                            </select>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Descrição no Empenho</label>
+                            <input id="adm-exam-desc-emp" type="text" placeholder="Ex: GLICOSE" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border focus:border-blue-500">
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Descrição / Cód. no Prestador</label>
+                            <input id="adm-exam-desc-prest" type="text" placeholder="Ex: 02.02.01.047-3 / GLICOSE" class="w-full p-3 bg-slate-50 rounded-xl text-xs border focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Qtd. Empenhada</label>
+                            <input id="adm-exam-qtd" type="number" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Saldo Anterior</label>
+                            <input id="adm-exam-saldo-ant" type="number" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-3">
+                        <button id="btn-adm-save-exam" onclick="app.admin.saveExam()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow">
+                            Salvar Procedimento
+                        </button>
+                        <button id="btn-adm-cancel-exam" onclick="app.admin.resetExamForm()" class="hidden px-4 py-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] border-b">
+                                <tr>
+                                    <th class="p-3 text-center">Item</th>
+                                    <th class="p-3">Categoria</th>
+                                    <th class="p-3">Descrição Empenho</th>
+                                    <th class="p-3 text-right">Empenhado</th>
+                                    <th class="p-3 text-right">Saldo Ant.</th>
+                                    <th class="p-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adm-exams-list-tbody" class="divide-y divide-slate-100 font-medium"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 3: USUÁRIOS -->
+            <div id="admin-view-usuarios" class="hidden grid lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4">
+                    <div class="bg-white p-6 rounded-3xl border shadow-sm sticky top-6">
+                        <h3 class="font-bold text-base mb-4 text-slate-800">
+                            Cadastrar Novo Usuário
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Nome Completo</label>
+                                <input id="user-field-nome" type="text" placeholder="Ex: Carlos Silva" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-semibold border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Login</label>
+                                <input id="user-field-login" type="text" placeholder="Ex: carlos.compras" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Senha</label>
+                                <input id="user-field-senha" type="password" placeholder="••••••••" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono border outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Perfil</label>
+                                <select id="user-field-perfil" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-bold border outline-none focus:border-blue-500">
+                                    <option value="Comprador">Comprador</option>
+                                    <option value="Gestor Financeiro">Gestor Financeiro</option>
+                                    <option value="Administrador">Administrador Geral</option>
+                                </select>
+                            </div>
+                            <button onclick="app.admin.createUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs shadow transition">
+                                Gravar Usuário na Planilha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-8">
+                    <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                            <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">
+                                Usuários Cadastrados na Aba _Usuarios
+                            </h4>
+                            <button onclick="app.admin.loadUsersList()" class="text-xs font-bold text-blue-600 hover:underline">
+                                🔄 Atualizar Lista
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] border-b">
+                                    <tr>
+                                        <th class="p-3.5">Nome</th>
+                                        <th class="p-3.5">Login</th>
+                                        <th class="p-3.5">Perfil</th>
+                                        <th class="p-3.5">Data Cadastro</th>
+                                        <th class="p-3.5 text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adm-users-list-tbody" class="divide-y divide-slate-100 font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 4: MATRIZ VISUAL DE PERMISSÕES (ADMIN "DEUS") -->
+            <div id="admin-view-permissoes" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div>
+                            <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">
+                                Acesso Master ("Deus")
+                            </span>
+                            <h3 class="text-xl font-black text-slate-900">
+                                Matriz de Controle de Permissões
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Marque ou desmarque o que cada perfil pode acessar e editar no sistema.
+                            </p>
+                        </div>
+                        <button onclick="app.admin.savePermissions()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 self-start sm:self-auto">
+                            <span>💾</span> Salvar Matriz de Permissões
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b">
+                                <tr>
+                                    <th class="p-3.5 min-w-[240px]">Funcionalidade / Ação no Sistema</th>
+                                    <th class="p-3.5 text-center w-36 bg-blue-50/50">Comprador</th>
+                                    <th class="p-3.5 text-center w-40 bg-emerald-50/50">Gestor Financeiro</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-medium">
+                                <tr class="bg-slate-50 font-black text-slate-500 uppercase text-[9px] tracking-wider">
+                                    <td colspan="3" class="p-2.5 pl-3.5">Módulo: Auditoria de Cotas de Exames</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Alterar Saldos Anteriores e Faturamentos na tabela</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-audit_edit_values" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-audit_edit_values" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Criar novas abas de Contratos de Exames (+ Novo Contrato)</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-audit_create_contract" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-audit_create_contract" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Cadastrar, editar ou remover procedimentos do catálogo de exames</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-audit_manage_procedures" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-audit_manage_procedures" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+
+                                <tr class="bg-slate-50 font-black text-slate-500 uppercase text-[9px] tracking-wider">
+                                    <td colspan="3" class="p-2.5 pl-3.5">Módulo: Livro Digital de Dotações (Pedidos de Compras)</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Cadastrar novas solicitações de dotação</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-dotacoes_create" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-dotacoes_create" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Dar Baixa Contábil no sistema (Check ✅)</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-dotacoes_check" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-dotacoes_check" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Editar solicitações já lançadas no livro (Lápis ✏️)</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-dotacoes_edit" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-dotacoes_edit" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Excluir solicitações de dotação (Lixeira 🗑️ com validação)</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-dotacoes_delete" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-dotacoes_delete" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+
+                                <tr class="bg-slate-50 font-black text-slate-500 uppercase text-[9px] tracking-wider">
+                                    <td colspan="3" class="p-2.5 pl-3.5">Módulo: Painel Geral de Contratos (R$ 14,2M • LDO)</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Cadastrar novos contratos no mural da saúde</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-panel_create" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-panel_create" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Editar valores, vigências, dados e fiscais dos contratos</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-panel_edit" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-panel_edit" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3.5">Arquivar ou desarquivar contratos vencidos</td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-comprador-panel_archive" class="w-4 h-4 rounded text-blue-600 border-slate-300"></td>
+                                    <td class="p-3.5 text-center"><input type="checkbox" id="perm-gestor-panel_archive" class="w-4 h-4 rounded text-emerald-600 border-slate-300"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CARREGAMENTO DOS 4 SCRIPTS MODULARES -->
+    <script src="app-core.js"></script>
+    <script src="app-audit.js"></script>
+    <script src="app-dotacoes.js"></script>
+    <script src="app-contratos.js"></script>
 </body>
 </html>
