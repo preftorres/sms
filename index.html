@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Municipal - Prefeitura de Torres</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        torres: { 
+                            dark: '#0f172a', 
+                            primary: '#1e40af', 
+                            accent: '#3b82f6',
+                            light: '#dbeafe'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ESTILOS MODULARES (TELA E IMPRESSÃO SEPARADOS) -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- CABEÇALHO GLOBAL UNIFICADO (FLEXBOX RESPONSIVO INTEGRADO) -->
+    <header class="bg-torres-dark text-white sticky top-0 z-40 shadow-lg print:hidden">
+        <div class="container mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+            
+            <!-- IDENTIFICAÇÃO INSTITUCIONAL DA CIDADE DE TORRES -->
+            <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer min-w-0 flex-1 mr-2" onclick="app.ui.navigate('landing')">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md shrink-0">
+                    <img src="Logo_Torres_100x100.webp" 
+                         alt="Prefeitura de Torres" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" 
+                         class="max-w-full h-auto object-contain">
+                    <svg class="w-6 h-6 text-blue-800 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <span class="hidden sm:block text-[9px] uppercase font-bold tracking-widest text-blue-400 leading-none">Estado do Rio Grande do Sul</span>
+                    <h1 class="text-xs sm:text-base font-black tracking-tight leading-tight truncate">Prefeitura Municipal de Torres</h1>
+                </div>
+            </div>
+
+            <!-- CONTROLES DO CABEÇALHO: MENU DINÂMICO + BADGE USUÁRIO + CADEADO ADMIN -->
+            <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                <nav id="main-nav" class="flex items-center gap-1 sm:gap-2 text-xs font-semibold"></nav>
+
+                <!-- BADGE DO USUÁRIO ATIVO -->
+                <div id="auth-user-badge" class="hidden text-[10px] sm:text-xs font-bold bg-white/10 border border-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-white flex items-center gap-1.5 backdrop-blur-md">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
+                    <span id="auth-user-name" class="font-bold text-blue-200 truncate max-w-[95px] sm:max-w-none">Usuário: admin</span>
+                    <button onclick="app.auditAuth.logout()" title="Sair da Sessão" class="text-white/60 hover:text-rose-400 font-black ml-0.5 text-xs p-0.5">✕</button>
+                </div>
+
+                <!-- BOTÃO CADEADO ADMINISTRATIVO -->
+                <button onclick="app.admin.trigger()" title="Painel Administrativo" class="p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-white/90 hover:text-white transition shadow-xs shrink-0">
+                    <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL DA SPA (INJEÇÃO DAS TELAS) -->
+    <main id="app-viewport" class="flex-grow flex flex-col"></main>
+
+    <!-- CONTAINER DINÂMICO DE MODAIS (INJETADOS SOB DEMANDA) -->
+    <div id="modal-host"></div>
+
+    <!-- CARREGAMENTO MODULAR DOS SCRIPTS (PASTA js/) -->
+    <script src="js/app-dados.js"></script>
+    <script src="js/app-core.js"></script>
+    <script src="js/app-audit.js"></script>
+    <script src="js/app-dotacoes.js"></script>
+    <script src="js/app-contratos.js"></script>
+</body>
+</html>
