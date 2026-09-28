@@ -802,8 +802,12 @@ Exemplo do formato:
                 <p class="text-xs text-slate-500 mt-0.5">Redistribuição matemática de quantitativos para o próximo empenho, eliminando déficits e estrita observância ao teto contratual.</p>
               </div>
             </div>
-            <button onclick="app.audit.closeBalanceadorModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">✕</button>
-          </div>
+            <div class="flex items-center gap-2">
+              <button onclick="app.audit.imprimirCotasBalanceadas()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition" title="Imprimir Relatório Oficial de Cotas Balanceadas (A4 Paisagem)">
+                <span>🖨️</span> Imprimir Cotas (A4)
+              </button>
+              <button onclick="app.audit.closeBalanceadorModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">✕</button>
+            </div>
 
           <!-- PARÂMETROS DA SIMULAÇÃO (CONTROLES INTERATIVOS) -->
           <div class="my-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 flex-shrink-0">
@@ -927,15 +931,18 @@ Exemplo do formato:
 
           <!-- RODAPÉ COM AÇÕES -->
           <div class="pt-3 mt-3 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-2 flex-shrink-0">
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-              <button onclick="app.audit.closeBalanceadorModal()" class="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button onclick="app.audit.closeBalanceadorModal()" class="px-3.5 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
                 Fechar
               </button>
-              <button onclick="app.audit.exportarCSVBalanceamento()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5" title="Baixar planilha de simulação comparativa em Excel/CSV">
+              <button onclick="app.audit.imprimirCotasBalanceadas()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5" title="Imprimir Relatório Oficial de Cotas Balanceadas formatado para caber em folha A4 Paisagem">
+                <span>🖨️</span> Imprimir Cotas (A4)
+              </button>
+              <button onclick="app.audit.exportarCSVBalanceamento()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5" title="Baixar planilha de simulação comparativa em Excel/CSV">
                 <span>📥</span> Exportar Planilha (.CSV)
               </button>
-              <button onclick="app.audit.abrirMemorandoTecnico()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5" title="Gerar e imprimir memorando oficial com fundamentação técnica para instrução de processo de compra">
-                <span>📄</span> Emitir Memorando Técnico
+              <button onclick="app.audit.abrirMemorandoTecnico()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5" title="Gerar e imprimir memorando oficial com fundamentação técnica para instrução de processo de compra">
+                <span>📄</span> Emitir Memorando
               </button>
             </div>
             <div class="w-full sm:w-auto">

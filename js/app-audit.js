@@ -762,7 +762,7 @@ app.audit = {
   },
 
   exportarCSVBalanceamento() {
-    if (!this._simulacaoState) return alert("Simulação não disponível.");
+    if (!this._simulacaoState) return app.ui.toast("Simulação não disponível.", "warning", "Atenção");
     const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
     const { parametros, totais, itens } = this._simulacaoState;
 
@@ -814,7 +814,7 @@ app.audit = {
   },
 
   abrirMemorandoTecnico() {
-    if (!this._simulacaoState) return alert("Execute a simulação primeiro.");
+    if (!this._simulacaoState) return app.ui.toast("Execute a simulação primeiro.", "warning", "Atenção");
     const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
     const { parametros, totais, itens } = this._simulacaoState;
     const modal = document.getElementById('modal-memorando-tecnico');
@@ -913,6 +913,342 @@ app.audit = {
     modal.classList.add('flex');
   },
 
+  // --------------------------------------------------------------------------
+  // RELATÓRIO OFICIAL DE COTAS BALANCEADAS (IMPRESSÃO FORMATADA PARA FOLHA A4)
+  // --------------------------------------------------------------------------
+  imprimirCotasBalanceadas() {
+    if (!this._simulacaoState) {
+      this.calcularBalanceamento();
+    }
+    if (!this._simulacaoState) {
+      return app.ui.toast("Não foi possível gerar os dados para impressão das cotas.", "warning", "Simulação Necessária");
+    }
+
+    const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
+    const { parametros, totais, itens } = this._simulacaoState;
+
+    const now = new Date();
+    const dataExtenso = `${now.getDate()} de ${now.toLocaleString('pt-BR', { month: 'long' })} de ${now.getFullYear()} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+    const rowsHtml = itens.map((p, idx) => {
+      const isUp = p.diffQtd > 0;
+      const isDown = p.diffQtd < 0;
+      let badgeVar = `<span style="color:#64748b; font-weight:bold;">= 0</span>`;
+      if (p.isNF) {
+        badgeVar = `<span style="background:#f1f5f9; color:#334155; font-size:7pt; padding:1px 4px; border-radius:3px; font-weight:bold;">FISCAL</span>`;
+      } else if (isUp) {
+        badgeVar = `<span style="background:#f3e8ff; color:#6b21a8; font-size:7pt; padding:1px 4px; border-radius:3px; font-weight:bold;">+${p.diffQtd.toLocaleString('pt-BR')} (+${p.percVar.toFixed(0)}%)</span>`;
+      } else if (isDown) {
+        badgeVar = `<span style="background:#fef3c7; color:#92400e; font-size:7pt; padding:1px 4px; border-radius:3px; font-weight:bold;">${p.diffQtd.toLocaleString('pt-BR')} (${p.percVar.toFixed(0)}%)</span>`;
+      }
+
+      const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+
+      return `
+        <tr style="background-color: ${rowBg}; page-break-inside: avoid; border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 2.5px 4px; text-align: center; font-weight: bold; font-family: monospace;">${p.item}</td>
+          <td style="padding: 2.5px 6px; font-weight: 600; color: #0f172a;">
+            <div>${p.descEmpenho}</div>
+            ${p.descPrestador ? `<div style="font-size: 6.5pt; color: #64748b; font-family: monospace;">${p.descPrestador}</div>` : ''}
+          </td>
+          <td style="padding: 2.5px 4px; text-align: right; font-family: monospace;">${this.formatBRL(p.vlUnit)}</td>
+          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; color: #334155;">${p.isNF ? '—' : p.qtdEmp.toLocaleString('pt-BR')}</td>
+          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; font-weight: bold; color: ${p.fat > p.qtdEmp ? '#6b21a8' : '#1e3a8a'};">${p.isNF ? '—' : p.fat.toLocaleString('pt-BR')}</td>
+          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; color: #64748b;">${p.isNF ? '—' : p.mediaMensal.toFixed(1)}</td>
+          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; font-weight: 900; background-color: #fffbeb; color: #78350f;">${p.isNF ? '1' : p.qtdSug.toLocaleString('pt-BR')}</td>
+          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace;">${badgeVar}</td>
+          <td style="padding: 2.5px 6px; text-align: right; font-family: monospace; font-weight: bold; color: #0f172a;">${this.formatBRL(p.vlTotSug)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const totalQtdEmp = itens.reduce((acc, i) => acc + (i.isNF ? 0 : i.qtdEmp), 0);
+    const totalFat = itens.reduce((acc, i) => acc + (i.isNF ? 0 : i.fat), 0);
+    const totalQtdSug = itens.reduce((acc, i) => acc + (i.isNF ? 1 : i.qtdSug), 0);
+
+    const printWin = window.open('', '_blank', 'width=1150,height=800');
+    if (!printWin) {
+      return app.ui.toast("Por favor, permita janelas pop-ups no navegador para visualizar a impressão A4.", "warning", "Pop-up Bloqueado");
+    }
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8">
+        <title>Relatório de Cotas Balanceadas - Contrato nº ${currentContract.num} - Torres/RS</title>
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 8mm 10mm 8mm 10mm;
+          }
+          * { box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            font-size: 7.5pt;
+            color: #0f172a;
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+          }
+          .no-print {
+            background: #0f172a;
+            color: #fff;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 9pt;
+            border-bottom: 2px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+          }
+          .btn-print {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 9pt;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+          }
+          .btn-print:hover { background: #1d4ed8; }
+          .btn-close {
+            background: #334155;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 9pt;
+            cursor: pointer;
+          }
+          .btn-close:hover { background: #475569; }
+          @media print {
+            .no-print { display: none !important; }
+            body { font-size: 7pt; }
+          }
+          .container { width: 100%; max-width: 100%; margin: 0 auto; padding: 4px; }
+          .header-box {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .header-title h1 { margin: 0; font-size: 11pt; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+          .header-title h2 { margin: 2px 0 0 0; font-size: 8.5pt; font-weight: 700; color: #334155; }
+          .header-title p { margin: 1px 0 0 0; font-size: 7pt; color: #64748b; }
+          .contract-badge {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 10px;
+            text-align: right;
+            font-size: 7pt;
+          }
+          .kpi-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+          }
+          .kpi-col {
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 6px;
+            text-align: center;
+          }
+          .kpi-label { font-size: 6.5pt; text-transform: uppercase; font-weight: bold; color: #64748b; }
+          .kpi-val { font-size: 9pt; font-weight: 900; font-family: monospace; color: #0f172a; margin-top: 1px; }
+          .kpi-sub { font-size: 6pt; color: #16a34a; font-weight: bold; }
+          table.report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.2pt;
+            border: 1px solid #cbd5e1;
+          }
+          table.report-table thead {
+            display: table-header-group;
+          }
+          table.report-table tfoot {
+            display: table-footer-group;
+          }
+          table.report-table tr {
+            page-break-inside: avoid;
+          }
+          table.report-table th {
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 6.8pt;
+            text-transform: uppercase;
+            font-weight: 800;
+            padding: 4px 4px;
+            border: 1px solid #1e293b;
+          }
+          .notes-box {
+            margin-top: 8px;
+            padding: 5px 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 6.5pt;
+            color: #475569;
+            line-height: 1.35;
+          }
+          .sign-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 22px;
+            page-break-inside: avoid;
+            gap: 20px;
+          }
+          .sign-col {
+            flex: 1;
+            text-align: center;
+            border-top: 1px solid #0f172a;
+            padding-top: 4px;
+            font-size: 7pt;
+          }
+          .sign-col strong { display: block; font-size: 7.5pt; color: #0f172a; }
+        </style>
+      </head>
+      <body>
+        <div class="no-print">
+          <div>
+            <strong>📄 Relatório Oficial de Cotas Balanceadas (Folha A4 Paisagem)</strong> — Contrato nº ${currentContract.num} (${itens.length} itens)
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-print">🖨️ Imprimir / Salvar PDF</button>
+            <button onclick="window.close()" class="btn-close">Fechar</button>
+          </div>
+        </div>
+
+        <div class="container">
+          <!-- CABEÇALHO OFICIAL -->
+          <div class="header-box">
+            <div class="header-title">
+              <h1>Prefeitura Municipal de Torres — Secretaria da Saúde</h1>
+              <h2>Auditoria e Controle Físico-Financeiro • Relatório Técnico de Balanceamento de Cotas</h2>
+              <p>Rua José Bonifácio, 642 — Torres/RS | Sistema de Auditoria Pública do SUS | Emissão: ${dataExtenso}</p>
+            </div>
+            <div class="contract-badge">
+              <div><strong>Contrato nº:</strong> ${currentContract.num}</div>
+              <div><strong>Prestador:</strong> ${currentContract.prestador}</div>
+              <div><strong>Empenhos:</strong> ${currentContract.empenhos}</div>
+            </div>
+          </div>
+
+          <!-- RESUMO DOS INDICADORES E METAS ORÇAMENTÁRIAS -->
+          <div class="kpi-row">
+            <div class="kpi-col">
+              <div class="kpi-label">Teto Alvo Contratual</div>
+              <div class="kpi-val">${this.formatBRL(totais.tetoAlvo)}</div>
+              <div class="kpi-sub" style="color:#64748b;">Limite Inviolável</div>
+            </div>
+            <div class="kpi-col" style="background: #f0fdf4; border-color: #86efac;">
+              <div class="kpi-label" style="color:#166534;">Custo Total Projetado</div>
+              <div class="kpi-val" style="color:#15803d;">${this.formatBRL(totais.custoNovo)}</div>
+              <div class="kpi-sub">✓ 100% Dentro do Teto</div>
+            </div>
+            <div class="kpi-col" style="background: #eff6ff; border-color: #93c5fd;">
+              <div class="kpi-label" style="color:#1e40af;">Folga Residual</div>
+              <div class="kpi-val" style="color:#1d4ed8;">${this.formatBRL(totais.folgaResidual)}</div>
+              <div class="kpi-sub" style="color:#2563eb;">Margem de Segurança</div>
+            </div>
+            <div class="kpi-col" style="background: #faf5ff; border-color: #d8b4fe;">
+              <div class="kpi-label" style="color:#6b21a8;">Itens Reforçados</div>
+              <div class="kpi-val" style="color:#7e22ce;">${totais.reforcados}</div>
+              <div class="kpi-sub" style="color:#9333ea;">Déficits Eliminados</div>
+            </div>
+            <div class="kpi-col" style="background: #fffbeb; border-color: #fde68a;">
+              <div class="kpi-label" style="color:#92400e;">Itens Otimizados</div>
+              <div class="kpi-val" style="color:#b45309;">${totais.otimizados}</div>
+              <div class="kpi-sub" style="color:#d97706;">Ociosidade Reduzida</div>
+            </div>
+            <div class="kpi-col">
+              <div class="kpi-label">Critérios do Algoritmo</div>
+              <div style="font-size: 6.8pt; font-weight: bold; margin-top: 2px;">
+                Hist: ${parametros.mesesHist}m | Proj: ${parametros.mesesProj}m
+              </div>
+              <div style="font-size: 6.2pt; color: #475569;">
+                Margem: +${(parametros.margem * 100).toFixed(0)}% | Reserva: ${parametros.reservaMin}un
+              </div>
+            </div>
+          </div>
+
+          <!-- TABELA COMPLETA COM QUEBRA AUTOMÁTICA EM FOLHAS A4 -->
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width: 5%; text-align: center;">Item</th>
+                <th style="width: 33%; text-align: left;">Procedimento Laboratorial (SUS)</th>
+                <th style="width: 8%; text-align: right;">Vl. Unit.</th>
+                <th style="width: 8%; text-align: center;">Cota Atual</th>
+                <th style="width: 7%; text-align: center;">Fat. Real</th>
+                <th style="width: 7%; text-align: center;">Média/Mês</th>
+                <th style="width: 9%; text-align: center; background: #b45309;">Cota Sugerida</th>
+                <th style="width: 10%; text-align: center;">Variação (Δ)</th>
+                <th style="width: 13%; text-align: right;">Custo Novo</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr style="background: #0f172a; color: #fff; font-weight: bold; font-family: monospace;">
+                <td colspan="3" style="padding: 4px 6px; text-align: right; text-transform: uppercase;">TOTAIS GERAIS CONSOLIDADOS:</td>
+                <td style="padding: 4px; text-align: center;">${totalQtdEmp.toLocaleString('pt-BR')}</td>
+                <td style="padding: 4px; text-align: center;">${totalFat.toLocaleString('pt-BR')}</td>
+                <td style="padding: 4px; text-align: center;">—</td>
+                <td style="padding: 4px; text-align: center; background: #b45309; color: #fff;">${totalQtdSug.toLocaleString('pt-BR')}</td>
+                <td style="padding: 4px; text-align: center;">—</td>
+                <td style="padding: 4px 6px; text-align: right; font-size: 8.5pt;">${this.formatBRL(totais.custoNovo)}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- OBSERVAÇÕES TÉCNICAS E RESPALDO LEGAL -->
+          <div class="notes-box">
+            <strong>Fundamentação e Metodologia Técnica:</strong> Redistribuição físico-financeira efetuada por algoritmo de otimização proporcional baseado na demanda epidemiológica faturada do período (${parametros.mesesHist} meses auditados via NFS-e). O cálculo aplica margem de segurança de ${(parametros.margem * 100).toFixed(0)}% para absorver variações sazonais e reserva técnica mínima obrigatória de ${parametros.reservaMin} unidades para procedimentos sem demanda recente, resguardando a integralidade da cobertura assistencial do SUS sem ultrapassar o teto orçamentário licitado (Art. 65 da Lei 8.666/93 e Lei 14.133/2021).
+          </div>
+
+          <!-- ASSINATURAS OFICIAIS -->
+          <div class="sign-row">
+            <div class="sign-col">
+              <strong>Setor de Auditoria Físico-Financeira</strong>
+              <span>Secretaria Municipal da Saúde de Torres</span>
+            </div>
+            <div class="sign-col">
+              <strong>Fiscal do Contrato Administrativo</strong>
+              <span>Controle e Execução Contratual</span>
+            </div>
+            <div class="sign-col">
+              <strong>Secretário(a) Municipal da Saúde</strong>
+              <span>Ordenador(a) de Despesa</span>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.focus();
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  },
+
   fecharMemorandoTecnico() {
     const modal = document.getElementById('modal-memorando-tecnico');
     if (modal) {
@@ -927,8 +1263,7 @@ app.audit = {
 
     const printWin = window.open('', '_blank', 'width=900,height=750');
     if (!printWin) {
-      alert("Por favor, permita pop-ups para imprimir o Memorando Técnico.");
-      return;
+      return app.ui.toast("Por favor, permita pop-ups para imprimir o Memorando Técnico.", "warning", "Pop-up Bloqueado");
     }
 
     printWin.document.write(`
@@ -978,8 +1313,8 @@ app.audit = {
   },
 
   async confirmarAplicacaoCotas() {
-    if (!this._simulacaoState) return alert("Simulação não realizada.");
-    if (!app.permissions.can('audit_edit_values')) return alert("Sem permissão para alterar cotas de exames.");
+    if (!this._simulacaoState) return app.ui.toast("Simulação não realizada.", "warning", "Atenção");
+    if (!app.permissions.can('audit_edit_values')) return app.ui.toast("Sem permissão para alterar cotas de exames.", "warning", "Acesso Restrito");
 
     const { totais, itens } = this._simulacaoState;
     const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
@@ -1012,7 +1347,7 @@ app.audit = {
     this.closeBalanceadorModal();
     this.renderTable();
 
-    alert(`✓ Sucesso! As 76 cotas rebalanceadas foram aplicadas ao Contrato nº ${currentContract.num} e sincronizadas com a nuvem.`);
+    app.ui.toast(`As 76 cotas rebalanceadas foram aplicadas ao Contrato nº ${currentContract.num} e sincronizadas com a nuvem!`, "success", "✓ Cotas Aplicadas");
   }
 };
 
