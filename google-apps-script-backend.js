@@ -162,7 +162,7 @@ function ensureDotacoesStructure(ss) {
     sheet.appendRow([
       1, "18306", "229", "198", "2 detector fetal C.E E.I:212", "20490", "",
       "Aguardando dotação do setor financeiro", "", "AGUARDANDO",
-      "Carlos (Compras)", "carlos.compras", "28/09/2026 às 10:00",
+      "Diego Canto", "diego", "28/09/2026 às 10:00",
       "", "", "", "639,98", ""
     ]);
   }

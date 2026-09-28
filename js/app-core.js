@@ -18,6 +18,7 @@ Object.assign(window.app, {
     exams: [],
     dotacoes: [],
     dotacoesFilter: 'TODOS',
+    dotacoesUserFilter: 'TODOS',
     dotacoesSearch: '',
     pendingDotacaoTemp: null,
     deleteDotacaoTarget: null,

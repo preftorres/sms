@@ -239,7 +239,7 @@ Exemplo do formato:
 
             <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 flex items-center gap-2">
               <span>👉</span>
-              <span>Ao salvar, o pedido entrará automaticamente na fila <strong>"Aguardando Dotação"</strong> para o <strong>Rafa (Financeiro)</strong> dar o Check.</span>
+              <span>Ao salvar, o pedido entrará automaticamente na fila <strong>"Aguardando Dotação"</strong> para o <strong>Setor Financeiro</strong> realizar a baixa contábil.</span>
             </div>
 
             <div class="pt-2 flex gap-2">
