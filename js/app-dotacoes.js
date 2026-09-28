@@ -493,6 +493,19 @@ app.dotacoes = {
 
       return matchStatus && matchUser && matchSearch;
     });
+
+    // ORDEM: DOS MAIS NOVOS PARA OS MAIS ANTIGOS (Decrescente)
+    return filtered.sort((a, b) => {
+      // 1. Pelo ID decrescente (pedidos novos têm ID maior / timestamp)
+      const idA = Number(a.id) || 0;
+      const idB = Number(b.id) || 0;
+      if (idB !== idA) return idB - idA;
+
+      // 2. Fallback pelo número do SF decrescente se houver
+      const sfA = parseInt(String(a.sf || '').replace(/\D/g, ''), 10) || 0;
+      const sfB = parseInt(String(b.sf || '').replace(/\D/g, ''), 10) || 0;
+      return sfB - sfA;
+    });
   },
 
   // --------------------------------------------------------------------------
@@ -528,104 +541,106 @@ app.dotacoes = {
 
       return `
         <tr class="${rowClass}">
-          <!-- 1. SF -->
-          <td class="p-3 font-mono font-black text-slate-900 text-xs sm:text-sm whitespace-nowrap">
-            <div class="flex items-center gap-1.5">
-              ${isAguardando ? '<span class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Aguardando Dotação"></span>' : ''}
-              <span>${d.sf || '—'}</span>
+          <!-- 1. SF (75px) -->
+          <td class="p-2.5 font-mono font-black text-slate-900 text-xs whitespace-nowrap overflow-hidden">
+            <div class="flex items-center gap-1">
+              ${isAguardando ? '<span class="inline-block w-2 h-2 shrink-0 rounded-full bg-amber-500 animate-pulse" title="Aguardando Dotação"></span>' : ''}
+              <span class="truncate">${d.sf || '—'}</span>
             </div>
           </td>
 
-          <!-- 2. OBJETO & DESTINAÇÃO -->
-          <td class="p-3">
-            <p class="font-bold text-slate-900 text-xs leading-snug line-clamp-2" title="${d.objeto || ''}">${d.objeto || '—'}</p>
-            ${d.valor ? `<span class="inline-block mt-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Valor: R$ ${d.valor}</span>` : ''}
+          <!-- 2. OBJETO & DESTINAÇÃO (Livre / Auto) -->
+          <td class="p-2.5 overflow-hidden">
+            <div class="space-y-0.5">
+              <p class="font-bold text-slate-900 text-xs leading-snug line-clamp-2 break-words" title="${d.objeto || ''}">${d.objeto || '—'}</p>
+              ${d.valor ? `<span class="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">Valor: R$ ${d.valor}</span>` : ''}
+            </div>
           </td>
 
-          <!-- 3. ATA & PROCESSO -->
-          <td class="p-3 whitespace-nowrap text-[11px]">
-            <span class="block font-mono text-slate-700"><strong>Ata:</strong> ${d.ata || '—'}</span>
-            <span class="block font-mono text-slate-500"><strong>Proc:</strong> ${d.processo || '—'}</span>
+          <!-- 3. ATA & PROCESSO (110px) -->
+          <td class="p-2.5 overflow-hidden text-[11px] leading-tight">
+            <div class="font-mono text-slate-800 truncate" title="Ata: ${d.ata || '—'}"><strong>Ata:</strong> ${d.ata || '—'}</div>
+            <div class="font-mono text-slate-500 truncate text-[10px]" title="Processo: ${d.processo || '—'}"><strong>Proc:</strong> ${d.processo || '—'}</div>
           </td>
 
-          <!-- 4. 1DOC -->
-          <td class="p-3 font-mono font-bold text-slate-800 text-xs whitespace-nowrap">
-            ${d.doc1 ? `<span class="bg-slate-100 px-2 py-0.5 rounded text-slate-700">${d.doc1}</span>` : '<span class="text-slate-300">—</span>'}
+          <!-- 4. 1DOC (90px) -->
+          <td class="p-2.5 font-mono font-bold text-slate-800 text-xs whitespace-nowrap text-center overflow-hidden">
+            ${d.doc1 ? `<span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 block truncate" title="${d.doc1}">${d.doc1}</span>` : '<span class="text-slate-300">—</span>'}
           </td>
 
-          <!-- 5. EMPENHO -->
-          <td class="p-3 font-mono text-xs whitespace-nowrap">
+          <!-- 5. EMPENHO (105px) -->
+          <td class="p-2.5 font-mono text-xs whitespace-nowrap text-center overflow-hidden">
             ${d.empenho ? `
-              <span class="font-black text-blue-900 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200 shadow-xs inline-block">
+              <span class="font-black text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 block truncate shadow-xs" title="${d.empenho}">
                 ${d.empenho}
               </span>
-            ` : '<span class="text-slate-400 italic text-[11px]">Pendente</span>'}
+            ` : '<span class="text-slate-400 italic text-[10px] block">—</span>'}
           </td>
 
-          <!-- 6. SITUAÇÃO / HISTÓRICO -->
-          <td class="p-3 text-[11px] text-slate-600 max-w-xs">
-            <p class="line-clamp-2" title="${d.situacao || ''}">${d.situacao || '—'}</p>
+          <!-- 6. SITUAÇÃO / HISTÓRICO (260px) -->
+          <td class="p-2.5 text-[11px] text-slate-600 overflow-hidden">
+            <p class="line-clamp-2 break-words leading-tight" title="${d.situacao || ''}">${d.situacao || '—'}</p>
           </td>
 
-          <!-- 7. PATRIMÔNIO (OPCIONAL) -->
-          <td class="p-3 text-center whitespace-nowrap">
+          <!-- 7. PATRIMÔNIO (75px) -->
+          <td class="p-2.5 text-center whitespace-nowrap overflow-hidden">
             ${d.patrimonio ? `
-              <span class="font-mono font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded text-[11px] border border-amber-200 inline-block" title="Bem durável patrimoniado">
+              <span class="font-mono font-bold text-amber-950 bg-amber-100 px-1.5 py-0.5 rounded text-[10px] border border-amber-200 inline-block truncate max-w-[65px]" title="Patrimônio: ${d.patrimonio}">
                 🏷️ ${d.patrimonio}
               </span>
             ` : '<span class="text-slate-300">—</span>'}
           </td>
 
-          <!-- 8. RASTREABILIDADE & STATUS -->
-          <td class="p-3 text-center whitespace-nowrap">
+          <!-- 8. STATUS & RESPONSÁVEL (145px) -->
+          <td class="p-2.5 text-center whitespace-nowrap overflow-hidden">
             ${isAguardando ? `
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-200">
-                ⏳ Aguardando Dotação
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-200">
+                ⏳ Aguardando
               </span>
             ` : isDotado ? `
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-200">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-200">
                 ✓ Dotado
               </span>
-              ${d.validador ? `<span class="block text-[9px] text-slate-400 mt-0.5">por ${d.validador}</span>` : ''}
+              ${d.validador ? `<span class="block text-[9px] text-slate-500 truncate max-w-[135px] mx-auto mt-0.5" title="Validado por ${d.validador}">${d.validador}</span>` : ''}
             ` : isConcluido ? `
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-200">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-200">
                 ✅ Concluído
               </span>
             ` : `
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
                 🚫 Cancelado
               </span>
             `}
-            <span class="block text-[9px] text-slate-400 mt-0.5">Criado por ${d.comprador || 'Comprador'}</span>
+            <span class="block text-[9px] text-slate-400 truncate max-w-[135px] mx-auto mt-0.5" title="Criado por ${d.comprador || 'Comprador'}">${d.comprador || 'Comprador'}</span>
           </td>
 
-          <!-- 9. AÇÕES CONTEXTUAIS -->
-          <td class="p-3 text-center whitespace-nowrap">
+          <!-- 9. AÇÕES CONTEXTUAIS (115px) -->
+          <td class="p-2.5 text-center whitespace-nowrap overflow-hidden">
             <div class="flex items-center justify-center gap-1">
               ${isAguardando && canCheck ? `
-                <button onclick="app.dotacoes.dotarPedido(${d.id})" class="px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-xs font-black shadow-xs transition flex items-center gap-1" title="1 Clique: Confirmar Dotação (Financeiro)">
+                <button onclick="app.dotacoes.dotarPedido(${d.id})" class="px-2 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-xs font-black shadow-xs transition flex items-center gap-0.5" title="1 Clique: Confirmar Dotação (Financeiro)">
                   <span>✓</span> Dotar
                 </button>
               ` : ''}
 
               ${(isDotado || isConcluido) ? `
-                <button onclick="app.dotacoes.openComplementarModal(${d.id})" class="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-200 transition flex items-center gap-1" title="Vincular Empenho, Situação e Patrimônio">
-                  <span>📦</span> Empenho
+                <button onclick="app.dotacoes.openComplementarModal(${d.id})" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-200 transition flex items-center gap-0.5" title="Vincular Empenho, Situação e Patrimônio">
+                  <span>📦</span> Emp.
                 </button>
               ` : ''}
 
               ${canEdit && !isCancelado ? `
-                <button onclick="app.dotacoes.openEditModal(${d.id})" class="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 rounded-lg text-xs font-bold border border-slate-200 transition" title="Corrigir / Editar dados do pedido">
+                <button onclick="app.dotacoes.openEditModal(${d.id})" class="p-1 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 rounded-lg text-xs font-bold border border-slate-200 transition" title="Corrigir / Editar dados do pedido">
                   ✏️
                 </button>
               ` : ''}
 
               ${!isCancelado ? `
-                <button onclick="app.dotacoes.openCancelarModal(${d.id})" class="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-lg text-xs font-bold border border-slate-200 transition" title="Cancelar Pedido">
+                <button onclick="app.dotacoes.openCancelarModal(${d.id})" class="p-1 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-lg text-xs font-bold border border-slate-200 transition" title="Cancelar Pedido">
                   ✕
                 </button>
               ` : `
-                <button onclick="app.dotacoes.reabrirPedido(${d.id})" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold border transition" title="Reativar pedido">
+                <button onclick="app.dotacoes.reabrirPedido(${d.id})" class="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold border transition" title="Reativar pedido">
                   ↩ Reabrir
                 </button>
               `}
@@ -730,20 +745,20 @@ app.render.dotacoesHub = function(el) {
   const isFilteringMine = loggedUser && (currentUserFilter.toLowerCase() === (loggedUser.usuario || '').toLowerCase() || currentUserFilter.toLowerCase() === (loggedUser.nome || '').toLowerCase());
 
   el.innerHTML = `
-    <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
+    <div class="w-full max-w-[1880px] mx-auto px-3 sm:px-6 py-4 fade-in">
         
         <!-- NAVEGAÇÃO DE TOPO -->
-        <div class="mb-4">
-            <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-600 transition group py-1">
-                <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <div class="mb-2">
+            <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-600 transition group py-0.5">
+                <svg class="w-3.5 h-3.5 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 <span>Voltar para o Portal de Acessos</span>
             </button>
         </div>
 
         <!-- CABEÇALHO DO LIVRO DIGITAL -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200">
             <div>
-                <div class="flex items-center gap-2 mb-1">
+                <div class="flex items-center gap-2 mb-0.5">
                     <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Contabilidade & Compras</span>
                     
                     <!-- Indicador de Notificação do Navegador -->
@@ -752,90 +767,90 @@ app.render.dotacoesHub = function(el) {
                         <span>${hasDesktopNotifications ? 'Alertas no Computador Ativos' : 'Ativar Alertas de Navegador'}</span>
                     </button>
                 </div>
-                <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Livro Digital de Pedidos de Dotação</h2>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Livro Digital de Pedidos de Dotação</h2>
+                <p class="text-xs text-slate-500">
                     Fluxo Integrado: <strong class="text-slate-700">1. Comprador lança</strong> → <strong class="text-slate-700">2. Setor Financeiro valida (1 clique)</strong> → <strong class="text-slate-700">3. Comprador insere empenho</strong>.
                 </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
-                <button onclick="app.dotacoes.exportCSV()" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition flex items-center gap-1.5">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="app.dotacoes.exportCSV()" class="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-xs transition flex items-center gap-1.5">
                     <span>📥</span> Exportar Excel
                 </button>
-                <button onclick="app.data.syncFromCloud(true)" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition flex items-center gap-1.5">
+                <button onclick="app.data.syncFromCloud(true)" class="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-xs transition flex items-center gap-1.5">
                     <span>🔄</span> Sincronizar
                 </button>
                 ${canCreate ? `
-                  <button onclick="app.dotacoes.openNewModal(true)" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                  <button onclick="app.dotacoes.openNewModal(true)" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5">
                       <span class="text-base leading-none">+</span> Nova Solicitação (SF)
                   </button>
                 ` : ''}
             </div>
         </div>
 
-        <!-- CARDS DE RESUMO DO FLUXO -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- CARDS DE RESUMO DO FLUXO (COMPACTOS) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3.5">
             <!-- 1. TOTAL -->
-            <div onclick="app.dotacoes.setFilter('TODOS')" class="cursor-pointer bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:border-slate-300 transition ${currentFilter === 'TODOS' ? 'ring-2 ring-slate-900' : ''}">
+            <div onclick="app.dotacoes.setFilter('TODOS')" class="cursor-pointer bg-white p-3.5 rounded-xl shadow-xs border border-slate-100 hover:border-slate-300 transition ${currentFilter === 'TODOS' ? 'ring-2 ring-slate-900' : ''}">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Histórico Geral</span>
-                    <span class="p-1.5 bg-slate-100 rounded-lg text-slate-600 text-xs">📋</span>
+                    <span class="p-1 bg-slate-100 rounded-md text-slate-600 text-xs">📋</span>
                 </div>
-                <p class="text-2xl font-black text-slate-900 mt-1">${totalCount}</p>
-                <span class="text-[10px] text-slate-400">Total de pedidos no livro</span>
+                <p class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">${totalCount}</p>
+                <span class="text-[10px] text-slate-400">Total de pedidos</span>
             </div>
             
             <!-- 2. AGUARDANDO (FILA DO FINANCEIRO) -->
-            <div onclick="app.dotacoes.setFilter('AGUARDANDO')" class="cursor-pointer bg-amber-50/70 p-5 rounded-2xl shadow-sm border border-amber-200 hover:bg-amber-100/70 transition ${currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES' ? 'ring-2 ring-amber-500' : ''}">
+            <div onclick="app.dotacoes.setFilter('AGUARDANDO')" class="cursor-pointer bg-amber-50/70 p-3.5 rounded-xl shadow-xs border border-amber-200 hover:bg-amber-100/70 transition ${currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES' ? 'ring-2 ring-amber-500' : ''}">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider">⏳ Fila do Financeiro</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-200 text-amber-900">Check Pendente</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase bg-amber-200 text-amber-900">Check Pendente</span>
                 </div>
-                <p class="text-2xl font-black text-amber-800 mt-1">${aguardandoCount}</p>
-                <span class="text-[10px] text-amber-700 font-bold">1 Clique para dotar sem digitação manual</span>
+                <p class="text-xl sm:text-2xl font-black text-amber-800 mt-0.5">${aguardandoCount}</p>
+                <span class="text-[10px] text-amber-700 font-bold">1 Clique para dotar</span>
             </div>
 
             <!-- 3. DOTADOS (EM COMPRAS) -->
-            <div onclick="app.dotacoes.setFilter('DOTADOS')" class="cursor-pointer bg-blue-50/70 p-5 rounded-2xl shadow-sm border border-blue-200 hover:bg-blue-100/70 transition ${currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS' ? 'ring-2 ring-blue-600' : ''}">
+            <div onclick="app.dotacoes.setFilter('DOTADOS')" class="cursor-pointer bg-blue-50/70 p-3.5 rounded-xl shadow-xs border border-blue-200 hover:bg-blue-100/70 transition ${currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS' ? 'ring-2 ring-blue-600' : ''}">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-black text-blue-900 uppercase tracking-wider">📦 Dotados / Em Compras</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-200 text-blue-900">Comprador</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase bg-blue-200 text-blue-900">Comprador</span>
                 </div>
-                <p class="text-2xl font-black text-blue-900 mt-1">${dotadosCount}</p>
-                <span class="text-[10px] text-blue-700 font-bold">Aguardando vincular empenho</span>
+                <p class="text-xl sm:text-2xl font-black text-blue-900 mt-0.5">${dotadosCount}</p>
+                <span class="text-[10px] text-blue-700 font-bold">Aguardando empenho</span>
             </div>
 
             <!-- 4. CONCLUÍDOS -->
-            <div onclick="app.dotacoes.setFilter('CONCLUIDOS')" class="cursor-pointer bg-emerald-50/70 p-5 rounded-2xl shadow-sm border border-emerald-200 hover:bg-emerald-100/70 transition ${currentFilter === 'CONCLUIDOS' ? 'ring-2 ring-emerald-600' : ''}">
+            <div onclick="app.dotacoes.setFilter('CONCLUIDOS')" class="cursor-pointer bg-emerald-50/70 p-3.5 rounded-xl shadow-xs border border-emerald-200 hover:bg-emerald-100/70 transition ${currentFilter === 'CONCLUIDOS' ? 'ring-2 ring-emerald-600' : ''}">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider">✅ Concluídos & Entregues</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-200 text-emerald-900">Finalizados</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase bg-emerald-200 text-emerald-900">Finalizados</span>
                 </div>
-                <p class="text-2xl font-black text-emerald-800 mt-1">${concluidosCount}</p>
-                <span class="text-[10px] text-emerald-700 font-bold">Empenho e NF lançados</span>
+                <p class="text-xl sm:text-2xl font-black text-emerald-800 mt-0.5">${concluidosCount}</p>
+                <span class="text-[10px] text-emerald-700 font-bold">Empenho vinculado</span>
             </div>
         </div>
 
         <!-- BARRA DE PESQUISA, FILTRO DE USUÁRIO E ABAS DE STATUS -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 space-y-3">
-            <div class="flex flex-col sm:flex-row items-center gap-3">
+        <div class="bg-white p-3 rounded-xl shadow-xs border border-slate-100 mb-3.5 space-y-2.5">
+            <div class="flex flex-col sm:flex-row items-center gap-2.5">
                 <div class="relative flex-1 w-full">
-                    <input type="text" id="dotacoes-search-input" oninput="app.dotacoes.setSearch(this.value)" value="${app.state.dotacoesSearch || ''}" placeholder="Buscar em tempo real por SF (ex: 18306), Objeto, 1Doc, Empenho ou Usuário (ex: diego)..." class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-emerald-500 font-medium">
-                    <span class="absolute left-3 top-3 text-slate-400">🔍</span>
+                    <input type="text" id="dotacoes-search-input" oninput="app.dotacoes.setSearch(this.value)" value="${app.state.dotacoesSearch || ''}" placeholder="Buscar em tempo real por SF (ex: 18306), Objeto, 1Doc, Empenho ou Usuário (ex: diego)..." class="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-emerald-500 font-medium">
+                    <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
                     ${app.state.dotacoesSearch ? `
-                      <button onclick="app.dotacoes.clearSearch()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
+                      <button onclick="app.dotacoes.clearSearch()" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
                     ` : ''}
                 </div>
 
                 <!-- SELETOR DINÂMICO DE USUÁRIO / COMPRADOR -->
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <select onchange="app.dotacoes.setUserFilter(this.value)" class="w-full sm:w-auto px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-emerald-500 text-slate-700">
+                    <select onchange="app.dotacoes.setUserFilter(this.value)" class="w-full sm:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-emerald-500 text-slate-700">
                         <option value="TODOS" ${currentUserFilter === 'TODOS' ? 'selected' : ''}>👤 Todos os Usuários</option>
                         ${uniqueUsersOptions}
                     </select>
                     
                     ${loggedUser ? `
-                      <button onclick="app.dotacoes.filterMyOrders()" class="px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${isFilteringMine ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}" title="Filtrar apenas os pedidos lançados por você">
+                      <button onclick="app.dotacoes.filterMyOrders()" class="px-3 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap ${isFilteringMine ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}" title="Filtrar apenas os pedidos lançados por você">
                         ${isFilteringMine ? '✓ Meus Pedidos' : 'Meus Pedidos'}
                       </button>
                     ` : ''}
@@ -843,22 +858,22 @@ app.render.dotacoesHub = function(el) {
             </div>
 
             <!-- ABAS DE STATUS -->
-            <div class="flex items-center justify-between border-t border-slate-100 pt-3">
-                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 w-full">
-                    <button onclick="app.dotacoes.setFilter('TODOS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'TODOS' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            <div class="flex items-center justify-between border-t border-slate-100 pt-2">
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 w-full">
+                    <button onclick="app.dotacoes.setFilter('TODOS')" class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap ${currentFilter === 'TODOS' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                         Todos (${totalCount})
                     </button>
-                    <button onclick="app.dotacoes.setFilter('AGUARDANDO')" class="px-3.5 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    <button onclick="app.dotacoes.setFilter('AGUARDANDO')" class="px-3 py-1 rounded-lg text-xs font-black transition whitespace-nowrap ${currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                         ⏳ Aguardando (${aguardandoCount})
                     </button>
-                    <button onclick="app.dotacoes.setFilter('DOTADOS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    <button onclick="app.dotacoes.setFilter('DOTADOS')" class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap ${currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                         📦 Dotados (${dotadosCount})
                     </button>
-                    <button onclick="app.dotacoes.setFilter('CONCLUIDOS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'CONCLUIDOS' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    <button onclick="app.dotacoes.setFilter('CONCLUIDOS')" class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap ${currentFilter === 'CONCLUIDOS' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                         ✅ Concluídos (${concluidosCount})
                     </button>
                     ${canceladosCount > 0 ? `
-                      <button onclick="app.dotacoes.setFilter('CANCELADOS')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'CANCELADOS' ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                      <button onclick="app.dotacoes.setFilter('CANCELADOS')" class="px-3 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap ${currentFilter === 'CANCELADOS' ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                           🚫 Cancelados (${canceladosCount})
                       </button>
                     ` : ''}
@@ -866,21 +881,32 @@ app.render.dotacoesHub = function(el) {
             </div>
         </div>
 
-        <!-- TABELA DO LIVRO DIGITAL -->
+        <!-- TABELA DO LIVRO DIGITAL (OTIMIZADA PARA DESKTOP 1920x1080) -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="custom-scroll overflow-x-auto overflow-y-auto max-h-[640px] relative">
-                <table id="table-dotacoes" class="w-full text-left border-collapse text-xs">
+            <div class="custom-scroll overflow-x-auto overflow-y-auto max-h-[calc(100vh-275px)] min-h-[480px] relative">
+                <table id="table-dotacoes" class="w-full text-left border-collapse text-xs table-fixed">
+                    <colgroup>
+                        <col style="width: 75px;">
+                        <col style="width: auto;">
+                        <col style="width: 110px;">
+                        <col style="width: 90px;">
+                        <col style="width: 105px;">
+                        <col style="width: 260px;">
+                        <col style="width: 75px;">
+                        <col style="width: 145px;">
+                        <col style="width: 115px;">
+                    </colgroup>
                     <thead class="sticky-thead bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
                         <tr>
-                            <th class="p-3.5 w-24">Nº SF</th>
-                            <th class="p-3.5 min-w-[240px]">Objeto / Destinação</th>
-                            <th class="p-3.5 w-28">Ata / Proc.</th>
-                            <th class="p-3.5 w-24">1Doc</th>
-                            <th class="p-3.5 w-28">Empenho</th>
-                            <th class="p-3.5 min-w-[180px]">Situação / Entrega</th>
-                            <th class="p-3.5 text-center w-28">Patrimônio</th>
-                            <th class="p-3.5 text-center w-36">Status / Validação</th>
-                            <th class="p-3.5 text-center w-36">Ações</th>
+                            <th class="p-2.5 text-slate-800">Nº SF</th>
+                            <th class="p-2.5 text-slate-800">Objeto / Destinação</th>
+                            <th class="p-2.5 text-slate-800">Ata / Proc.</th>
+                            <th class="p-2.5 text-center text-slate-800">1Doc</th>
+                            <th class="p-2.5 text-center text-slate-800">Empenho</th>
+                            <th class="p-2.5 text-slate-800">Situação / Entrega</th>
+                            <th class="p-2.5 text-center text-slate-800">Patrim.</th>
+                            <th class="p-2.5 text-center text-slate-800">Status / Resp.</th>
+                            <th class="p-2.5 text-center text-slate-800">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="table-dotacoes-body" class="divide-y divide-slate-200 font-medium">
@@ -888,8 +914,9 @@ app.render.dotacoesHub = function(el) {
                     </tbody>
                 </table>
             </div>
-            <div class="p-3 bg-slate-50 border-t border-slate-200 text-right text-[11px] text-slate-500 font-bold">
-                Exibindo <span id="table-filtered-count">${app.dotacoes.getFilteredList().length}</span> de ${totalCount} pedidos registrados
+            <div class="p-2.5 px-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-slate-500 font-bold">
+                <span class="text-slate-400">💡 Ordem decrescente (mais novos primeiro) • Layout panorâmico para Desktop (1920x1080)</span>
+                <span>Exibindo <span id="table-filtered-count" class="text-slate-800 font-black">${app.dotacoes.getFilteredList().length}</span> de ${totalCount} pedidos registrados</span>
             </div>
         </div>
 
