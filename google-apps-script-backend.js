@@ -75,9 +75,9 @@ const HEADERS_EXAMS = ["id", "item", "cat", "descEmpenho", "descPrestador", "vlU
 const HEADERS_SHORTCUTS = ["id", "title", "url", "desc"];
 const HEADERS_USERS = ["id", "usuario", "senha", "nome", "perfil", "createdAt"];
 const HEADERS_DOTACOES = [
-  "id", "processo", "origem", "solicitante", "quantidade", "objeto",
-  "comprador", "compradorLogin", "dataSolicitacao", "status",
-  "empenhoDoc", "validador", "validadorLogin", "dataValidacao"
+  "id", "sf", "ata", "processo", "objeto", "doc1", "empenho", "situacao", "patrimonio",
+  "status", "comprador", "compradorLogin", "dataSolicitacao",
+  "validador", "validadorLogin", "dataValidacao", "valor", "motivoCancelamento"
 ];
 
 // OS 42 CONTRATOS REAIS DA SAÚDE DE TORRES (R$ 14.230.950,50)
@@ -160,10 +160,10 @@ function ensureDotacoesStructure(ss) {
     sheet = ss.insertSheet(DOTACOES_SHEET);
     sheet.appendRow(HEADERS_DOTACOES);
     sheet.appendRow([
-      1, "19011", "Farmácia Municipal", "Dra. Juliana / Farmácia", 12000,
-      "Medicamentos de Atenção Básica e Insulinas",
-      "Carlos Silva", "carlos.compras", "13/09/2026 às 10:15",
-      "PENDENTE", "", "", "", ""
+      1, "18306", "229", "198", "2 detector fetal C.E E.I:212", "20490", "",
+      "Aguardando dotação do setor financeiro", "", "AGUARDANDO",
+      "Carlos (Compras)", "carlos.compras", "28/09/2026 às 10:00",
+      "", "", "", "639,98", ""
     ]);
   }
   return sheet;
@@ -367,23 +367,41 @@ function getDotacoesList(ss) {
   const sheet = ensureDotacoesStructure(ss);
   const rows = sheet.getDataRange().getValues();
   const list = [];
+  if (rows.length <= 1) return list;
+
+  const headers = rows[0].map(h => String(h || '').trim().toLowerCase());
+  const col = (name) => headers.indexOf(name.toLowerCase());
+
   for (let i = 1; i < rows.length; i++) {
-    if (!rows[i][0] && rows[i][0] !== 0) continue;
+    const row = rows[i];
+    if (!row[0] && row[0] !== 0) continue;
+
+    const getVal = (colName, defIdx) => {
+      const idx = col(colName);
+      if (idx !== -1 && idx < row.length) return row[idx];
+      if (defIdx !== undefined && defIdx < row.length) return row[defIdx];
+      return "";
+    };
+
     list.push({
-      id: Number(rows[i][0]),
-      processo: String(rows[i][1]),
-      origem: String(rows[i][2]),
-      solicitante: String(rows[i][3]),
-      quantidade: Number(rows[i][4]) || 0,
-      objeto: String(rows[i][5]),
-      comprador: String(rows[i][6]),
-      compradorLogin: String(rows[i][7]),
-      dataSolicitacao: String(rows[i][8]),
-      status: String(rows[i][9]),
-      empenhoDoc: String(rows[i][10]),
-      validador: String(rows[i][11]),
-      validadorLogin: String(rows[i][12]),
-      dataValidacao: String(rows[i][13])
+      id: Number(row[0]),
+      sf: String(getVal("sf", 1) || ""),
+      ata: String(getVal("ata", 2) || ""),
+      processo: String(getVal("processo", 3) || ""),
+      objeto: String(getVal("objeto", 4) || ""),
+      doc1: String(getVal("doc1", 5) || ""),
+      empenho: String(getVal("empenho", 6) || ""),
+      situacao: String(getVal("situacao", 7) || ""),
+      patrimonio: String(getVal("patrimonio", 8) || ""),
+      status: String(getVal("status", 9) || "AGUARDANDO"),
+      comprador: String(getVal("comprador", 10) || ""),
+      compradorLogin: String(getVal("compradorLogin", 11) || ""),
+      dataSolicitacao: String(getVal("dataSolicitacao", 12) || ""),
+      validador: String(getVal("validador", 13) || ""),
+      validadorLogin: String(getVal("validadorLogin", 14) || ""),
+      dataValidacao: String(getVal("dataValidacao", 15) || ""),
+      valor: String(getVal("valor", 16) || ""),
+      motivoCancelamento: String(getVal("motivoCancelamento", 17) || "")
     });
   }
   return list;
@@ -657,14 +675,15 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // --- MÓDULO DE DOTAÇÕES ---
+    // --- MÓDULO DE DOTAÇÕES (FLUXO 3 ETAPAS) ---
     if (action === "CREATE_DOTACAO") {
       const sheet = ensureDotacoesStructure(ss);
       const d = payload.dotacao;
       sheet.appendRow([
-        d.id, d.processo, d.origem, d.solicitante, d.quantidade, d.objeto,
-        d.comprador, d.compradorLogin, d.dataSolicitacao, d.status,
-        d.empenhoDoc || "", d.validador || "", d.validadorLogin || "", d.dataValidacao || ""
+        d.id || Date.now(), d.sf || "", d.ata || "", d.processo || "", d.objeto || "",
+        d.doc1 || "", d.empenho || "", d.situacao || "", d.patrimonio || "",
+        d.status || "AGUARDANDO", d.comprador || "", d.compradorLogin || "", d.dataSolicitacao || "",
+        d.validador || "", d.validadorLogin || "", d.dataValidacao || "", d.valor || "", d.motivoCancelamento || ""
       ]);
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
@@ -676,11 +695,17 @@ function doPost(e) {
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(d.id)) {
           const rowNum = i + 1;
-          sheet.getRange(rowNum, 2).setValue(d.processo);
-          sheet.getRange(rowNum, 3).setValue(d.origem);
-          sheet.getRange(rowNum, 4).setValue(d.solicitante);
-          sheet.getRange(rowNum, 5).setValue(d.quantidade);
-          sheet.getRange(rowNum, 6).setValue(d.objeto);
+          if (d.sf !== undefined) sheet.getRange(rowNum, 2).setValue(d.sf);
+          if (d.ata !== undefined) sheet.getRange(rowNum, 3).setValue(d.ata);
+          if (d.processo !== undefined) sheet.getRange(rowNum, 4).setValue(d.processo);
+          if (d.objeto !== undefined) sheet.getRange(rowNum, 5).setValue(d.objeto);
+          if (d.doc1 !== undefined) sheet.getRange(rowNum, 6).setValue(d.doc1);
+          if (d.empenho !== undefined) sheet.getRange(rowNum, 7).setValue(d.empenho);
+          if (d.situacao !== undefined) sheet.getRange(rowNum, 8).setValue(d.situacao);
+          if (d.patrimonio !== undefined) sheet.getRange(rowNum, 9).setValue(d.patrimonio);
+          if (d.status !== undefined) sheet.getRange(rowNum, 10).setValue(d.status);
+          if (d.valor !== undefined) sheet.getRange(rowNum, 17).setValue(d.valor);
+          if (d.motivoCancelamento !== undefined) sheet.getRange(rowNum, 18).setValue(d.motivoCancelamento);
           break;
         }
       }
@@ -694,10 +719,10 @@ function doPost(e) {
         if (Number(rows[i][0]) === Number(payload.id)) {
           const rowNum = i + 1;
           sheet.getRange(rowNum, 10).setValue(payload.status);
-          sheet.getRange(rowNum, 11).setValue(payload.empenhoDoc || "Confirmado");
-          sheet.getRange(rowNum, 12).setValue(payload.validador || "");
-          sheet.getRange(rowNum, 13).setValue(payload.validadorLogin || "");
-          sheet.getRange(rowNum, 14).setValue(payload.dataValidacao || "");
+          if (payload.validador) sheet.getRange(rowNum, 14).setValue(payload.validador);
+          if (payload.validadorLogin) sheet.getRange(rowNum, 15).setValue(payload.validadorLogin);
+          if (payload.dataValidacao) sheet.getRange(rowNum, 16).setValue(payload.dataValidacao);
+          if (payload.situacao) sheet.getRange(rowNum, 8).setValue(payload.situacao);
           break;
         }
       }

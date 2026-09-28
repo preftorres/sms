@@ -17,7 +17,7 @@ Object.assign(window.app, {
     activeContractTab: 'Contrato_67_2026',
     exams: [],
     dotacoes: [],
-    dotacoesFilter: 'PENDENTES',
+    dotacoesFilter: 'TODOS',
     dotacoesSearch: '',
     pendingDotacaoTemp: null,
     deleteDotacaoTarget: null,
@@ -52,8 +52,8 @@ Object.assign(window.app, {
         if (app.dotacoes) {
           app.dotacoes.closeNewModal();
           app.dotacoes.closeEditModal();
-          app.dotacoes.closeBaixaModal();
-          app.dotacoes.closeDeleteModal();
+          app.dotacoes.closeComplementarModal();
+          app.dotacoes.closeCancelarModal();
         }
         if (app.contratos) {
           app.contratos.closeNewModal();
@@ -257,7 +257,14 @@ Object.assign(window.app, {
       }
 
       const rawDotacoes = localStorage.getItem(CONFIG.keys.dotacoesCache);
-      app.state.dotacoes = rawDotacoes ? JSON.parse(rawDotacoes) : JSON.parse(JSON.stringify(INITIAL_DOTACOES));
+      let parsedDot = null;
+      try { parsedDot = rawDotacoes ? JSON.parse(rawDotacoes) : null; } catch(e){}
+      if (!parsedDot || !Array.isArray(parsedDot) || parsedDot.length < 50) {
+        app.state.dotacoes = JSON.parse(JSON.stringify(INITIAL_DOTACOES));
+        this.saveLocalDotacoes();
+      } else {
+        app.state.dotacoes = parsedDot;
+      }
 
       const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
       app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
@@ -346,7 +353,7 @@ Object.assign(window.app, {
             this.saveLocalExams();
           }
 
-          if (Array.isArray(res.dotacoes)) {
+          if (Array.isArray(res.dotacoes) && res.dotacoes.length >= 50) {
             app.state.dotacoes = res.dotacoes;
             this.saveLocalDotacoes();
             if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
@@ -361,12 +368,14 @@ Object.assign(window.app, {
 
           if (app.state.view === 'auditoria_detalhe') app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
           else if (app.state.view === 'auditoria_hub') app.render.auditoriaHub(document.getElementById('app-viewport'));
+          else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(document.getElementById('app-viewport'));
+          else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(document.getElementById('app-viewport'));
 
-          if (showFeedback) alert("Dados atualizados com sucesso diretamente da Planilha Google!");
+          if (showFeedback) app.ui.toast("Dados atualizados com sucesso diretamente da Planilha Google!", "success", "✓ Sincronizado");
         }
       } catch (err) {
         console.warn("Modo Offline ativado.", err);
-        if (showFeedback) alert("Modo offline: exibindo dados salvos em cache.");
+        if (showFeedback) app.ui.toast("Modo offline: exibindo dados salvos em cache.", "info", "Modo Offline");
       } finally {
         app.ui.setSyncStatus(false);
       }
@@ -437,7 +446,116 @@ Object.assign(window.app, {
     }
   },
 
+  notifications: {
+    isSupported() {
+      return 'Notification' in window;
+    },
+
+    getPermission() {
+      return this.isSupported() ? Notification.permission : 'denied';
+    },
+
+    async requestPermission() {
+      if (!this.isSupported()) {
+        app.ui.toast("Seu navegador não suporta notificações de área de trabalho.", "warning", "Notificações");
+        return 'unsupported';
+      }
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          app.ui.toast("Notificações no computador ativadas com sucesso! Você receberá alertas mesmo com o navegador em segundo plano.", "success", "🔔 Alertas Ativados!");
+          this.send("Prefeitura de Torres • Saúde", "🔔 Alertas ativados! Você será notificado sobre novos pedidos de dotação e checks do financeiro.");
+        } else {
+          app.ui.toast("Permissão de notificação não concedida.", "info", "Aviso");
+        }
+        return perm;
+      } catch (e) {
+        console.error("Erro ao solicitar permissão de notificação:", e);
+      }
+    },
+
+    send(title, body, icon = "Logo_Torres_100x100.webp") {
+      if (this.isSupported() && Notification.permission === 'granted') {
+        try {
+          const n = new Notification(title, {
+            body: body,
+            icon: icon,
+            badge: icon,
+            tag: 'torres-saude-notification',
+            renotify: true
+          });
+          n.onclick = () => {
+            window.focus();
+            n.close();
+          };
+        } catch (e) {
+          console.warn("Falha ao emitir notificação nativa:", e);
+        }
+      }
+    }
+  },
+
   ui: {
+    toast(message, type = 'success', title = '', duration = 5000) {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed bottom-4 right-4 z-[99999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-3 sm:px-0';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto transform transition-all duration-300 ease-out translate-y-4 opacity-0 p-4 rounded-2xl shadow-2xl border backdrop-blur-md flex items-start gap-3 text-xs';
+
+      let icon = '✅';
+      let bgBorder = 'bg-white/95 border-emerald-200 text-slate-800 shadow-emerald-500/10';
+      let titleColor = 'text-emerald-900';
+
+      if (type === 'workflow') {
+        icon = '🔄';
+        bgBorder = 'bg-white/95 border-blue-200 text-slate-800 shadow-blue-500/10';
+        titleColor = 'text-blue-900';
+      } else if (type === 'warning') {
+        icon = '⚠️';
+        bgBorder = 'bg-white/95 border-amber-200 text-slate-800 shadow-amber-500/10';
+        titleColor = 'text-amber-900';
+      } else if (type === 'error') {
+        icon = '❌';
+        bgBorder = 'bg-white/95 border-rose-200 text-slate-800 shadow-rose-500/10';
+        titleColor = 'text-rose-900';
+      } else if (type === 'info') {
+        icon = 'ℹ️';
+        bgBorder = 'bg-white/95 border-slate-200 text-slate-800 shadow-slate-500/10';
+        titleColor = 'text-slate-900';
+      }
+
+      toast.className += ` ${bgBorder}`;
+      toast.innerHTML = `
+        <span class="text-xl flex-shrink-0 mt-0.5">${icon}</span>
+        <div class="flex-grow space-y-0.5">
+          ${title ? `<div class="font-black ${titleColor} text-[13px] leading-tight">${title}</div>` : ''}
+          <div class="text-slate-600 leading-snug font-medium">${message}</div>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1 font-bold text-sm leading-none flex-shrink-0">✕</button>
+      `;
+
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      const timer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+
+      toast.addEventListener('mouseenter', () => clearTimeout(timer));
+    },
+
     navigate(view) {
       if (view === 'saude') view = 'saude_links';
       if (window.location.hash === '#' + view) {

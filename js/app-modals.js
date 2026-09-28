@@ -191,157 +191,185 @@ Exemplo do formato:
       </div>
 
       <!-- ================================================================= -->
-      <!-- 4. DOTAÇÕES: NOVA SOLICITAÇÃO (LIVRO DIGITAL)                     -->
+      <!-- 4. DOTAÇÕES: NOVO PEDIDO (ENTRADA RÁPIDA DO COMPRADOR)             -->
       <!-- ================================================================= -->
       <div id="modal-nova-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-black text-slate-900">Novo Pedido de Dotação Orçamentária</h3>
+            <div class="flex items-center gap-2.5">
+              <span class="p-2 bg-amber-50 text-amber-600 rounded-xl text-lg">📝</span>
+              <div>
+                <h3 class="text-base font-black text-slate-900">Novo Pedido de Dotação</h3>
+                <p class="text-[11px] text-slate-500">Lançamento rápido do Comprador para envio ao Financeiro</p>
+              </div>
+            </div>
             <button onclick="app.dotacoes.closeNewModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
           </div>
-          <form onsubmit="app.dotacoes.openConfirmModal(event)" class="space-y-3 text-xs">
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Nº do Processo / Pedido</label>
-              <input type="text" id="dot-field-processo" required placeholder="Ex: 19011" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 font-mono font-bold">
+          <form onsubmit="app.dotacoes.saveNewDotacao(event)" class="space-y-3.5 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nº da Solicitação (SF) *</label>
+                <input type="text" id="dot-field-sf" required placeholder="Ex: 18306" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-slate-900 outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Protocolo 1Doc</label>
+                <input type="text" id="dot-field-1doc" placeholder="Ex: 20490" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-slate-800 outline-none focus:border-amber-500">
+              </div>
             </div>
+
             <div>
-              <label class="block font-bold text-slate-600 mb-1">Setor / Origem Solicitante</label>
-              <input type="text" id="dot-field-origem" required placeholder="Ex: Farmácia Municipal ou Posto Central" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500">
+              <label class="block font-bold text-slate-700 mb-1">Objeto / Descrição & Destinação *</label>
+              <textarea id="dot-field-objeto" required rows="2" placeholder="Ex: 2 Detector fetal C.E E.I: 212 - Posto Central..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-amber-500"></textarea>
             </div>
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Responsável Solicitante</label>
-              <input type="text" id="dot-field-solicitante" required placeholder="Ex: Dra. Juliana / Farmácia" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500">
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nº Ata RP</label>
+                <input type="text" id="dot-field-ata" placeholder="Ex: 301/2025" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nº Processo</label>
+                <input type="text" id="dot-field-processo" placeholder="Ex: 306/2025" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Valor Estimado (R$)</label>
+                <input type="text" id="dot-field-valor" placeholder="Ex: 639,98" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 font-bold outline-none focus:border-amber-500">
+              </div>
             </div>
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Quantidade de Itens (Total)</label>
-              <input type="number" id="dot-field-quantidade" required min="1" placeholder="Ex: 12000" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 font-bold">
+
+            <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 flex items-center gap-2">
+              <span>👉</span>
+              <span>Ao salvar, o pedido entrará automaticamente na fila <strong>"Aguardando Dotação"</strong> para o <strong>Rafa (Financeiro)</strong> dar o Check.</span>
             </div>
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Objeto / Descrição dos Suprimentos</label>
-              <textarea id="dot-field-objeto" required rows="2" placeholder="Ex: Medicamentos de atenção básica e insulinas..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500"></textarea>
-            </div>
-            <div class="pt-3 flex gap-2">
+
+            <div class="pt-2 flex gap-2">
               <button type="button" onclick="app.dotacoes.closeNewModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-              <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">Conferir Pedido →</button>
+              <button type="submit" class="flex-1 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-black rounded-xl shadow-md transition">Enviar para Dotação →</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- ================================================================= -->
-      <!-- 5. DOTAÇÕES: CONFERÊNCIA OBRIGATÓRIA ANTES DE SALVAR              -->
-      <!-- ================================================================= -->
-      <div id="modal-conferencia-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-emerald-200 fade-in">
-          <div class="text-center mb-4">
-            <span class="inline-block p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-2">📋</span>
-            <h3 class="text-base font-black text-slate-900">Conferência de Pedido</h3>
-            <p class="text-xs text-slate-500">Confira atentamente os dados antes de gravar no livro</p>
-          </div>
-          <div class="bg-slate-50 rounded-2xl p-4 space-y-2 text-xs border mb-4">
-            <div class="flex justify-between border-b pb-1.5"><span class="text-slate-400 font-bold">Processo:</span><span id="conf-processo" class="font-mono font-black text-slate-900"></span></div>
-            <div class="flex justify-between border-b pb-1.5"><span class="text-slate-400 font-bold">Origem:</span><span id="conf-origem" class="font-bold text-slate-800"></span></div>
-            <div class="flex justify-between border-b pb-1.5"><span class="text-slate-400 font-bold">Solicitante:</span><span id="conf-solicitante" class="font-semibold text-slate-800"></span></div>
-            <div class="flex justify-between border-b pb-1.5"><span class="text-slate-400 font-bold">Quantidade:</span><span id="conf-quantidade" class="font-black text-emerald-700"></span></div>
-            <div class="flex justify-between border-b pb-1.5"><span class="text-slate-400 font-bold">Comprador:</span><span id="conf-comprador" class="font-bold text-slate-700"></span></div>
-            <div class="pt-1"><span class="text-slate-400 font-bold block mb-0.5">Objeto:</span><p id="conf-objeto" class="text-slate-700 font-medium"></p></div>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="app.dotacoes.cancelConfirm()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">← Corrigir</button>
-            <button onclick="app.dotacoes.saveToCloud()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">Confirmar & Salvar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ================================================================= -->
-      <!-- 6. DOTAÇÕES: EDITAR SOLICITAÇÃO                                   -->
+      <!-- 5. DOTAÇÕES: EDITAR / CORRIGIR PEDIDO (COMPRADOR)                  -->
       <!-- ================================================================= -->
       <div id="modal-editar-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-black text-slate-900">Editar Pedido de Dotação</h3>
+            <div class="flex items-center gap-2.5">
+              <span class="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">✏️</span>
+              <div>
+                <h3 class="text-base font-black text-slate-900">Corrigir / Editar Pedido</h3>
+                <p class="text-[11px] text-slate-500">Ajuste qualquer dado inserido incorretamente pelo Comprador</p>
+              </div>
+            </div>
             <button onclick="app.dotacoes.closeEditModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
           </div>
-          <form onsubmit="app.dotacoes.confirmEdit(event)" class="space-y-3 text-xs">
+          <form onsubmit="app.dotacoes.saveEditDotacao(event)" class="space-y-3.5 text-xs">
             <input type="hidden" id="edit-dot-id">
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Nº do Processo</label>
-              <input type="text" id="edit-dot-processo" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nº da Solicitação (SF) *</label>
+                <input type="text" id="edit-dot-sf" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-slate-900 outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Protocolo 1Doc</label>
+                <input type="text" id="edit-dot-1doc" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-slate-800 outline-none focus:border-blue-500">
+              </div>
             </div>
+
             <div>
-              <label class="block font-bold text-slate-600 mb-1">Setor / Origem</label>
-              <input type="text" id="edit-dot-origem" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500">
+              <label class="block font-bold text-slate-700 mb-1">Objeto / Descrição & Destinação *</label>
+              <textarea id="edit-dot-objeto" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-blue-500"></textarea>
             </div>
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Solicitante</label>
-              <input type="text" id="edit-dot-solicitante" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500">
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nº Ata RP</label>
+                <input type="text" id="edit-dot-ata" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nº Processo</label>
+                <input type="text" id="edit-dot-processo" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Valor / Emenda</label>
+                <input type="text" id="edit-dot-valor" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 font-bold outline-none focus:border-blue-500">
+              </div>
             </div>
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Quantidade de Itens</label>
-              <input type="number" id="edit-dot-quantidade" required min="1" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
-            </div>
-            <div>
-              <label class="block font-bold text-slate-600 mb-1">Objeto / Descrição</label>
-              <textarea id="edit-dot-objeto" required rows="2" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500"></textarea>
-            </div>
-            <div class="pt-3 flex gap-2">
+
+            <div class="pt-2 flex gap-2">
               <button type="button" onclick="app.dotacoes.closeEditModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-              <button type="submit" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl shadow-md">Salvar Alterações</button>
+              <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md transition">Salvar Correção</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- ================================================================= -->
-      <!-- 7. DOTAÇÕES: BAIXA CONTÁBIL                                       -->
+      <!-- 6. DOTAÇÕES: COMPLEMENTAR PEDIDO APÓS DOTAÇÃO (COMPRADOR)         -->
       <!-- ================================================================= -->
-      <div id="modal-baixa-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-emerald-200 fade-in">
-          <div class="text-center mb-4">
-            <span class="inline-block p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-2">✅</span>
-            <h3 class="text-base font-black text-slate-900">Dar Baixa Contábil</h3>
-            <p id="baixa-info-processo" class="text-xs text-slate-500 mt-1"></p>
+      <div id="modal-complementar-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-emerald-200 fade-in">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+              <span class="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">📦</span>
+              <div>
+                <h3 class="text-base font-black text-slate-900">Complementar Dados do Pedido</h3>
+                <p id="comp-info-pedido" class="text-[11px] text-slate-500">Vinculação de Empenho, Situação e Patrimônio</p>
+              </div>
+            </div>
+            <button onclick="app.dotacoes.closeComplementarModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
           </div>
-          <form onsubmit="app.dotacoes.confirmBaixa(event)" class="space-y-3 text-xs">
-            <input type="hidden" id="baixa-target-id">
+          <form onsubmit="app.dotacoes.saveComplementarDotacao(event)" class="space-y-3.5 text-xs">
+            <input type="hidden" id="comp-dot-id">
+
             <div>
-              <label class="block font-bold text-slate-600 mb-1">Nº do Documento / Empenho Gerado</label>
-              <input type="text" id="baixa-field-doc" placeholder="Ex: 3890/2026 (opcional)" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 font-mono font-bold">
+              <label class="block font-bold text-slate-700 mb-1">Nº do Empenho (Betha)</label>
+              <input type="text" id="comp-field-empenho" placeholder="Ex: 15471 ou 15471 / 15472" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-black text-blue-900 outline-none focus:border-emerald-500">
             </div>
-            <div class="pt-3 flex gap-2">
-              <button type="button" onclick="app.dotacoes.closeBaixaModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-              <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">Confirmar Baixa</button>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Situação / Acompanhamento de Entrega</label>
+              <input type="text" id="comp-field-situacao" placeholder="Ex: email enviado em 28/09, aguardando entrega, NF em 30/09..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-emerald-500">
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="font-bold text-slate-700">Tombamento de Patrimônio</label>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Opcional (Bens Permanentes)</span>
+              </div>
+              <input type="text" id="comp-field-patrimonio" placeholder="Ex: 47783 (TV) ou deixe em branco se for consumo" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono outline-none focus:border-emerald-500">
+              <span class="text-[10px] text-slate-400 block mt-1">Preencha apenas para bens duráveis que recebem plaqueta de patrimônio. Para materiais de consumo, deixe em branco.</span>
+            </div>
+
+            <div class="pt-2 flex gap-2">
+              <button type="button" onclick="app.dotacoes.closeComplementarModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+              <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md transition">Salvar Dados</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- ================================================================= -->
-      <!-- 8. DOTAÇÕES: EXCLUSÃO SEGURA (DIGITAÇÃO OBRIGATÓRIA)             -->
+      <!-- 7. DOTAÇÕES: CANCELAR PEDIDO COM JUSTIFICATIVA                    -->
       <!-- ================================================================= -->
-      <div id="modal-excluir-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+      <div id="modal-cancelar-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-rose-200 fade-in">
           <div class="text-center mb-4">
-            <span class="inline-block p-3 bg-rose-50 text-rose-600 rounded-2xl mb-2">⚠️</span>
-            <h3 class="text-base font-black text-slate-900">Excluir Solicitação de Dotação</h3>
-            <p class="text-xs text-slate-500 mt-1">Esta ação é irreversível e exige confirmação manual.</p>
+            <span class="inline-block p-3 bg-rose-50 text-rose-600 rounded-2xl mb-2 text-xl">🚫</span>
+            <h3 class="text-base font-black text-slate-900">Cancelar Pedido de Dotação</h3>
+            <p id="cancel-info-pedido" class="text-xs text-slate-500 mt-1"></p>
           </div>
-          <div class="p-3 bg-slate-50 rounded-2xl border text-xs space-y-1 mb-4">
-            <div class="flex justify-between"><span class="text-slate-400 font-bold">Origem:</span><span id="delete-preview-origem" class="font-bold"></span></div>
-            <div class="flex justify-between"><span class="text-slate-400 font-bold">Solicitante:</span><span id="delete-preview-solicitante"></span></div>
-            <div class="flex justify-between"><span class="text-slate-400 font-bold">Qtd:</span><span id="delete-preview-quantidade" class="font-bold"></span></div>
-            <div><span class="text-slate-400 font-bold">Objeto:</span><p id="delete-preview-objeto" class="italic text-slate-600 line-clamp-2"></p></div>
-          </div>
-          <form onsubmit="app.dotacoes.confirmDelete(event)" class="space-y-3 text-xs">
-            <input type="hidden" id="delete-dot-target-id">
+          <form onsubmit="app.dotacoes.confirmCancelarDotacao(event)" class="space-y-3.5 text-xs">
+            <input type="hidden" id="cancel-dot-id">
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Digite o número do processo (<span id="delete-dot-expected-num" class="font-mono text-rose-600 font-black"></span>) para confirmar:</label>
-              <input type="text" id="delete-dot-typed-processo" onpaste="app.dotacoes.blockPaste(event)" autocomplete="off" placeholder="Digite aqui sem colar..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-rose-500 font-mono font-bold text-center">
+              <label class="block font-bold text-slate-700 mb-1">Motivo do Cancelamento</label>
+              <textarea id="cancel-field-motivo" required rows="2" placeholder="Ex: Pedido duplicado, cancelado pelo setor solicitante ou processo não prosseguiu..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-rose-500"></textarea>
             </div>
-            <div id="delete-dot-error-msg" class="hidden text-rose-600 font-bold text-[11px] text-center"></div>
             <div class="pt-2 flex gap-2">
-              <button type="button" onclick="app.dotacoes.closeDeleteModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-              <button type="submit" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md">Excluir Definitivamente</button>
+              <button type="button" onclick="app.dotacoes.closeCancelarModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Voltar</button>
+              <button type="submit" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md transition">Confirmar Cancelamento</button>
             </div>
           </form>
         </div>

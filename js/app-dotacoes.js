@@ -3,6 +3,11 @@
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
  * MÓDULO DE DOTAÇÕES: Livro Digital de Pedidos, Baixa Contábil e Rastreabilidade
  * Arquivo: js/app-dotacoes.js
+ * Fluxo em 3 Etapas:
+ *   1. Comprador: Entrada rápida de SF, 1Doc, Objeto, Ata, Processo (com edição livre)
+ *   2. Rafa (Financeiro): Fila limpa com 1 clique para Dotar (zero digitação)
+ *   3. Comprador: Complementação de Empenho, Situação e Patrimônio (opcional)
+ * Sem alert() • Notificações Desktop e Toasts Amigáveis
  * ============================================================================
  */
 
@@ -10,9 +15,12 @@ window.app = window.app || {};
 window.app.render = window.app.render || {};
 
 app.dotacoes = {
+  // --------------------------------------------------------------------------
+  // ETAPA 1: NOVO PEDIDO (COMPRADOR)
+  // --------------------------------------------------------------------------
   openNewModal(clearForm = true) {
     if (!app.permissions.can('dotacoes_create')) {
-      return alert("Seu perfil de acesso não tem permissão para cadastrar pedidos de dotação.");
+      return app.ui.toast("Seu perfil de acesso não tem permissão para cadastrar pedidos de dotação.", "warning", "Acesso Restrito");
     }
 
     const modal = document.getElementById('modal-nova-dotacao');
@@ -21,14 +29,25 @@ app.dotacoes = {
       modal.classList.add('flex');
 
       if (clearForm) {
-        document.getElementById('dot-field-processo').value = '';
-        document.getElementById('dot-field-origem').value = '';
-        document.getElementById('dot-field-solicitante').value = '';
-        document.getElementById('dot-field-quantidade').value = '';
-        document.getElementById('dot-field-objeto').value = '';
+        const sfEl = document.getElementById('dot-field-sf');
+        const doc1El = document.getElementById('dot-field-1doc');
+        const objEl = document.getElementById('dot-field-objeto');
+        const ataEl = document.getElementById('dot-field-ata');
+        const procEl = document.getElementById('dot-field-processo');
+        const valEl = document.getElementById('dot-field-valor');
+
+        if (sfEl) sfEl.value = '';
+        if (doc1El) doc1El.value = '';
+        if (objEl) objEl.value = '';
+        if (ataEl) ataEl.value = '';
+        if (procEl) procEl.value = '';
+        if (valEl) valEl.value = '';
       }
 
-      setTimeout(() => document.getElementById('dot-field-processo').focus(), 80);
+      setTimeout(() => {
+        const sfEl = document.getElementById('dot-field-sf');
+        if (sfEl) sfEl.focus();
+      }, 80);
     }
   },
 
@@ -40,128 +59,97 @@ app.dotacoes = {
     }
   },
 
-  openConfirmModal(e) {
-    e.preventDefault();
-    const processo = document.getElementById('dot-field-processo').value.trim();
-    const origem = document.getElementById('dot-field-origem').value.trim();
-    const solicitante = document.getElementById('dot-field-solicitante').value.trim();
-    const quantidade = parseInt(document.getElementById('dot-field-quantidade').value, 10) || 0;
-    const objeto = document.getElementById('dot-field-objeto').value.trim();
+  async saveNewDotacao(e) {
+    if (e) e.preventDefault();
 
-    if (!processo || !origem || !solicitante || !quantidade || !objeto) {
-      return alert("Preencha todos os campos da dotação.");
+    const sf = (document.getElementById('dot-field-sf')?.value || '').trim();
+    const doc1 = (document.getElementById('dot-field-1doc')?.value || '').trim();
+    const objeto = (document.getElementById('dot-field-objeto')?.value || '').trim();
+    const ata = (document.getElementById('dot-field-ata')?.value || '').trim();
+    const processo = (document.getElementById('dot-field-processo')?.value || '').trim();
+    const valor = (document.getElementById('dot-field-valor')?.value || '').trim();
+
+    if (!sf || !objeto) {
+      return app.ui.toast("Preencha pelo menos o Nº da SF e o Objeto/Destinação.", "warning", "Campos Obrigatórios");
     }
 
-    const compradorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Comprador';
-    const compradorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'comprador';
-
-    app.state.pendingDotacaoTemp = {
-      processo, origem, solicitante, quantidade, objeto,
-      comprador: compradorNome,
-      compradorLogin: compradorLogin
-    };
-
-    document.getElementById('conf-processo').textContent = processo;
-    document.getElementById('conf-origem').textContent = origem;
-    document.getElementById('conf-solicitante').textContent = solicitante;
-    document.getElementById('conf-quantidade').textContent = `${quantidade.toLocaleString('pt-BR')} unidades`;
-    document.getElementById('conf-objeto').textContent = objeto;
-    document.getElementById('conf-comprador').textContent = `${compradorNome} (${compradorLogin})`;
-
-    this.closeNewModal();
-    const confModal = document.getElementById('modal-conferencia-dotacao');
-    if (confModal) {
-      confModal.classList.remove('hidden');
-      confModal.classList.add('flex');
-    }
-  },
-
-  cancelConfirm() {
-    const confModal = document.getElementById('modal-conferencia-dotacao');
-    if (confModal) {
-      confModal.classList.add('hidden');
-      confModal.classList.remove('flex');
-    }
-
-    const modal = document.getElementById('modal-nova-dotacao');
-    if (modal) {
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-
-      if (app.state.pendingDotacaoTemp) {
-        document.getElementById('dot-field-processo').value = app.state.pendingDotacaoTemp.processo || '';
-        document.getElementById('dot-field-origem').value = app.state.pendingDotacaoTemp.origem || '';
-        document.getElementById('dot-field-solicitante').value = app.state.pendingDotacaoTemp.solicitante || '';
-        document.getElementById('dot-field-quantidade').value = app.state.pendingDotacaoTemp.quantidade || '';
-        document.getElementById('dot-field-objeto').value = app.state.pendingDotacaoTemp.objeto || '';
-      }
-
-      setTimeout(() => document.getElementById('dot-field-processo').focus(), 80);
-    }
-  },
-
-  async saveToCloud() {
-    if (!app.state.pendingDotacaoTemp) return;
-
-    const confModal = document.getElementById('modal-conferencia-dotacao');
-    if (confModal) {
-      confModal.classList.add('hidden');
-      confModal.classList.remove('flex');
-    }
-
+    const compradorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Carlos (Compras)';
+    const compradorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'carlos.compras';
     const now = new Date();
     const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
     const newRecord = {
       id: Date.now(),
-      ...app.state.pendingDotacaoTemp,
+      sf: sf,
+      ata: ata,
+      processo: processo,
+      objeto: objeto,
+      doc1: doc1,
+      empenho: "",
+      situacao: "Aguardando dotação do setor financeiro",
+      patrimonio: "",
+      status: "AGUARDANDO",
+      comprador: compradorNome,
+      compradorLogin: compradorLogin,
       dataSolicitacao: dataHoraStr,
-      status: "PENDENTE",
-      empenhoDoc: "",
       validador: "",
       validadorLogin: "",
-      dataValidacao: ""
+      dataValidacao: "",
+      valor: valor || ""
     };
 
     app.state.dotacoes.unshift(newRecord);
     app.data.saveLocalDotacoes();
 
-    app.state.pendingDotacaoTemp = null;
-    document.getElementById('dot-field-processo').value = '';
-    document.getElementById('dot-field-origem').value = '';
-    document.getElementById('dot-field-solicitante').value = '';
-    document.getElementById('dot-field-quantidade').value = '';
-    document.getElementById('dot-field-objeto').value = '';
+    this.closeNewModal();
 
     if (app.state.view === 'dotacoes_hub') {
       app.render.dotacoesHub(document.getElementById('app-viewport'));
     }
 
+    // Feedback visual suave e notificação para o computador
+    app.ui.toast(`Pedido SF ${sf} encaminhado com sucesso para a fila de dotação do Rafa!`, "success", "✓ Pedido Registrado");
+    app.notifications.send("Novo Pedido de Dotação Registrado", `SF ${sf}: ${objeto.length > 55 ? objeto.substring(0, 55) + '...' : objeto}`);
+
+    // Sincroniza em segundo plano com a planilha do Google
     await app.data.sendToCloud({
       action: "CREATE_DOTACAO",
       dotacao: newRecord
     });
   },
 
+  // --------------------------------------------------------------------------
+  // CORREÇÃO LIVRE DO COMPRADOR (EDITAR PEDIDO)
+  // --------------------------------------------------------------------------
   openEditModal(id) {
     if (!app.permissions.can('dotacoes_edit')) {
-      return alert("Apenas Administrador e Gestor Financeiro podem editar solicitações.");
+      return app.ui.toast("Seu perfil de acesso não tem permissão para editar pedidos.", "warning", "Acesso Restrito");
     }
 
-    const item = app.state.dotacoes.find(d => d.id === id);
+    const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
     if (!item) return;
 
-    document.getElementById('edit-dot-id').value = item.id;
-    document.getElementById('edit-dot-processo').value = item.processo;
-    document.getElementById('edit-dot-origem').value = item.origem;
-    document.getElementById('edit-dot-solicitante').value = item.solicitante;
-    document.getElementById('edit-dot-quantidade').value = item.quantidade;
-    document.getElementById('edit-dot-objeto').value = item.objeto;
+    const idEl = document.getElementById('edit-dot-id');
+    const sfEl = document.getElementById('edit-dot-sf');
+    const doc1El = document.getElementById('edit-dot-1doc');
+    const objEl = document.getElementById('edit-dot-objeto');
+    const ataEl = document.getElementById('edit-dot-ata');
+    const procEl = document.getElementById('edit-dot-processo');
+    const valEl = document.getElementById('edit-dot-valor');
+
+    if (idEl) idEl.value = item.id;
+    if (sfEl) sfEl.value = item.sf || '';
+    if (doc1El) doc1El.value = item.doc1 || '';
+    if (objEl) objEl.value = item.objeto || '';
+    if (ataEl) ataEl.value = item.ata || '';
+    if (procEl) procEl.value = item.processo || '';
+    if (valEl) valEl.value = item.valor || '';
 
     const modal = document.getElementById('modal-editar-dotacao');
     if (modal) {
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      setTimeout(() => { if (sfEl) sfEl.focus(); }, 80);
     }
   },
 
@@ -173,17 +161,19 @@ app.dotacoes = {
     }
   },
 
-  async confirmEdit(e) {
-    e.preventDefault();
-    const id = Number(document.getElementById('edit-dot-id').value);
-    const item = app.state.dotacoes.find(d => d.id === id);
+  async saveEditDotacao(e) {
+    if (e) e.preventDefault();
+
+    const id = Number(document.getElementById('edit-dot-id')?.value);
+    const item = app.state.dotacoes.find(d => Number(d.id) === id);
     if (!item) return;
 
-    item.processo = document.getElementById('edit-dot-processo').value.trim();
-    item.origem = document.getElementById('edit-dot-origem').value.trim();
-    item.solicitante = document.getElementById('edit-dot-solicitante').value.trim();
-    item.quantidade = parseInt(document.getElementById('edit-dot-quantidade').value, 10) || 0;
-    item.objeto = document.getElementById('edit-dot-objeto').value.trim();
+    item.sf = (document.getElementById('edit-dot-sf')?.value || '').trim();
+    item.doc1 = (document.getElementById('edit-dot-1doc')?.value || '').trim();
+    item.objeto = (document.getElementById('edit-dot-objeto')?.value || '').trim();
+    item.ata = (document.getElementById('edit-dot-ata')?.value || '').trim();
+    item.processo = (document.getElementById('edit-dot-processo')?.value || '').trim();
+    item.valor = (document.getElementById('edit-dot-valor')?.value || '').trim();
 
     app.data.saveLocalDotacoes();
     this.closeEditModal();
@@ -192,153 +182,217 @@ app.dotacoes = {
       app.render.dotacoesHub(document.getElementById('app-viewport'));
     }
 
+    app.ui.toast(`Correções no pedido SF ${item.sf} salvas com sucesso!`, "success", "✓ Pedido Corrigido");
+
     await app.data.sendToCloud({
       action: "UPDATE_DOTACAO",
       dotacao: item
     });
-
-    alert("Solicitação corrigida e atualizada no Google Sheets!");
   },
 
-  openDeleteModal(id) {
-    if (!app.permissions.can('dotacoes_delete')) {
-      return alert("Apenas Administrador e Gestor Financeiro têm permissão para excluir solicitações.");
+  // --------------------------------------------------------------------------
+  // ETAPA 2: CHECK DO GESTOR FINANCEIRO (RAFA) - 1 CLIQUE, ZERO DIGITAÇÃO
+  // --------------------------------------------------------------------------
+  async dotarPedido(id) {
+    if (!app.permissions.can('dotacoes_check')) {
+      return app.ui.toast("Apenas o Gestor Financeiro e Administrador têm permissão para dotar pedidos.", "warning", "Acesso Restrito");
     }
 
-    const item = app.state.dotacoes.find(d => d.id === id);
+    const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
     if (!item) return;
 
-    app.state.deleteDotacaoTarget = item;
+    const gestorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Rafa (Financeiro)';
+    const gestorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'rafa.financeiro';
+    const now = new Date();
+    const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
-    document.getElementById('delete-dot-target-id').value = item.id;
-    document.getElementById('delete-dot-expected-num').textContent = item.processo;
-    document.getElementById('delete-dot-typed-processo').value = '';
-    document.getElementById('delete-dot-error-msg').classList.add('hidden');
+    item.status = "DOTADO";
+    item.validador = gestorNome;
+    item.validadorLogin = gestorLogin;
+    item.dataValidacao = dataHoraStr;
 
-    document.getElementById('delete-preview-origem').textContent = item.origem;
-    document.getElementById('delete-preview-solicitante').textContent = item.solicitante;
-    document.getElementById('delete-preview-quantidade').textContent = `${item.quantidade.toLocaleString('pt-BR')} un.`;
-    document.getElementById('delete-preview-objeto').textContent = item.objeto;
+    if (!item.situacao || item.situacao.includes("Aguardando dotação")) {
+      item.situacao = `Dotação confirmada em ${dataHoraStr.split(' ')[0]} - aguardando empenho`;
+    }
 
-    const modal = document.getElementById('modal-excluir-dotacao');
+    app.data.saveLocalDotacoes();
+
+    if (app.state.view === 'dotacoes_hub') {
+      app.render.dotacoesHub(document.getElementById('app-viewport'));
+    }
+
+    // Toasts e notificações de retorno ao comprador
+    app.ui.toast(`Dotação aprovada para SF ${item.sf}! Pedido retornado ao comprador para empenho.`, "success", "✓ Pedido Dotado");
+    app.notifications.send("Pedido Dotado pelo Financeiro!", `SF ${item.sf} foi validado por ${gestorNome}. Prossiga com o empenho e compra.`);
+
+    await app.data.sendToCloud({
+      action: "UPDATE_DOTACAO_STATUS",
+      id: item.id,
+      status: "DOTADO",
+      validador: gestorNome,
+      validadorLogin: gestorLogin,
+      dataValidacao: dataHoraStr,
+      situacao: item.situacao
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // ETAPA 3: COMPLEMENTAÇÃO PÓS-DOTAÇÃO (COMPRADOR)
+  // --------------------------------------------------------------------------
+  openComplementarModal(id) {
+    const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
+    if (!item) return;
+
+    const idEl = document.getElementById('comp-dot-id');
+    const infoEl = document.getElementById('comp-info-pedido');
+    const empEl = document.getElementById('comp-field-empenho');
+    const sitEl = document.getElementById('comp-field-situacao');
+    const patEl = document.getElementById('comp-field-patrimonio');
+
+    if (idEl) idEl.value = item.id;
+    if (infoEl) {
+      infoEl.textContent = `SF: ${item.sf || '—'} | Ata: ${item.ata || '—'} | Processo: ${item.processo || '—'} • ${item.objeto ? (item.objeto.length > 50 ? item.objeto.substring(0, 50) + '...' : item.objeto) : ''}`;
+    }
+    if (empEl) empEl.value = item.empenho || '';
+    if (sitEl) sitEl.value = item.situacao || '';
+    if (patEl) patEl.value = item.patrimonio || '';
+
+    const modal = document.getElementById('modal-complementar-dotacao');
     if (modal) {
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-      setTimeout(() => document.getElementById('delete-dot-typed-processo').focus(), 80);
+      setTimeout(() => { if (empEl) empEl.focus(); }, 80);
     }
   },
 
-  closeDeleteModal() {
-    app.state.deleteDotacaoTarget = null;
-    const modal = document.getElementById('modal-excluir-dotacao');
+  closeComplementarModal() {
+    const modal = document.getElementById('modal-complementar-dotacao');
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
   },
 
-  blockPaste(e) {
-    e.preventDefault();
-    alert("Por segurança institucional, não é permitido colar. Digite os números manualmente.");
-    return false;
-  },
+  async saveComplementarDotacao(e) {
+    if (e) e.preventDefault();
 
-  async confirmDelete(e) {
-    e.preventDefault();
-    const target = app.state.deleteDotacaoTarget;
-    if (!target) return;
+    const id = Number(document.getElementById('comp-dot-id')?.value);
+    const item = app.state.dotacoes.find(d => Number(d.id) === id);
+    if (!item) return;
 
-    const typed = document.getElementById('delete-dot-typed-processo').value.trim();
-    const errorEl = document.getElementById('delete-dot-error-msg');
+    item.empenho = (document.getElementById('comp-field-empenho')?.value || '').trim();
+    item.situacao = (document.getElementById('comp-field-situacao')?.value || '').trim();
+    item.patrimonio = (document.getElementById('comp-field-patrimonio')?.value || '').trim();
 
-    if (typed !== String(target.processo).trim()) {
-      errorEl.textContent = `O número digitado (${typed}) não confere com o processo (${target.processo}).`;
-      errorEl.classList.remove('hidden');
-      document.getElementById('delete-dot-typed-processo').focus();
-      return;
+    // Se possui empenho e a situação indica entrega/conclusão, evolui para CONCLUIDO
+    const sitLower = item.situacao.toLowerCase();
+    if (item.empenho && (sitLower.includes('nf') || sitLower.includes('entregue') || sitLower.includes('concluid') || sitLower.includes('recebido'))) {
+      item.status = "CONCLUIDO";
     }
 
-    app.state.dotacoes = app.state.dotacoes.filter(d => d.id !== target.id);
     app.data.saveLocalDotacoes();
-    this.closeDeleteModal();
+    this.closeComplementarModal();
 
     if (app.state.view === 'dotacoes_hub') {
       app.render.dotacoesHub(document.getElementById('app-viewport'));
     }
 
+    app.ui.toast(`Dados de empenho e entrega vinculados ao pedido SF ${item.sf}!`, "success", "✓ Dados Atualizados");
+
     await app.data.sendToCloud({
-      action: "DELETE_DOTACAO",
-      id: target.id
+      action: "UPDATE_DOTACAO",
+      dotacao: item
     });
-
-    alert(`Processo nº ${target.processo} excluído com sucesso.`);
   },
 
-  openBaixaModal(id) {
-    if (!app.permissions.can('dotacoes_check')) {
-      return alert("Apenas Gestor Financeiro e Administrador têm permissão para dar baixa contábil.");
-    }
-
-    const item = app.state.dotacoes.find(d => d.id === id);
+  // --------------------------------------------------------------------------
+  // CANCELAMENTO DE PEDIDO COM JUSTIFICATIVA
+  // --------------------------------------------------------------------------
+  openCancelarModal(id) {
+    const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
     if (!item) return;
 
-    document.getElementById('baixa-target-id').value = id;
-    document.getElementById('baixa-info-processo').textContent = `Processo nº ${item.processo} (${item.origem} • Solicitado por: ${item.solicitante})`;
-    document.getElementById('baixa-field-doc').value = '';
+    const idEl = document.getElementById('cancel-dot-id');
+    const infoEl = document.getElementById('cancel-info-pedido');
+    const motivoEl = document.getElementById('cancel-field-motivo');
 
-    const m = document.getElementById('modal-baixa-dotacao');
-    if (m) {
-      m.classList.remove('hidden');
-      m.classList.add('flex');
-      setTimeout(() => document.getElementById('baixa-field-doc').focus(), 80);
+    if (idEl) idEl.value = item.id;
+    if (infoEl) infoEl.textContent = `SF: ${item.sf} • ${item.objeto ? item.objeto.substring(0, 45) + '...' : ''}`;
+    if (motivoEl) motivoEl.value = '';
+
+    const modal = document.getElementById('modal-cancelar-dotacao');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => { if (motivoEl) motivoEl.focus(); }, 80);
     }
   },
 
-  closeBaixaModal() {
-    const m = document.getElementById('modal-baixa-dotacao');
-    if (m) {
-      m.classList.add('hidden');
-      m.classList.remove('flex');
+  closeCancelarModal() {
+    const modal = document.getElementById('modal-cancelar-dotacao');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
   },
 
-  async confirmBaixa(e) {
-    e.preventDefault();
-    const id = Number(document.getElementById('baixa-target-id').value);
-    const docNum = document.getElementById('baixa-field-doc').value.trim();
+  async confirmCancelarDotacao(e) {
+    if (e) e.preventDefault();
 
-    const item = app.state.dotacoes.find(d => d.id === id);
+    const id = Number(document.getElementById('cancel-dot-id')?.value);
+    const item = app.state.dotacoes.find(d => Number(d.id) === id);
     if (!item) return;
 
-    const gestorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Gestor Financeiro';
-    const gestorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'financeiro';
-    const now = new Date();
-    const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    const motivo = (document.getElementById('cancel-field-motivo')?.value || '').trim();
+    if (!motivo) {
+      return app.ui.toast("Por favor, digite o motivo do cancelamento.", "warning", "Justificativa Necessária");
+    }
 
-    item.status = "REGISTRADO";
-    item.empenhoDoc = docNum || "Confirmado";
-    item.validador = gestorNome;
-    item.validadorLogin = gestorLogin;
-    item.dataValidacao = dataHoraStr;
+    item.status = "CANCELADO";
+    item.motivoCancelamento = motivo;
+    item.situacao = `CANCELADO: ${motivo}`;
 
     app.data.saveLocalDotacoes();
-    this.closeBaixaModal();
+    this.closeCancelarModal();
 
     if (app.state.view === 'dotacoes_hub') {
       app.render.dotacoesHub(document.getElementById('app-viewport'));
     }
 
+    app.ui.toast(`Pedido SF ${item.sf} marcado como Cancelado.`, "info", "Pedido Cancelado");
+
     await app.data.sendToCloud({
-      action: "UPDATE_DOTACAO_STATUS",
-      id: id,
-      status: "REGISTRADO",
-      empenhoDoc: item.empenhoDoc,
-      validador: gestorNome,
-      validadorLogin: gestorLogin,
-      dataValidacao: dataHoraStr
+      action: "UPDATE_DOTACAO",
+      dotacao: item
     });
   },
 
+  // --------------------------------------------------------------------------
+  // REABERTURA DE PEDIDO
+  // --------------------------------------------------------------------------
+  async reabrirPedido(id) {
+    const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
+    if (!item) return;
+
+    item.status = "AGUARDANDO";
+    item.situacao = "Reaberto para nova dotação";
+    app.data.saveLocalDotacoes();
+
+    if (app.state.view === 'dotacoes_hub') {
+      app.render.dotacoesHub(document.getElementById('app-viewport'));
+    }
+
+    app.ui.toast(`Pedido SF ${item.sf} reaberto e retornado à fila de dotação!`, "info", "✓ Pedido Reativado");
+
+    await app.data.sendToCloud({
+      action: "UPDATE_DOTACAO",
+      dotacao: item
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // FILTROS E PESQUISA EM TEMPO REAL
+  // --------------------------------------------------------------------------
   setFilter(status) {
     app.state.dotacoesFilter = status;
     if (app.state.view === 'dotacoes_hub') {
@@ -347,98 +401,261 @@ app.dotacoes = {
   },
 
   setSearch(val) {
-    app.state.dotacoesSearch = val.toLowerCase().trim();
+    app.state.dotacoesSearch = (val || '').toLowerCase().trim();
     const tbody = document.getElementById('table-dotacoes-body');
     if (tbody) tbody.innerHTML = this.renderTableRows();
+    const countEl = document.getElementById('table-filtered-count');
+    if (countEl) countEl.textContent = this.getFilteredList().length;
   },
 
-  renderTableRows() {
-    const filtered = app.state.dotacoes.filter(d => {
-      const matchStatus = (app.state.dotacoesFilter === 'TODOS') ||
-                          (app.state.dotacoesFilter === 'PENDENTES' && d.status === 'PENDENTE') ||
-                          (app.state.dotacoesFilter === 'REGISTRADOS' && d.status === 'REGISTRADO');
+  getFilteredList() {
+    return app.state.dotacoes.filter(d => {
+      const status = (d.status || 'AGUARDANDO').toUpperCase();
+      const currentFilter = (app.state.dotacoesFilter || 'TODOS').toUpperCase();
 
-      const s = app.state.dotacoesSearch;
-      const matchSearch = !s ||
-                          String(d.processo).toLowerCase().includes(s) ||
-                          d.origem.toLowerCase().includes(s) ||
-                          d.objeto.toLowerCase().includes(s) ||
-                          d.solicitante.toLowerCase().includes(s) ||
-                          d.comprador.toLowerCase().includes(s) ||
-                          (d.empenhoDoc && d.empenhoDoc.toLowerCase().includes(s));
+      let matchFilter = false;
+      if (currentFilter === 'TODOS') {
+        matchFilter = true;
+      } else if (currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES') {
+        matchFilter = (status === 'AGUARDANDO' || status === 'PENDENTE');
+      } else if (currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS') {
+        matchFilter = (status === 'DOTADO' || status === 'REGISTRADO');
+      } else if (currentFilter === 'CONCLUIDOS') {
+        matchFilter = (status === 'CONCLUIDO');
+      } else if (currentFilter === 'CANCELADOS') {
+        matchFilter = (status === 'CANCELADO');
+      }
 
-      return matchStatus && matchSearch;
+      const s = (app.state.dotacoesSearch || '').trim();
+      if (!s) return matchFilter;
+
+      const searchable = [
+        d.sf, d.ata, d.processo, d.objeto, d.doc1, d.empenho,
+        d.situacao, d.patrimonio, d.comprador, d.validador, d.valor
+      ].map(x => String(x || '').toLowerCase()).join(' ');
+
+      return matchFilter && searchable.includes(s);
     });
+  },
 
-    if (filtered.length === 0) {
-      return `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium text-xs">Nenhum registro de dotação encontrado para os filtros selecionados.</td></tr>`;
+  // --------------------------------------------------------------------------
+  // RENDERIZAÇÃO DAS LINHAS DA TABELA
+  // --------------------------------------------------------------------------
+  renderTableRows() {
+    const list = this.getFilteredList();
+
+    if (list.length === 0) {
+      return `
+        <tr>
+          <td colspan="9" class="p-12 text-center text-slate-400 font-medium text-xs">
+            <span class="block text-2xl mb-2">🔍</span>
+            Nenhum pedido de dotação encontrado para os filtros ou busca selecionados.
+          </td>
+        </tr>
+      `;
     }
 
     const canCheck = app.permissions.can('dotacoes_check');
     const canEdit = app.permissions.can('dotacoes_edit');
-    const canDelete = app.permissions.can('dotacoes_delete');
 
-    return filtered.map(d => {
-      const isPend = d.status === 'PENDENTE';
+    return list.map(d => {
+      const status = (d.status || 'AGUARDANDO').toUpperCase();
+      const isAguardando = (status === 'AGUARDANDO' || status === 'PENDENTE');
+      const isDotado = (status === 'DOTADO' || status === 'REGISTRADO');
+      const isConcluido = (status === 'CONCLUIDO');
+      const isCancelado = (status === 'CANCELADO');
+
+      let rowClass = "hover:bg-slate-50 transition border-b border-slate-200";
+      if (isAguardando) rowClass = "bg-amber-50/40 hover:bg-amber-100/50 transition border-b border-amber-100";
+      else if (isCancelado) rowClass = "bg-rose-50/20 hover:bg-rose-50/40 transition border-b border-rose-100 opacity-75";
+
       return `
-        <tr class="border-b border-slate-200 transition ${isPend ? 'bg-amber-50/40 hover:bg-amber-100/40' : 'bg-white hover:bg-slate-50'}">
-          <td class="p-3.5 font-black text-slate-900 text-xs sm:text-sm font-mono">${d.processo}</td>
-          <td class="p-3.5">
-            <span class="block font-bold text-slate-800 text-xs">${d.origem}</span>
-            <span class="block text-[11px] text-slate-500 line-clamp-1 italic">${d.objeto}</span>
+        <tr class="${rowClass}">
+          <!-- 1. SF -->
+          <td class="p-3 font-mono font-black text-slate-900 text-xs sm:text-sm whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              ${isAguardando ? '<span class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Aguardando Dotação"></span>' : ''}
+              <span>${d.sf || '—'}</span>
+            </div>
           </td>
-          <td class="p-3.5 text-xs">
-            <span class="font-bold text-slate-900">${d.solicitante}</span>
+
+          <!-- 2. OBJETO & DESTINAÇÃO -->
+          <td class="p-3">
+            <p class="font-bold text-slate-900 text-xs leading-snug line-clamp-2" title="${d.objeto || ''}">${d.objeto || '—'}</p>
+            ${d.valor ? `<span class="inline-block mt-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Valor: R$ ${d.valor}</span>` : ''}
           </td>
-          <td class="p-3.5 text-right font-black text-slate-900 text-xs sm:text-sm">${d.quantidade.toLocaleString('pt-BR')} un.</td>
-          <td class="p-3.5 text-xs text-slate-600">
-            <span class="font-bold text-slate-800 block">${d.comprador}</span>
-            <span class="text-[10px] text-slate-400 block">${d.dataSolicitacao}</span>
+
+          <!-- 3. ATA & PROCESSO -->
+          <td class="p-3 whitespace-nowrap text-[11px]">
+            <span class="block font-mono text-slate-700"><strong>Ata:</strong> ${d.ata || '—'}</span>
+            <span class="block font-mono text-slate-500"><strong>Proc:</strong> ${d.processo || '—'}</span>
           </td>
-          <td class="p-3.5 text-center">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isPend ? 'badge-dotacao-pendente' : 'badge-dotacao-registrado'}">
-              ${isPend ? '⏳ Aguardando' : '✅ Registrado'}
-            </span>
-            ${!isPend && d.empenhoDoc ? `<span class="block text-[10px] text-emerald-800 font-mono font-bold mt-0.5">Doc: ${d.empenhoDoc}</span>` : ''}
-            ${!isPend && d.validador ? `<span class="block text-[9px] text-slate-400 mt-0.5">por ${d.validador}</span>` : ''}
+
+          <!-- 4. 1DOC -->
+          <td class="p-3 font-mono font-bold text-slate-800 text-xs whitespace-nowrap">
+            ${d.doc1 ? `<span class="bg-slate-100 px-2 py-0.5 rounded text-slate-700">${d.doc1}</span>` : '<span class="text-slate-300">—</span>'}
           </td>
-          <td class="p-3.5 text-center whitespace-nowrap">
-            <div class="flex items-center justify-center gap-1.5">
-              ${isPend && canCheck ? `
-                <button onclick="app.dotacoes.openBaixaModal(${d.id})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black shadow-xs transition">
-                  ✅ Baixar
+
+          <!-- 5. EMPENHO -->
+          <td class="p-3 font-mono text-xs whitespace-nowrap">
+            ${d.empenho ? `
+              <span class="font-black text-blue-900 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200 shadow-xs inline-block">
+                ${d.empenho}
+              </span>
+            ` : '<span class="text-slate-400 italic text-[11px]">Pendente</span>'}
+          </td>
+
+          <!-- 6. SITUAÇÃO / HISTÓRICO -->
+          <td class="p-3 text-[11px] text-slate-600 max-w-xs">
+            <p class="line-clamp-2" title="${d.situacao || ''}">${d.situacao || '—'}</p>
+          </td>
+
+          <!-- 7. PATRIMÔNIO (OPCIONAL) -->
+          <td class="p-3 text-center whitespace-nowrap">
+            ${d.patrimonio ? `
+              <span class="font-mono font-bold text-amber-950 bg-amber-100 px-2 py-0.5 rounded text-[11px] border border-amber-200 inline-block" title="Bem durável patrimoniado">
+                🏷️ ${d.patrimonio}
+              </span>
+            ` : '<span class="text-slate-300">—</span>'}
+          </td>
+
+          <!-- 8. RASTREABILIDADE & STATUS -->
+          <td class="p-3 text-center whitespace-nowrap">
+            ${isAguardando ? `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-200">
+                ⏳ Aguardando Dotação
+              </span>
+            ` : isDotado ? `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-200">
+                ✓ Dotado
+              </span>
+              ${d.validador ? `<span class="block text-[9px] text-slate-400 mt-0.5">por ${d.validador}</span>` : ''}
+            ` : isConcluido ? `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-200">
+                ✅ Concluído
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                🚫 Cancelado
+              </span>
+            `}
+            <span class="block text-[9px] text-slate-400 mt-0.5">Criado por ${d.comprador || 'Comprador'}</span>
+          </td>
+
+          <!-- 9. AÇÕES CONTEXTUAIS -->
+          <td class="p-3 text-center whitespace-nowrap">
+            <div class="flex items-center justify-center gap-1">
+              ${isAguardando && canCheck ? `
+                <button onclick="app.dotacoes.dotarPedido(${d.id})" class="px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-xs font-black shadow-xs transition flex items-center gap-1" title="1 Clique: Confirmar Dotação (Rafa)">
+                  <span>✓</span> Dotar
                 </button>
               ` : ''}
-              
-              ${canEdit ? `
-                <button onclick="app.dotacoes.openEditModal(${d.id})" title="Editar Lançamento" class="px-2 py-1.5 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 rounded-lg text-xs font-bold border transition">
+
+              ${(isDotado || isConcluido) ? `
+                <button onclick="app.dotacoes.openComplementarModal(${d.id})" class="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-200 transition flex items-center gap-1" title="Vincular Empenho, Situação e Patrimônio">
+                  <span>📦</span> Empenho
+                </button>
+              ` : ''}
+
+              ${canEdit && !isCancelado ? `
+                <button onclick="app.dotacoes.openEditModal(${d.id})" class="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 rounded-lg text-xs font-bold border border-slate-200 transition" title="Corrigir / Editar dados do pedido">
                   ✏️
                 </button>
               ` : ''}
 
-              ${canDelete ? `
-                <button onclick="app.dotacoes.openDeleteModal(${d.id})" title="Excluir Lançamento (Requer confirmação)" class="px-2 py-1.5 bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-bold border transition">
-                  🗑️
+              ${!isCancelado ? `
+                <button onclick="app.dotacoes.openCancelarModal(${d.id})" class="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-lg text-xs font-bold border border-slate-200 transition" title="Cancelar Pedido">
+                  ✕
                 </button>
-              ` : ''}
-
-              ${!isPend && !canEdit && !canDelete ? `<span class="text-[11px] font-bold text-emerald-700">✓ Concluído</span>` : ''}
+              ` : `
+                <button onclick="app.dotacoes.reabrirPedido(${d.id})" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold border transition" title="Reativar pedido">
+                  ↩ Reabrir
+                </button>
+              `}
             </div>
           </td>
         </tr>
       `;
     }).join('');
+  },
+
+  // --------------------------------------------------------------------------
+  // EXPORTAÇÃO COMPLETA PARA EXCEL (CSV FORMATADO UTF-8 COM BOM)
+  // --------------------------------------------------------------------------
+  exportCSV() {
+    const list = this.getFilteredList();
+    if (list.length === 0) {
+      return app.ui.toast("Nenhum registro para exportar com os filtros atuais.", "warning", "Sem Dados");
+    }
+
+    const headers = [
+      "SF", "ATA", "Nº PROCESSO", "OBJETO / DESTINAÇÃO", "1DOC",
+      "EMPENHO", "SITUAÇÃO / ENTREGA", "PATRIMÔNIO", "STATUS",
+      "COMPRADOR", "DATA SOLICITAÇÃO", "VALIDADOR (FINANCEIRO)", "DATA VALIDAÇÃO", "VALOR ESTIMADO"
+    ];
+
+    const rows = list.map(d => [
+      `"${(d.sf || '').replace(/"/g, '""')}"`,
+      `"${(d.ata || '').replace(/"/g, '""')}"`,
+      `"${(d.processo || '').replace(/"/g, '""')}"`,
+      `"${(d.objeto || '').replace(/"/g, '""')}"`,
+      `"${(d.doc1 || '').replace(/"/g, '""')}"`,
+      `"${(d.empenho || '').replace(/"/g, '""')}"`,
+      `"${(d.situacao || '').replace(/"/g, '""')}"`,
+      `"${(d.patrimonio || '').replace(/"/g, '""')}"`,
+      `"${(d.status || '').replace(/"/g, '""')}"`,
+      `"${(d.comprador || '').replace(/"/g, '""')}"`,
+      `"${(d.dataSolicitacao || '').replace(/"/g, '""')}"`,
+      `"${(d.validador || '').replace(/"/g, '""')}"`,
+      `"${(d.dataValidacao || '').replace(/"/g, '""')}"`,
+      `"${(d.valor || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const dStr = new Date().toISOString().slice(0, 10);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Dotacoes_Saude_Torres_${dStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    app.ui.toast(`Exportados ${list.length} registros para arquivo CSV compatível com o Excel!`, "success", "✓ Relatório Gerado");
   }
 };
 
+// ----------------------------------------------------------------------------
+// VIEW PRINCIPAL DO LIVRO DIGITAL DE DOTAÇÕES
+// ----------------------------------------------------------------------------
 app.render.dotacoesHub = function(el) {
-  const pendentesCount = app.state.dotacoes.filter(d => d.status === 'PENDENTE').length;
-  const registradosCount = app.state.dotacoes.filter(d => d.status === 'REGISTRADO').length;
+  const allList = app.state.dotacoes || [];
+  const totalCount = allList.length;
+
+  const aguardandoCount = allList.filter(d => {
+    const st = (d.status || 'AGUARDANDO').toUpperCase();
+    return st === 'AGUARDANDO' || st === 'PENDENTE';
+  }).length;
+
+  const dotadosCount = allList.filter(d => {
+    const st = (d.status || '').toUpperCase();
+    return st === 'DOTADO' || st === 'REGISTRADO';
+  }).length;
+
+  const concluidosCount = allList.filter(d => (d.status || '').toUpperCase() === 'CONCLUIDO').length;
+  const canceladosCount = allList.filter(d => (d.status || '').toUpperCase() === 'CANCELADO').length;
+
   const canCreate = app.permissions.can('dotacoes_create');
+  const hasDesktopNotifications = ("Notification" in window) && Notification.permission === "granted";
+
+  const currentFilter = (app.state.dotacoesFilter || 'TODOS').toUpperCase();
 
   el.innerHTML = `
-    <div class="container mx-auto px-6 py-6 sm:py-8 fade-in">
+    <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
         
+        <!-- NAVEGAÇÃO DE TOPO -->
         <div class="mb-4">
             <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-600 transition group py-1">
                 <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -446,82 +663,125 @@ app.render.dotacoesHub = function(el) {
             </button>
         </div>
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
+        <!-- CABEÇALHO DO LIVRO DIGITAL -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
             <div>
-                <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Contabilidade & Suprimentos da Saúde</span>
-                <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Livro Digital de Dotações</h2>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Registro seguro de pedidos de compra e controle de baixa orçamentária.</p>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Contabilidade & Compras</span>
+                    
+                    <!-- Indicador de Notificação do Navegador -->
+                    <button onclick="app.notifications.requestPermission()" title="${hasDesktopNotifications ? 'Alertas do computador ativos' : 'Clique para receber aviso quando o Rafa dotar seu pedido'}" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold transition ${hasDesktopNotifications ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900 hover:bg-amber-200 cursor-pointer animate-pulse'}">
+                        <span>🔔</span>
+                        <span>${hasDesktopNotifications ? 'Alertas no Computador Ativos' : 'Ativar Alertas de Navegador'}</span>
+                    </button>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Livro Digital de Pedidos de Dotação</h2>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                    Fluxo Integrado: <strong class="text-slate-700">1. Comprador lança</strong> → <strong class="text-slate-700">2. Rafa confirma (1 clique)</strong> → <strong class="text-slate-700">3. Comprador insere empenho</strong>.
+                </p>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="app.data.syncFromCloud(true)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
-                    🔄 Atualizar
+
+            <div class="flex flex-wrap items-center gap-2.5">
+                <button onclick="app.dotacoes.exportCSV()" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition flex items-center gap-1.5">
+                    <span>📥</span> Exportar Excel
+                </button>
+                <button onclick="app.data.syncFromCloud(true)" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition flex items-center gap-1.5">
+                    <span>🔄</span> Sincronizar
                 </button>
                 ${canCreate ? `
-                  <button onclick="app.dotacoes.openNewModal(true)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
-                      <span class="text-sm">+</span> Nova Solicitação
+                  <button onclick="app.dotacoes.openNewModal(true)" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                      <span class="text-base leading-none">+</span> Nova Solicitação (SF)
                   </button>
                 ` : ''}
             </div>
         </div>
 
-        <!-- CARDS DE RESUMO -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Pedidos</span>
-                <p class="text-2xl font-black text-slate-800 mt-1">${app.state.dotacoes.length}</p>
-                <span class="text-[10px] text-slate-400">Processos lançados no livro</span>
+        <!-- CARDS DE RESUMO DO FLUXO -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- 1. TOTAL -->
+            <div onclick="app.dotacoes.setFilter('TODOS')" class="cursor-pointer bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:border-slate-300 transition ${currentFilter === 'TODOS' ? 'ring-2 ring-slate-900' : ''}">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Histórico Geral</span>
+                    <span class="p-1.5 bg-slate-100 rounded-lg text-slate-600 text-xs">📋</span>
+                </div>
+                <p class="text-2xl font-black text-slate-900 mt-1">${totalCount}</p>
+                <span class="text-[10px] text-slate-400">Total de pedidos no livro</span>
             </div>
             
-            <div onclick="app.dotacoes.setFilter('PENDENTES')" class="cursor-pointer bg-amber-50/60 p-5 rounded-2xl shadow-sm border border-amber-200 hover:bg-amber-100/60 transition">
+            <!-- 2. AGUARDANDO (FILA DO RAFA) -->
+            <div onclick="app.dotacoes.setFilter('AGUARDANDO')" class="cursor-pointer bg-amber-50/70 p-5 rounded-2xl shadow-sm border border-amber-200 hover:bg-amber-100/70 transition ${currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES' ? 'ring-2 ring-amber-500' : ''}">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider">⏳ Aguardando Registro</span>
-                    <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">Fila Ativa</span>
+                    <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider">⏳ Fila do Rafa (Financeiro)</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-200 text-amber-900">Check Pendente</span>
                 </div>
-                <p class="text-2xl font-black text-amber-800 mt-1">${pendentesCount}</p>
-                <span class="text-[10px] text-amber-700 font-bold">Clique para filtrar apenas pendentes</span>
+                <p class="text-2xl font-black text-amber-800 mt-1">${aguardandoCount}</p>
+                <span class="text-[10px] text-amber-700 font-bold">1 Clique para dotar sem digitação</span>
             </div>
 
-            <div onclick="app.dotacoes.setFilter('REGISTRADOS')" class="cursor-pointer bg-emerald-50/60 p-5 rounded-2xl shadow-sm border border-emerald-200 hover:bg-emerald-100/60 transition">
+            <!-- 3. DOTADOS (EM COMPRAS) -->
+            <div onclick="app.dotacoes.setFilter('DOTADOS')" class="cursor-pointer bg-blue-50/70 p-5 rounded-2xl shadow-sm border border-blue-200 hover:bg-blue-100/70 transition ${currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS' ? 'ring-2 ring-blue-600' : ''}">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider">✅ Baixas Realizadas</span>
+                    <span class="text-[10px] font-black text-blue-900 uppercase tracking-wider">📦 Dotados / Em Compras</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-200 text-blue-900">Comprador</span>
                 </div>
-                <p class="text-2xl font-black text-emerald-800 mt-1">${registradosCount}</p>
-                <span class="text-[10px] text-emerald-700 font-bold">Clique para filtrar concluídos</span>
+                <p class="text-2xl font-black text-blue-900 mt-1">${dotadosCount}</p>
+                <span class="text-[10px] text-blue-700 font-bold">Aguardando vincular empenho</span>
+            </div>
+
+            <!-- 4. CONCLUÍDOS -->
+            <div onclick="app.dotacoes.setFilter('CONCLUIDOS')" class="cursor-pointer bg-emerald-50/70 p-5 rounded-2xl shadow-sm border border-emerald-200 hover:bg-emerald-100/70 transition ${currentFilter === 'CONCLUIDOS' ? 'ring-2 ring-emerald-600' : ''}">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider">✅ Concluídos & Entregues</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-200 text-emerald-900">Finalizados</span>
+                </div>
+                <p class="text-2xl font-black text-emerald-800 mt-1">${concluidosCount}</p>
+                <span class="text-[10px] text-emerald-700 font-bold">Empenho e NF lançados</span>
             </div>
         </div>
 
-        <!-- BARRA DE PESQUISA E FILTROS -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <!-- BARRA DE PESQUISA E ABAS DE FILTRO -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
             <div class="relative flex-1 w-full">
-                <input type="text" oninput="app.dotacoes.setSearch(this.value)" placeholder="Buscar por processo (ex: 19011), solicitante, comprador ou objeto..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-emerald-500">
-                <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                <input type="text" oninput="app.dotacoes.setSearch(this.value)" value="${app.state.dotacoesSearch || ''}" placeholder="Buscar por SF (ex: 18306), 1Doc (ex: 20490), Empenho, Objeto, Ata ou Comprador..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-emerald-500 font-medium">
+                <span class="absolute left-3 top-3 text-slate-400">🔍</span>
             </div>
 
-            <div class="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                <button onclick="app.dotacoes.setFilter('PENDENTES')" class="px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap ${app.state.dotacoesFilter === 'PENDENTES' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                    ⏳ Apenas Pendentes (${pendentesCount})
+            <!-- ABAS DE STATUS -->
+            <div class="flex items-center gap-1.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
+                <button onclick="app.dotacoes.setFilter('TODOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'TODOS' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    Todos (${totalCount})
                 </button>
-                <button onclick="app.dotacoes.setFilter('REGISTRADOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.dotacoesFilter === 'REGISTRADOS' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                    ✅ Apenas Registrados
+                <button onclick="app.dotacoes.setFilter('AGUARDANDO')" class="px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap ${currentFilter === 'AGUARDANDO' || currentFilter === 'PENDENTES' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    ⏳ Aguardando (${aguardandoCount})
                 </button>
-                <button onclick="app.dotacoes.setFilter('TODOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.dotacoesFilter === 'TODOS' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                    Todos
+                <button onclick="app.dotacoes.setFilter('DOTADOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'DOTADOS' || currentFilter === 'REGISTRADOS' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    📦 Dotados (${dotadosCount})
                 </button>
+                <button onclick="app.dotacoes.setFilter('CONCLUIDOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'CONCLUIDOS' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    ✅ Concluídos (${concluidosCount})
+                </button>
+                ${canceladosCount > 0 ? `
+                  <button onclick="app.dotacoes.setFilter('CANCELADOS')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentFilter === 'CANCELADOS' ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                      🚫 Cancelados (${canceladosCount})
+                  </button>
+                ` : ''}
             </div>
         </div>
 
-        <!-- TABELA EM ORDEM DECRESCENTE -->
+        <!-- TABELA DO LIVRO DIGITAL -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="custom-scroll overflow-y-auto max-h-[600px] relative">
+            <div class="custom-scroll overflow-x-auto overflow-y-auto max-h-[640px] relative">
                 <table id="table-dotacoes" class="w-full text-left border-collapse text-xs">
                     <thead class="sticky-thead bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
                         <tr>
-                            <th class="p-3.5 w-24">Processo</th>
-                            <th class="p-3.5 min-w-[200px]">Origem & Objeto</th>
-                            <th class="p-3.5 w-40">Solicitante (Quem pediu)</th>
-                            <th class="p-3.5 text-right w-24">Quantidade</th>
-                            <th class="p-3.5 w-40">Lançado por (Comprador)</th>
-                            <th class="p-3.5 text-center w-36">Situação</th>
+                            <th class="p-3.5 w-24">Nº SF</th>
+                            <th class="p-3.5 min-w-[240px]">Objeto / Destinação</th>
+                            <th class="p-3.5 w-28">Ata / Proc.</th>
+                            <th class="p-3.5 w-24">1Doc</th>
+                            <th class="p-3.5 w-28">Empenho</th>
+                            <th class="p-3.5 min-w-[180px]">Situação / Entrega</th>
+                            <th class="p-3.5 text-center w-28">Patrimônio</th>
+                            <th class="p-3.5 text-center w-36">Status / Validação</th>
                             <th class="p-3.5 text-center w-36">Ações</th>
                         </tr>
                     </thead>
@@ -529,6 +789,9 @@ app.render.dotacoesHub = function(el) {
                         ${app.dotacoes.renderTableRows()}
                     </tbody>
                 </table>
+            </div>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-right text-[11px] text-slate-500 font-bold">
+                Exibindo <span id="table-filtered-count">${app.dotacoes.getFilteredList().length}</span> de ${totalCount} pedidos registrados
             </div>
         </div>
 
