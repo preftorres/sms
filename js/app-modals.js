@@ -910,6 +910,112 @@ Exemplo do formato:
           </div>
         </div>
       </div>
+
+      <!-- ================================================================= -->
+      <!-- 16. MODAL DE PROCESSAMENTO & FEEDBACK DE USUÁRIO (ZERO ALERT)     -->
+      <!-- ================================================================= -->
+      <div id="modal-feedback-usuario" class="hidden fixed inset-0 z-[80] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 fade-in text-center relative overflow-hidden">
+          
+          <!-- ETAPA: TRABALHANDO / PROCESSANDO -->
+          <div id="user-feedback-loading" class="space-y-4">
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+              <div class="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
+              <span class="absolute text-xl">👤</span>
+            </div>
+            <div>
+              <h3 id="user-feedback-loading-title" class="text-base sm:text-lg font-black text-slate-900">Gravando Usuário no Sistema...</h3>
+              <p class="text-xs text-slate-500 mt-1">Sincronizando credenciais e permissões com o Google Sheets</p>
+            </div>
+
+            <!-- Passos Visuais de Progresso -->
+            <div class="p-3.5 bg-slate-50 rounded-2xl border text-left text-xs space-y-2.5">
+              <div class="flex items-center gap-2 text-emerald-700 font-bold">
+                <span class="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">✓</span>
+                <span>Validação dos dados e credenciais</span>
+              </div>
+              <div class="flex items-center gap-2 text-blue-700 font-bold animate-pulse">
+                <span class="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">⏳</span>
+                <span>Gravando na aba _Usuarios no Google Sheets...</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-400">
+                <span class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">○</span>
+                <span>Atualizando matriz e tabela de acessos</span>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400 italic">Por favor, aguarde alguns instantes enquanto a nuvem conclui o registro com segurança.</p>
+          </div>
+
+          <!-- ETAPA: SUCESSO -->
+          <div id="user-feedback-success" class="hidden space-y-4">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-inner font-bold">
+              ✓
+            </div>
+            <div>
+              <h3 id="user-feedback-success-title" class="text-base sm:text-lg font-black text-slate-900">Usuário Cadastrado com Sucesso!</h3>
+              <p class="text-xs text-slate-500 mt-1">As credenciais foram salvas e sincronizadas na planilha oficial.</p>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 rounded-2xl border text-left text-xs space-y-1.5">
+              <div class="flex justify-between"><span class="text-slate-500">Nome:</span> <strong id="ufb-res-nome" class="text-slate-800 font-bold"></strong></div>
+              <div class="flex justify-between"><span class="text-slate-500">Login:</span> <strong id="ufb-res-login" class="font-mono text-blue-700 font-black"></strong></div>
+              <div class="flex justify-between"><span class="text-slate-500">Perfil:</span> <span id="ufb-res-perfil" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800"></span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Status:</span> <span class="text-emerald-700 font-bold">✓ Ativo e Liberado</span></div>
+            </div>
+
+            <div class="pt-2 flex gap-2">
+              <button onclick="app.admin.finishUserModal(false)" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                + Cadastrar Outro
+              </button>
+              <button onclick="app.admin.finishUserModal(true)" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs shadow-md transition">
+                ✓ Concluir
+              </button>
+            </div>
+          </div>
+
+          <!-- ETAPA: ERRO -->
+          <div id="user-feedback-error" class="hidden space-y-4">
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-inner font-bold">
+              ✕
+            </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-black text-slate-900">Falha na Sincronização</h3>
+              <p id="user-feedback-error-msg" class="text-xs text-rose-600 mt-1"></p>
+            </div>
+            <div class="pt-2">
+              <button onclick="app.admin.closeFeedbackModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition">
+                Fechar e Tentar Novamente
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- 17. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE USUÁRIO (ZERO ALERT)       -->
+      <!-- ================================================================= -->
+      <div id="modal-confirm-delete-user" class="hidden fixed inset-0 z-[80] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-rose-200 fade-in text-center">
+          <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+            🗑️
+          </div>
+          <h3 class="text-base font-black text-slate-900">Excluir Usuário</h3>
+          <p class="text-xs text-slate-500 mt-1">Deseja realmente remover o acesso deste servidor?</p>
+          
+          <div class="my-4 p-3 bg-slate-50 rounded-2xl border text-xs">
+            <div class="font-bold text-slate-800" id="del-user-name"></div>
+            <div class="font-mono text-blue-700 font-bold text-[11px] mt-0.5" id="del-user-login"></div>
+          </div>
+
+          <input type="hidden" id="del-user-target-id">
+          <div class="flex gap-2">
+            <button onclick="app.admin.closeDeleteUserModal()" class="flex-1 py-2.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
+            <button onclick="app.admin.confirmDeleteUser()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs shadow-md transition">Sim, Excluir</button>
+          </div>
+        </div>
+      </div>
     `;
   }
 };

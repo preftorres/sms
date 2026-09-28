@@ -62,6 +62,8 @@ Object.assign(window.app, {
         }
         if (app.admin) {
           app.admin.closeResetPasswordModal();
+          app.admin.closeFeedbackModal();
+          app.admin.closeDeleteUserModal();
           app.admin.exit();
         }
       }
@@ -722,7 +724,9 @@ Object.assign(window.app, {
     },
 
     async savePermissions() {
-      if (!this.isAdminUser()) return alert("Apenas Administrador Geral tem permissão.");
+      if (!this.isAdminUser()) {
+        return app.ui.toast("Apenas o Administrador Geral tem permissão para alterar a matriz de segurança.", "warning", "Acesso Restrito");
+      }
 
       const keys = [
         'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
@@ -749,7 +753,35 @@ Object.assign(window.app, {
         permissions: newPerms
       });
 
-      alert("✓ Matriz de Permissões salva com sucesso!");
+      app.ui.toast("Matriz de Permissões salva com sucesso na planilha oficial!", "success", "✓ Permissões Atualizadas");
+    },
+
+    renderUsersRows() {
+      const tbody = document.getElementById('adm-users-list-tbody');
+      if (!tbody) return;
+
+      const users = app.state.users || [];
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 text-xs">Nenhum usuário cadastrado no momento. Preencha o formulário acima para cadastrar o primeiro.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => `
+        <tr class="hover:bg-blue-50/60 transition cursor-pointer group" onclick="app.admin.editUser(${u.id})" title="Clique para editar este usuário">
+          <td class="p-3.5 font-bold text-slate-800 group-hover:text-blue-600 transition flex items-center gap-1.5">
+            <span>✏️</span>
+            <span>${u.nome || u.usuario}</span>
+          </td>
+          <td class="p-3.5 font-mono text-blue-700 font-bold">${u.usuario}</td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700')}">${u.perfil}</span></td>
+          <td class="p-3.5 text-slate-400">${u.createdAt || "—"}</td>
+          <td class="p-3.5 text-center whitespace-nowrap" onclick="event.stopPropagation()">
+            <button onclick="app.admin.editUser(${u.id})" class="text-amber-600 hover:text-amber-800 font-bold mr-2 text-xs">Editar</button>
+            <button onclick="app.admin.openResetPasswordModal(${u.id}, '${u.usuario}')" class="text-blue-600 hover:text-blue-800 font-bold mr-2 text-xs">🔑 Senha</button>
+            <button onclick="app.admin.openDeleteUserModal(${u.id}, '${u.usuario}')" class="text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
     },
 
     async loadUsersList() {
@@ -757,7 +789,11 @@ Object.assign(window.app, {
       const tbody = document.getElementById('adm-users-list-tbody');
       if (!tbody) return;
 
-      tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Consultando usuários no Google Sheets...</td></tr>`;
+      if (app.state.users && app.state.users.length > 0) {
+        this.renderUsersRows();
+      } else {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Consultando usuários no Google Sheets...</td></tr>`;
+      }
 
       try {
         const res = await fetch(`${GOOGLE_API_URL}?action=GET_USERS`, { redirect: 'follow' });
@@ -765,35 +801,86 @@ Object.assign(window.app, {
 
         if (data.status === "success" && Array.isArray(data.users)) {
           app.state.users = data.users;
-          tbody.innerHTML = data.users.map(u => `
-            <tr class="hover:bg-blue-50/60 transition cursor-pointer group" onclick="app.admin.editUser(${u.id})" title="Clique para editar este usuário">
-              <td class="p-3.5 font-bold text-slate-800 group-hover:text-blue-600 transition flex items-center gap-1.5">
-                <span>✏️</span>
-                <span>${u.nome || u.usuario}</span>
-              </td>
-              <td class="p-3.5 font-mono text-blue-700 font-bold">${u.usuario}</td>
-              <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700')}">${u.perfil}</span></td>
-              <td class="p-3.5 text-slate-400">${u.createdAt || "—"}</td>
-              <td class="p-3.5 text-center whitespace-nowrap" onclick="event.stopPropagation()">
-                <button onclick="app.admin.editUser(${u.id})" class="text-amber-600 hover:text-amber-800 font-bold mr-2 text-xs">Editar</button>
-                <button onclick="app.admin.openResetPasswordModal(${u.id}, '${u.usuario}')" class="text-blue-600 hover:text-blue-800 font-bold mr-2 text-xs">🔑 Senha</button>
-                <button onclick="app.admin.deleteUser(${u.id}, '${u.usuario}')" class="text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
-              </td>
-            </tr>
-          `).join('');
+          this.renderUsersRows();
         } else {
           throw new Error(data.message || "Resposta inválida");
         }
       } catch (err) {
         console.error("Erro na leitura de usuários:", err);
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="p-4 text-center text-rose-500">
-              <b>Não foi possível carregar a lista em tempo real.</b><br>
-              <span class="text-slate-400 text-[11px]">Certifique-se de executar a função ensureUsersStructure no Apps Script.</span>
-            </td>
-          </tr>
-        `;
+        if (!app.state.users || app.state.users.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="p-4 text-center text-rose-500">
+                <b>Não foi possível carregar a lista em tempo real.</b><br>
+                <span class="text-slate-400 text-[11px]">Certifique-se de executar a função ensureUsersStructure no Apps Script.</span>
+              </td>
+            </tr>
+          `;
+        }
+      }
+    },
+
+    openFeedbackModal(loadingTitle) {
+      const modal = document.getElementById('modal-feedback-usuario');
+      const loadBox = document.getElementById('user-feedback-loading');
+      const succBox = document.getElementById('user-feedback-success');
+      const errBox = document.getElementById('user-feedback-error');
+      const loadTitle = document.getElementById('user-feedback-loading-title');
+
+      if (!modal) return;
+      if (loadTitle) loadTitle.textContent = loadingTitle || "Gravando Usuário na Planilha Google...";
+      if (loadBox) loadBox.classList.remove('hidden');
+      if (succBox) succBox.classList.add('hidden');
+      if (errBox) errBox.classList.add('hidden');
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    },
+
+    setFeedbackSuccess(title, nome, login, perfil) {
+      const loadBox = document.getElementById('user-feedback-loading');
+      const succBox = document.getElementById('user-feedback-success');
+      const succTitle = document.getElementById('user-feedback-success-title');
+      const resNome = document.getElementById('ufb-res-nome');
+      const resLogin = document.getElementById('ufb-res-login');
+      const resPerfil = document.getElementById('ufb-res-perfil');
+
+      if (loadBox) loadBox.classList.add('hidden');
+      if (succTitle) succTitle.textContent = title;
+      if (resNome) resNome.textContent = nome || login;
+      if (resLogin) resLogin.textContent = `@${login}`;
+      if (resPerfil) resPerfil.textContent = perfil;
+      if (succBox) succBox.classList.remove('hidden');
+    },
+
+    setFeedbackError(errorMsg) {
+      const loadBox = document.getElementById('user-feedback-loading');
+      const succBox = document.getElementById('user-feedback-success');
+      const errBox = document.getElementById('user-feedback-error');
+      const msgEl = document.getElementById('user-feedback-error-msg');
+
+      if (loadBox) loadBox.classList.add('hidden');
+      if (succBox) succBox.classList.add('hidden');
+      if (msgEl) msgEl.textContent = errorMsg || "Não foi possível sincronizar com o Google Apps Script.";
+      if (errBox) errBox.classList.remove('hidden');
+    },
+
+    closeFeedbackModal() {
+      const modal = document.getElementById('modal-feedback-usuario');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    finishUserModal(closeAndReset = true) {
+      this.closeFeedbackModal();
+      this.resetUserForm();
+      if (!closeAndReset) {
+        setTimeout(() => {
+          const nomeField = document.getElementById('user-field-nome');
+          if (nomeField) nomeField.focus();
+        }, 120);
       }
     },
 
@@ -835,68 +922,158 @@ Object.assign(window.app, {
       if (senhaEl) senhaEl.value = '';
       if (perfilEl) perfilEl.value = 'Comprador';
       if (labelEl) labelEl.textContent = "Cadastrar Novo Usuário";
-      if (btnSave) btnSave.textContent = "Cadastrar Usuário";
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.textContent = "Cadastrar Usuário";
+      }
       if (btnCancel) btnCancel.classList.add('hidden');
     },
 
     async saveUser() {
-      if (!this.isAdminUser()) return alert("Apenas administradores podem cadastrar ou editar usuários.");
+      if (!this.isAdminUser()) {
+        return app.ui.toast("Apenas Administrador Geral pode cadastrar ou alterar usuários.", "warning", "Acesso Restrito");
+      }
 
-      const editId = document.getElementById('user-edit-id').value;
-      const nome = document.getElementById('user-field-nome').value.trim();
-      const usuario = document.getElementById('user-field-login').value.trim().toLowerCase();
-      const senha = document.getElementById('user-field-senha').value.trim();
-      const perfil = document.getElementById('user-field-perfil').value;
+      const editId = (document.getElementById('user-edit-id')?.value || '').trim();
+      const nome = (document.getElementById('user-field-nome')?.value || '').trim();
+      const usuario = (document.getElementById('user-field-login')?.value || '').trim().toLowerCase();
+      const senha = (document.getElementById('user-field-senha')?.value || '').trim();
+      const perfil = document.getElementById('user-field-perfil')?.value || 'Comprador';
+      const btnSave = document.getElementById('btn-save-user');
 
-      if (!usuario) return alert("Preencha o nome de usuário (login).");
+      if (!usuario) {
+        return app.ui.toast("Preencha o nome de usuário (login).", "warning", "Campo Obrigatório");
+      }
 
-      if (editId) {
-        // Atualização de Usuário Existente
-        app.ui.setSyncStatus(true, "Atualizando usuário no Google Sheets...");
+      if (!editId && !senha) {
+        return app.ui.toast("Preencha uma senha inicial para o novo usuário.", "warning", "Campo Obrigatório");
+      }
 
-        await app.data.sendToCloud({
-          action: "UPDATE_USER",
-          id: Number(editId),
-          usuario,
-          senha,
-          nome: nome || usuario,
-          perfil
-        });
+      const isEdit = !!editId;
 
-        alert(`✓ Usuário "${usuario}" atualizado com sucesso!`);
-        this.resetUserForm();
-        setTimeout(() => this.loadUsersList(), 800);
-      } else {
-        // Cadastro de Novo Usuário
-        if (!senha) return alert("Preencha uma senha para o novo usuário.");
+      // Feedback IMEDIATO no botão
+      if (btnSave) {
+        btnSave.disabled = true;
+        btnSave.innerHTML = `<span class="inline-block animate-spin mr-1.5">⏳</span> ${isEdit ? 'Atualizando...' : 'Gravando...'}`;
+      }
 
+      // Abre IMEDIATAMENTE o modal de progresso
+      const modalTitle = isEdit 
+        ? `Atualizando "${usuario}" na Planilha Google...`
+        : `Gravando "${usuario}" na Planilha Google...`;
+      this.openFeedbackModal(modalTitle);
+
+      try {
         const now = new Date();
         const createdAt = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
-        app.ui.setSyncStatus(true, "Gravando novo usuário no Google Sheets...");
+        // Atualização Otimista no estado local e tabela imediata
+        if (isEdit) {
+          const uIdx = (app.state.users || []).findIndex(u => Number(u.id) === Number(editId));
+          if (uIdx !== -1) {
+            app.state.users[uIdx].usuario = usuario;
+            app.state.users[uIdx].nome = nome || usuario;
+            app.state.users[uIdx].perfil = perfil;
+          }
+        } else {
+          app.state.users = app.state.users || [];
+          app.state.users.unshift({
+            id: Date.now(),
+            usuario,
+            nome: nome || usuario,
+            perfil,
+            createdAt
+          });
+        }
+        this.renderUsersRows();
 
+        // Envia para o Google Sheets em segundo plano
         await app.data.sendToCloud({
-          action: "CREATE_USER",
-          usuario, senha, nome: nome || usuario, perfil, createdAt
+          action: isEdit ? "UPDATE_USER" : "CREATE_USER",
+          id: isEdit ? Number(editId) : undefined,
+          usuario,
+          senha,
+          nome: nome || usuario,
+          perfil,
+          createdAt
         });
 
-        alert(`✓ Usuário "${usuario}" (${perfil}) criado com sucesso!`);
-        this.resetUserForm();
-        setTimeout(() => this.loadUsersList(), 800);
+        // Transiciona o modal para o estado de SUCESSO!
+        this.setFeedbackSuccess(
+          isEdit ? "Usuário Atualizado com Sucesso!" : "Usuário Cadastrado com Sucesso!",
+          nome || usuario,
+          usuario,
+          perfil
+        );
+
+        app.ui.toast(`Usuário "${usuario}" (${perfil}) salvo com sucesso!`, "success", "✓ Pronto");
+
+      } catch (err) {
+        console.error("Erro ao salvar usuário:", err);
+        this.setFeedbackError("Ocorreu um erro ao sincronizar com o Google Apps Script. Verifique sua conexão e tente novamente.");
+        app.ui.toast("Erro ao gravar usuário na planilha.", "error", "Falha de Conexão");
+      } finally {
+        if (btnSave) {
+          btnSave.disabled = false;
+          btnSave.textContent = isEdit ? "Atualizar Usuário" : "Cadastrar Usuário";
+        }
       }
     },
 
-    async deleteUser(id, usuario) {
-      if (!this.isAdminUser()) return alert("Apenas administradores podem excluir usuários.");
-      if (confirm(`Deseja excluir o usuário "${usuario}" da planilha?`)) {
-        app.ui.setSyncStatus(true, "Excluindo usuário...");
-        await app.data.sendToCloud({ action: "DELETE_USER", id: id });
-        setTimeout(() => this.loadUsersList(), 1000);
+    openDeleteUserModal(id, usuario) {
+      if (!this.isAdminUser()) {
+        return app.ui.toast("Apenas Administrador Geral pode excluir usuários.", "warning", "Acesso Restrito");
       }
+
+      const modal = document.getElementById('modal-confirm-delete-user');
+      const targetUser = (app.state.users || []).find(u => Number(u.id) === Number(id));
+
+      const idEl = document.getElementById('del-user-target-id');
+      const nameEl = document.getElementById('del-user-name');
+      const loginEl = document.getElementById('del-user-login');
+
+      if (idEl) idEl.value = id;
+      if (nameEl) nameEl.textContent = targetUser?.nome || usuario;
+      if (loginEl) loginEl.textContent = `@${usuario}`;
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    },
+
+    closeDeleteUserModal() {
+      const modal = document.getElementById('modal-confirm-delete-user');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    async confirmDeleteUser() {
+      const id = Number(document.getElementById('del-user-target-id')?.value);
+      this.closeDeleteUserModal();
+
+      const targetUser = (app.state.users || []).find(u => Number(u.id) === id);
+      const usuario = targetUser?.usuario || 'usuário';
+
+      // Atualização otimista imediata na tabela
+      app.state.users = (app.state.users || []).filter(u => Number(u.id) !== id);
+      this.renderUsersRows();
+
+      app.ui.toast(`Usuário "${usuario}" removido do sistema.`, "info", "✓ Usuário Excluído");
+
+      await app.data.sendToCloud({
+        action: "DELETE_USER",
+        id: id
+      });
     },
 
     openResetPasswordModal(id, usuario) {
-      if (!this.isAdminUser()) return alert("Apenas administradores podem alterar senhas.");
+      if (!this.isAdminUser()) {
+        return app.ui.toast("Apenas Administrador Geral pode alterar senhas.", "warning", "Acesso Restrito");
+      }
+
       const modal = document.getElementById('modal-reset-password');
       const targetUserEl = document.getElementById('reset-pass-target-user');
       const targetIdEl = document.getElementById('reset-pass-target-id');
@@ -923,18 +1100,20 @@ Object.assign(window.app, {
 
     async confirmResetPassword(e) {
       e.preventDefault();
-      if (!this.isAdminUser()) return alert("Apenas administradores podem alterar senhas.");
+      if (!this.isAdminUser()) {
+        return app.ui.toast("Apenas Administrador Geral pode alterar senhas.", "warning", "Acesso Restrito");
+      }
 
       const id = Number(document.getElementById('reset-pass-target-id').value);
       const newPassword = document.getElementById('reset-pass-new-password').value.trim();
       const usuario = document.getElementById('reset-pass-target-user').textContent;
 
       if (!newPassword || newPassword.length < 4) {
-        return alert("A senha deve ter pelo menos 4 caracteres.");
+        return app.ui.toast("A senha deve ter pelo menos 4 caracteres.", "warning", "Senha Curta");
       }
 
-      app.ui.setSyncStatus(true, "Atualizando senha no Google Sheets...");
       this.closeResetPasswordModal();
+      app.ui.toast(`Atualizando senha do usuário "${usuario}" na nuvem...`, "info", "Gravando");
 
       await app.data.sendToCloud({
         action: "UPDATE_USER_PASSWORD",
@@ -942,7 +1121,7 @@ Object.assign(window.app, {
         newPassword: newPassword
       });
 
-      alert(`✓ Senha do usuário "${usuario}" alterada com sucesso na planilha!`);
+      app.ui.toast(`Senha do usuário "${usuario}" alterada com sucesso!`, "success", "✓ Senha Atualizada");
     },
 
     renderLinksList() {
