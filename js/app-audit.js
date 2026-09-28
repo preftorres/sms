@@ -502,9 +502,11 @@ app.audit = {
     if (!modal) return;
 
     if (!app.state.exams || app.state.exams.length === 0) {
-      if (app.state.activeContractTab === "Contrato_73_2026") {
+      if (typeof CONTRATO_73_EXAMS !== 'undefined' && Array.isArray(CONTRATO_73_EXAMS)) {
         app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
-        app.data.saveLocalExams();
+        if (app.data && app.data.saveLocalExams) app.data.saveLocalExams();
+      } else {
+        app.state.exams = [];
       }
     }
 

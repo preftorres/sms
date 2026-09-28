@@ -808,6 +808,7 @@ Exemplo do formato:
               </button>
               <button onclick="app.audit.closeBalanceadorModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">✕</button>
             </div>
+          </div>
 
           <!-- PARÂMETROS DA SIMULAÇÃO (CONTROLES INTERATIVOS) -->
           <div class="my-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 flex-shrink-0">
