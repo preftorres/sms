@@ -1,0 +1,152 @@
+/* ==========================================================================
+   PRINT.CSS - REGRAS DE IMPRESSÃO & RELATÓRIOS EM PDF (A4 PAISAGEM)
+   Prefeitura Municipal de Torres - Secretaria da Saúde
+   ========================================================================== */
+
+@page {
+  size: A4 landscape;
+  margin: 6mm 6mm 6mm 6mm;
+}
+
+/* Oculta barras de navegação, modais, botões e campos de busca na folha */
+header,
+footer,
+#modal-host,
+.print\:hidden,
+button,
+.btn-action,
+.toolbar,
+.filters-group,
+input[type="text"],
+input[type="checkbox"],
+select {
+  display: none !important;
+}
+
+body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-size: 8pt !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#app-viewport {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.custom-scroll {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.sticky-thead {
+  position: static !important;
+}
+
+/* Cabeçalho Oficial de Impressão */
+.print-header {
+  display: block !important;
+  margin-bottom: 8px !important;
+  border-bottom: 2px solid #0f172a !important;
+  padding-bottom: 4px !important;
+}
+
+/* Grade de KPIs / Totais Oficiais na Folha */
+.kpi-print-grid {
+  display: flex !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.kpi-card {
+  border: 1px solid #1e293b !important;
+  box-shadow: none !important;
+  padding: 4px 8px !important;
+  flex: 1 !important;
+  background-color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+.kpi-card .text-xs,
+.kpi-card .text-sm,
+.kpi-card .text-lg,
+.kpi-card .text-xl,
+.kpi-card .text-2xl {
+  font-size: 11pt !important;
+  line-height: 1.1 !important;
+}
+
+/* Coluna de referência do prestador oculta na impressão para ganhar espaço */
+.col-hide-print {
+  display: none !important;
+}
+
+/* Formatação clássica de processo público para tabelas de auditoria */
+#table-audit,
+#table-dotacoes,
+#table-painel-contratos {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 1px solid #1e293b !important;
+  font-size: 7.5pt !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+#table-audit th,
+#table-audit td,
+#table-dotacoes th,
+#table-dotacoes td,
+#table-painel-contratos th,
+#table-painel-contratos td {
+  border: 0.5px solid #64748b !important;
+  padding: 2.5px 3.5px !important;
+  font-size: 7pt !important;
+  line-height: 1.15 !important;
+}
+
+thead th {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  border-bottom: 1.5px solid #0f172a !important;
+}
+
+tfoot th {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  border-top: 1.5px solid #0f172a !important;
+}
+
+/* Converte os campos numéricos editáveis em texto puro na impressão */
+.table-num {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  width: auto !important;
+  font-size: 7pt !important;
+}
+
+/* Cores e Badges de Situação na Impressão com contraste garantido */
+.tag-esgotado { background-color: #7e22ce !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.tag-critico  { background-color: #dc2626 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.tag-alerta   { background-color: #ca8a04 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.tag-seguro   { background-color: #16a34a !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.tag-zero     { background-color: #94a3b8 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+tr.row-esgotado td { background-color: #f3e8ff !important; color: #581c87 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+tr.row-critico td  { background-color: #fee2e2 !important; color: #991b1b !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+tr.row-alerta td   { background-color: #fef9c3 !important; color: #854d0e !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+tr.row-zero td     { background-color: #f8fafc !important; color: #94a3b8 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+tr {
+  page-break-inside: avoid;
+}

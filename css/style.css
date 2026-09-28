@@ -1,0 +1,141 @@
+/* ==========================================================================
+   STYLE.CSS - INTERFACE DE TELA (COMPUTADOR & CELULAR)
+   Prefeitura Municipal de Torres - Secretaria da Saúde
+   ========================================================================== */
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f8fafc;
+  transition: all 0.25s ease;
+}
+
+/* Animações de Transição de Telas */
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Efeitos dos Cards de Secretarias e Módulos */
+.card-landing {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+}
+.card-landing:hover {
+  transform: scale(1.02);
+  border-color: #3b82f6;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+}
+
+.glass-blur {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+}
+
+/* Indicadores de Drag & Drop para Reordenação de Atalhos */
+.dragging {
+  opacity: 0.45;
+  border: 2px dashed #3b82f6 !important;
+}
+.drag-over {
+  border-top: 3px solid #3b82f6 !important;
+}
+
+/* Cabeçalho Fixo (Sticky) de Tabelas */
+.sticky-thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Scrollbar Customizado, Fino e Discreto */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Oculta as setas nativas de campos numéricos */
+input[type="number"].table-num::-webkit-inner-spin-button,
+input[type="number"].table-num::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"].table-num {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Feedback Visual dos 3 Botões de Cópia do Gemini */
+.btn-copy.copied {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
+/* Badges de Situação do Módulo de Dotações */
+.badge-dotacao-pendente {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  font-weight: 800;
+}
+
+.badge-dotacao-registrado {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  font-weight: 800;
+}
+
+/* SEMÁFORO DE VENCIMENTOS DO PAINEL GERAL DE CONTRATOS (LDO/LOA) */
+.semaforo-critico {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #f87171;
+}
+
+.semaforo-atencao {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.semaforo-vigente {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.semaforo-arquivado {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* ==========================================================================
+   BADGES E CORES DA AUDITORIA FÍSICO-FINANCEIRA (TELA & IMPRESSÃO)
+   ========================================================================== */
+.tag-esgotado { background-color: #7e22ce !important; color: #ffffff !important; font-weight: 800; }
+.tag-critico  { background-color: #dc2626 !important; color: #ffffff !important; font-weight: 800; }
+.tag-alerta   { background-color: #ca8a04 !important; color: #ffffff !important; font-weight: 800; }
+.tag-seguro   { background-color: #16a34a !important; color: #ffffff !important; font-weight: 800; }
+.tag-zero     { background-color: #94a3b8 !important; color: #ffffff !important; font-weight: 700; }
+
+tr.row-esgotado td { background-color: #f3e8ff !important; color: #581c87 !important; font-weight: 600; }
+tr.row-critico td  { background-color: #fee2e2 !important; color: #991b1b !important; font-weight: 600; }
+tr.row-alerta td   { background-color: #fef9c3 !important; color: #854d0e !important; }
+tr.row-seguro td   { background-color: #ffffff !important; }
+tr.row-zero td     { background-color: #f8fafc !important; color: #94a3b8 !important; }
