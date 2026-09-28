@@ -73,8 +73,8 @@ app.dotacoes = {
       return app.ui.toast("Preencha pelo menos o Nº da SF e o Objeto/Destinação.", "warning", "Campos Obrigatórios");
     }
 
-    const compradorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Diego Canto';
-    const compradorLogin = (app.state.auth.user && app.state.auth.user.usuario) || 'diego';
+    const compradorNome = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || '';
+    const compradorLogin = (app.state.auth.user && app.state.auth.user.usuario) || '';
     const now = new Date();
     const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
@@ -409,7 +409,10 @@ app.dotacoes = {
   },
 
   filterMyOrders() {
-    const logged = app.state.auth.user?.usuario || app.state.auth.user?.nome || 'diego';
+    const logged = app.state.auth.user?.usuario || app.state.auth.user?.nome || '';
+    if (!logged) {
+      return app.ui.toast("Faça login para filtrar seus pedidos.", "info", "Filtro Pessoal");
+    }
     if (app.state.dotacoesUserFilter === logged) {
       this.setUserFilter('TODOS');
     } else {
@@ -611,7 +614,7 @@ app.dotacoes = {
                 🚫 Cancelado
               </span>
             `}
-            <span class="block text-[9px] text-slate-400 truncate max-w-[135px] mx-auto mt-0.5" title="Criado por ${d.comprador || 'Comprador'}">${d.comprador || 'Comprador'}</span>
+            ${d.comprador ? `<span class="block text-[9px] text-slate-400 truncate max-w-[135px] mx-auto mt-0.5" title="Criado por ${d.comprador}">${d.comprador}</span>` : ''}
           </td>
 
           <!-- 9. AÇÕES CONTEXTUAIS (115px) -->
