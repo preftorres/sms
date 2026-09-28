@@ -16,6 +16,39 @@ window.app.render = window.app.render || {};
 
 app.dotacoes = {
   // --------------------------------------------------------------------------
+  // CONTROLE DINÂMICO DE EMENDA PARLAMENTAR (TOGGLE CHECKBOX)
+  // --------------------------------------------------------------------------
+  toggleEmendaField(context) {
+    let chkId = 'dot-field-check-emenda';
+    let wrapId = 'dot-wrap-emenda-nova';
+    let inpId = 'dot-field-emenda';
+
+    if (context === 'edit') {
+      chkId = 'edit-dot-check-emenda';
+      wrapId = 'edit-wrap-emenda';
+      inpId = 'edit-dot-emenda';
+    } else if (context === 'comp') {
+      chkId = 'comp-dot-check-emenda';
+      wrapId = 'comp-wrap-emenda';
+      inpId = 'comp-dot-emenda';
+    }
+
+    const chk = document.getElementById(chkId);
+    const wrap = document.getElementById(wrapId);
+    const inp = document.getElementById(inpId);
+
+    if (wrap) {
+      if (chk && chk.checked) {
+        wrap.classList.remove('hidden');
+        setTimeout(() => { if (inp) inp.focus(); }, 60);
+      } else {
+        wrap.classList.add('hidden');
+        if (inp) inp.value = '';
+      }
+    }
+  },
+
+  // --------------------------------------------------------------------------
   // ETAPA 1: NOVO PEDIDO (COMPRADOR)
   // --------------------------------------------------------------------------
   openNewModal(clearForm = true) {
@@ -35,6 +68,11 @@ app.dotacoes = {
         const ataEl = document.getElementById('dot-field-ata');
         const procEl = document.getElementById('dot-field-processo');
         const valEl = document.getElementById('dot-field-valor');
+        const empEl = document.getElementById('dot-field-empenho');
+        const sitEl = document.getElementById('dot-field-situacao');
+        const chkEmenda = document.getElementById('dot-field-check-emenda');
+        const wrapEmenda = document.getElementById('dot-wrap-emenda-nova');
+        const emendaEl = document.getElementById('dot-field-emenda');
 
         if (sfEl) sfEl.value = '';
         if (doc1El) doc1El.value = '';
@@ -42,6 +80,11 @@ app.dotacoes = {
         if (ataEl) ataEl.value = '';
         if (procEl) procEl.value = '';
         if (valEl) valEl.value = '';
+        if (empEl) empEl.value = '';
+        if (sitEl) sitEl.value = '';
+        if (chkEmenda) chkEmenda.checked = false;
+        if (wrapEmenda) wrapEmenda.classList.add('hidden');
+        if (emendaEl) emendaEl.value = '';
       }
 
       setTimeout(() => {
@@ -68,6 +111,10 @@ app.dotacoes = {
     const ata = (document.getElementById('dot-field-ata')?.value || '').trim();
     const processo = (document.getElementById('dot-field-processo')?.value || '').trim();
     const valor = (document.getElementById('dot-field-valor')?.value || '').trim();
+    const empenho = (document.getElementById('dot-field-empenho')?.value || '').trim();
+    const situacao = (document.getElementById('dot-field-situacao')?.value || '').trim();
+    const isEmenda = document.getElementById('dot-field-check-emenda')?.checked;
+    const emenda = isEmenda ? (document.getElementById('dot-field-emenda')?.value || '').trim() : '';
 
     if (!sf || !objeto) {
       return app.ui.toast("Preencha pelo menos o Nº da SF e o Objeto/Destinação.", "warning", "Campos Obrigatórios");
@@ -85,16 +132,17 @@ app.dotacoes = {
       processo: processo,
       objeto: objeto,
       doc1: doc1,
-      empenho: "",
-      situacao: "Aguardando dotação do setor financeiro",
+      empenho: empenho,
+      situacao: situacao || "Aguardando dotação do setor financeiro",
       patrimonio: "",
-      status: "AGUARDANDO",
+      status: empenho ? "DOTADO" : "AGUARDANDO",
+      emenda: emenda,
       comprador: compradorNome,
       compradorLogin: compradorLogin,
       dataSolicitacao: dataHoraStr,
-      validador: "",
-      validadorLogin: "",
-      dataValidacao: "",
+      validador: empenho ? "Setor Financeiro" : "",
+      validadorLogin: empenho ? "financeiro" : "",
+      dataValidacao: empenho ? dataHoraStr : "",
       valor: valor || ""
     };
 
@@ -136,6 +184,11 @@ app.dotacoes = {
     const ataEl = document.getElementById('edit-dot-ata');
     const procEl = document.getElementById('edit-dot-processo');
     const valEl = document.getElementById('edit-dot-valor');
+    const empEl = document.getElementById('edit-dot-empenho');
+    const sitEl = document.getElementById('edit-dot-situacao');
+    const chkEmenda = document.getElementById('edit-dot-check-emenda');
+    const wrapEmenda = document.getElementById('edit-wrap-emenda');
+    const emendaEl = document.getElementById('edit-dot-emenda');
 
     if (idEl) idEl.value = item.id;
     if (sfEl) sfEl.value = item.sf || '';
@@ -144,6 +197,18 @@ app.dotacoes = {
     if (ataEl) ataEl.value = item.ata || '';
     if (procEl) procEl.value = item.processo || '';
     if (valEl) valEl.value = item.valor || '';
+    if (empEl) empEl.value = item.empenho || '';
+    if (sitEl) sitEl.value = item.situacao || '';
+
+    if (item.emenda) {
+      if (chkEmenda) chkEmenda.checked = true;
+      if (wrapEmenda) wrapEmenda.classList.remove('hidden');
+      if (emendaEl) emendaEl.value = item.emenda;
+    } else {
+      if (chkEmenda) chkEmenda.checked = false;
+      if (wrapEmenda) wrapEmenda.classList.add('hidden');
+      if (emendaEl) emendaEl.value = '';
+    }
 
     const modal = document.getElementById('modal-editar-dotacao');
     if (modal) {
@@ -174,6 +239,14 @@ app.dotacoes = {
     item.ata = (document.getElementById('edit-dot-ata')?.value || '').trim();
     item.processo = (document.getElementById('edit-dot-processo')?.value || '').trim();
     item.valor = (document.getElementById('edit-dot-valor')?.value || '').trim();
+    item.empenho = (document.getElementById('edit-dot-empenho')?.value || '').trim();
+    item.situacao = (document.getElementById('edit-dot-situacao')?.value || '').trim();
+    const isEmenda = document.getElementById('edit-dot-check-emenda')?.checked;
+    item.emenda = isEmenda ? (document.getElementById('edit-dot-emenda')?.value || '').trim() : '';
+
+    if (item.empenho && (item.status === 'AGUARDANDO' || !item.status)) {
+      item.status = 'DOTADO';
+    }
 
     app.data.saveLocalDotacoes();
     this.closeEditModal();
@@ -248,6 +321,9 @@ app.dotacoes = {
     const empEl = document.getElementById('comp-field-empenho');
     const sitEl = document.getElementById('comp-field-situacao');
     const patEl = document.getElementById('comp-field-patrimonio');
+    const chkEmenda = document.getElementById('comp-dot-check-emenda');
+    const wrapEmenda = document.getElementById('comp-wrap-emenda');
+    const emendaEl = document.getElementById('comp-dot-emenda');
 
     if (idEl) idEl.value = item.id;
     if (infoEl) {
@@ -256,6 +332,16 @@ app.dotacoes = {
     if (empEl) empEl.value = item.empenho || '';
     if (sitEl) sitEl.value = item.situacao || '';
     if (patEl) patEl.value = item.patrimonio || '';
+
+    if (item.emenda) {
+      if (chkEmenda) chkEmenda.checked = true;
+      if (wrapEmenda) wrapEmenda.classList.remove('hidden');
+      if (emendaEl) emendaEl.value = item.emenda;
+    } else {
+      if (chkEmenda) chkEmenda.checked = false;
+      if (wrapEmenda) wrapEmenda.classList.add('hidden');
+      if (emendaEl) emendaEl.value = '';
+    }
 
     const modal = document.getElementById('modal-complementar-dotacao');
     if (modal) {
@@ -283,6 +369,8 @@ app.dotacoes = {
     item.empenho = (document.getElementById('comp-field-empenho')?.value || '').trim();
     item.situacao = (document.getElementById('comp-field-situacao')?.value || '').trim();
     item.patrimonio = (document.getElementById('comp-field-patrimonio')?.value || '').trim();
+    const isEmenda = document.getElementById('comp-dot-check-emenda')?.checked;
+    item.emenda = isEmenda ? (document.getElementById('comp-dot-emenda')?.value || '').trim() : '';
 
     // Se possui empenho e a situação indica entrega/conclusão, evolui para CONCLUIDO
     const sitLower = item.situacao.toLowerCase();
@@ -488,7 +576,7 @@ app.dotacoes = {
         const searchable = [
           d.sf, d.ata, d.processo, d.objeto, d.doc1, d.empenho,
           d.situacao, d.patrimonio, d.comprador, d.compradorLogin,
-          d.validador, d.validadorLogin, d.valor, d.motivoCancelamento
+          d.validador, d.validadorLogin, d.valor, d.emenda, d.motivoCancelamento
         ].map(x => normalize(x)).join(' ');
 
         matchSearch = searchable.includes(normS);
@@ -556,7 +644,10 @@ app.dotacoes = {
           <td class="p-2.5 overflow-hidden">
             <div class="space-y-0.5">
               <p class="font-bold text-slate-900 text-xs leading-snug line-clamp-2 break-words" title="${d.objeto || ''}">${d.objeto || '—'}</p>
-              ${d.valor ? `<span class="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">Valor: R$ ${d.valor}</span>` : ''}
+              <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
+                ${d.valor ? `<span class="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">Valor: R$ ${d.valor}</span>` : ''}
+                ${d.emenda ? `<span class="inline-flex items-center gap-1 text-[10px] font-black text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200" title="Recurso de Emenda Parlamentar: ${d.emenda}">🏛️ Emenda: ${d.emenda}</span>` : ''}
+              </div>
             </div>
           </td>
 
@@ -666,7 +757,7 @@ app.dotacoes = {
     const headers = [
       "SF", "ATA", "Nº PROCESSO", "OBJETO / DESTINAÇÃO", "1DOC",
       "EMPENHO", "SITUAÇÃO / ENTREGA", "PATRIMÔNIO", "STATUS",
-      "COMPRADOR", "DATA SOLICITAÇÃO", "VALIDADOR (FINANCEIRO)", "DATA VALIDAÇÃO", "VALOR ESTIMADO"
+      "COMPRADOR", "DATA SOLICITAÇÃO", "VALIDADOR (FINANCEIRO)", "DATA VALIDAÇÃO", "VALOR ESTIMADO", "EMENDA PARLAMENTAR"
     ];
 
     const rows = list.map(d => [
@@ -683,7 +774,8 @@ app.dotacoes = {
       `"${(d.dataSolicitacao || '').replace(/"/g, '""')}"`,
       `"${(d.validador || '').replace(/"/g, '""')}"`,
       `"${(d.dataValidacao || '').replace(/"/g, '""')}"`,
-      `"${(d.valor || '').replace(/"/g, '""')}"`
+      `"${(d.valor || '').replace(/"/g, '""')}"`,
+      `"${(d.emenda || '').replace(/"/g, '""')}"`
     ]);
 
     const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\r\n");

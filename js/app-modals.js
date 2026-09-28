@@ -194,7 +194,7 @@ Exemplo do formato:
       <!-- 4. DOTAÇÕES: NOVO PEDIDO (ENTRADA RÁPIDA DO COMPRADOR)             -->
       <!-- ================================================================= -->
       <div id="modal-nova-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2.5">
               <span class="p-2 bg-amber-50 text-amber-600 rounded-xl text-lg">📝</span>
@@ -237,14 +237,41 @@ Exemplo do formato:
               </div>
             </div>
 
+            <!-- EMPENHO & SITUAÇÃO (OPCIONAIS NA CRIAÇÃO) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block font-bold text-slate-700">Nº do Empenho</label>
+                  <span class="text-[10px] text-slate-400 font-bold uppercase">Betha Cloud</span>
+                </div>
+                <input type="text" id="dot-field-empenho" placeholder="Ex: 15471 (ou gerado pós-dotação)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-slate-900 outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Situação / Acompanhamento</label>
+                <input type="text" id="dot-field-situacao" placeholder="Ex: Aguardando dotação, proc. adm..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-amber-500">
+              </div>
+            </div>
+
+            <!-- EMENDA PARLAMENTAR (CHECKBOX COM ATIVAÇÃO DINÂMICA) -->
+            <div class="p-3 bg-purple-50/70 border border-purple-200/80 rounded-2xl transition">
+              <label class="flex items-center gap-2.5 cursor-pointer font-bold text-purple-950 text-xs select-none">
+                <input type="checkbox" id="dot-field-check-emenda" onchange="app.dotacoes.toggleEmendaField('nova')" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-purple-300 accent-purple-600">
+                <span>🏛️ Recurso de Emenda Parlamentar</span>
+              </label>
+              <div id="dot-wrap-emenda-nova" class="hidden mt-2 pt-2 border-t border-purple-200/60">
+                <label class="block font-bold text-purple-900 text-[11px] mb-1">Nº / Identificação da Emenda *</label>
+                <input type="text" id="dot-field-emenda" placeholder="Ex: Emenda nº 1234/2026 - Dep. Fulano de Tal" class="w-full px-3 py-1.5 bg-white border border-purple-300 rounded-xl text-slate-900 font-medium outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
+              </div>
+            </div>
+
             <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 flex items-center gap-2">
               <span>👉</span>
-              <span>Ao salvar, o pedido entrará automaticamente na fila <strong>"Aguardando Dotação"</strong> para o <strong>Setor Financeiro</strong> realizar a baixa contábil.</span>
+              <span>Ao salvar, o pedido entrará automaticamente na fila <strong>"Aguardando Dotação"</strong> (ou <strong>"Dotado"</strong> se o empenho já foi informado) para o acompanhamento contábil.</span>
             </div>
 
             <div class="pt-2 flex gap-2">
               <button type="button" onclick="app.dotacoes.closeNewModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-              <button type="submit" class="flex-1 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-black rounded-xl shadow-md transition">Enviar para Dotação →</button>
+              <button type="submit" class="flex-1 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-black rounded-xl shadow-md transition">Enviar Pedido →</button>
             </div>
           </form>
         </div>
@@ -254,7 +281,7 @@ Exemplo do formato:
       <!-- 5. DOTAÇÕES: EDITAR / CORRIGIR PEDIDO (COMPRADOR)                  -->
       <!-- ================================================================= -->
       <div id="modal-editar-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2.5">
               <span class="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">✏️</span>
@@ -293,8 +320,35 @@ Exemplo do formato:
                 <input type="text" id="edit-dot-processo" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:border-blue-500">
               </div>
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Valor / Emenda</label>
+                <label class="block font-bold text-slate-700 mb-1">Valor Estimado (R$)</label>
                 <input type="text" id="edit-dot-valor" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 font-bold outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <!-- EMPENHO & SITUAÇÃO -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block font-bold text-slate-700">Nº do Empenho</label>
+                  <span class="text-[10px] text-slate-400 font-bold uppercase">Betha Cloud</span>
+                </div>
+                <input type="text" id="edit-dot-empenho" placeholder="Ex: 15471" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-blue-900 outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Situação / Acompanhamento</label>
+                <input type="text" id="edit-dot-situacao" placeholder="Ex: NF emitida, aguardando entrega..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <!-- EMENDA PARLAMENTAR (CHECKBOX COM ATIVAÇÃO DINÂMICA) -->
+            <div class="p-3 bg-purple-50/70 border border-purple-200/80 rounded-2xl transition">
+              <label class="flex items-center gap-2.5 cursor-pointer font-bold text-purple-950 text-xs select-none">
+                <input type="checkbox" id="edit-dot-check-emenda" onchange="app.dotacoes.toggleEmendaField('edit')" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-purple-300 accent-purple-600">
+                <span>🏛️ Recurso de Emenda Parlamentar</span>
+              </label>
+              <div id="edit-wrap-emenda" class="hidden mt-2 pt-2 border-t border-purple-200/60">
+                <label class="block font-bold text-purple-900 text-[11px] mb-1">Nº / Identificação da Emenda *</label>
+                <input type="text" id="edit-dot-emenda" placeholder="Ex: Emenda nº 1234/2026 - Dep. Fulano de Tal" class="w-full px-3 py-1.5 bg-white border border-purple-300 rounded-xl text-slate-900 font-medium outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
               </div>
             </div>
 
@@ -310,7 +364,7 @@ Exemplo do formato:
       <!-- 6. DOTAÇÕES: COMPLEMENTAR PEDIDO APÓS DOTAÇÃO (COMPRADOR)         -->
       <!-- ================================================================= -->
       <div id="modal-complementar-dotacao" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-emerald-200 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-emerald-200 fade-in max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2.5">
               <span class="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">📦</span>
@@ -341,6 +395,18 @@ Exemplo do formato:
               </div>
               <input type="text" id="comp-field-patrimonio" placeholder="Ex: 47783 (TV) ou deixe em branco se for consumo" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono outline-none focus:border-emerald-500">
               <span class="text-[10px] text-slate-400 block mt-1">Preencha apenas para bens duráveis que recebem plaqueta de patrimônio. Para materiais de consumo, deixe em branco.</span>
+            </div>
+
+            <!-- EMENDA PARLAMENTAR (CHECKBOX COM ATIVAÇÃO DINÂMICA) -->
+            <div class="p-3 bg-purple-50/70 border border-purple-200/80 rounded-2xl transition">
+              <label class="flex items-center gap-2.5 cursor-pointer font-bold text-purple-950 text-xs select-none">
+                <input type="checkbox" id="comp-dot-check-emenda" onchange="app.dotacoes.toggleEmendaField('comp')" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-purple-300 accent-purple-600">
+                <span>🏛️ Recurso de Emenda Parlamentar</span>
+              </label>
+              <div id="comp-wrap-emenda" class="hidden mt-2 pt-2 border-t border-purple-200/60">
+                <label class="block font-bold text-purple-900 text-[11px] mb-1">Nº / Identificação da Emenda *</label>
+                <input type="text" id="comp-dot-emenda" placeholder="Ex: Emenda nº 1234/2026 - Dep. Fulano de Tal" class="w-full px-3 py-1.5 bg-white border border-purple-300 rounded-xl text-slate-900 font-medium outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
+              </div>
             </div>
 
             <div class="pt-2 flex gap-2">
