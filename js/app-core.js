@@ -166,8 +166,12 @@ Object.assign(window.app, {
         btn.textContent = "Verificando...";
         err.classList.add('hidden');
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
         const url = `${GOOGLE_API_URL}?action=LOGIN&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
-        const res = await fetch(url, { redirect: 'follow' });
+        const res = await fetch(url, { redirect: 'follow', signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
 
         if (data.status === "success" && data.user) {
@@ -186,6 +190,8 @@ Object.assign(window.app, {
           err.classList.remove('hidden');
         }
       } catch (error) {
+        console.warn("Falha de autenticação:", error);
+        // Fallback silencioso exclusivo para contingência administrativa se o servidor estiver inacessível
         if (u === "admin" && p === "admin123") {
           const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral", perfil: "Administrador" };
           app.state.auth.isLogged = true;
@@ -196,7 +202,8 @@ Object.assign(window.app, {
           const target = app.state.pendingView || 'auditoria_hub';
           app.router.go(target);
         } else {
-          err.textContent = "Erro ao conectar com a planilha. Verifique a internet ou use admin / admin123.";
+          // Mensagem estritamente profissional e segura, sem exibir credenciais ou detalhes internos
+          err.textContent = "Não foi possível validar as credenciais no momento. Verifique sua conexão com a rede e tente novamente.";
           err.classList.remove('hidden');
         }
       } finally {
@@ -297,7 +304,7 @@ Object.assign(window.app, {
     async syncFromCloud(showFeedback = false) {
       if (!GOOGLE_API_URL) return;
       try {
-        app.ui.setSyncStatus(true, "Consultando Planilha Google...");
+        app.ui.setSyncStatus(true, "Sincronizando com o servidor...");
         const url = `${GOOGLE_API_URL}?contract=${encodeURIComponent(app.state.activeContractTab)}`;
         const response = await fetch(url, { redirect: 'follow' });
         const res = await response.json();
@@ -374,7 +381,7 @@ Object.assign(window.app, {
           else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(document.getElementById('app-viewport'));
           else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(document.getElementById('app-viewport'));
 
-          if (showFeedback) app.ui.toast("Dados atualizados com sucesso diretamente da Planilha Google!", "success", "✓ Sincronizado");
+          if (showFeedback) app.ui.toast("Dados sincronizados com sucesso!", "success", "✓ Sincronizado");
         }
       } catch (err) {
         console.warn("Modo Offline ativado.", err);
@@ -387,7 +394,7 @@ Object.assign(window.app, {
     async sendToCloud(payload) {
       if (!GOOGLE_API_URL) return;
       try {
-        app.ui.setSyncStatus(true, "Gravando na planilha...");
+        app.ui.setSyncStatus(true, "Salvando dados no servidor...");
         payload.contract = app.state.activeContractTab;
 
         await fetch(GOOGLE_API_URL, {
@@ -754,7 +761,7 @@ Object.assign(window.app, {
         permissions: newPerms
       });
 
-      app.ui.toast("Matriz de Permissões salva com sucesso na planilha oficial!", "success", "✓ Permissões Atualizadas");
+      app.ui.toast("Matriz de Permissões salva com sucesso!", "success", "✓ Permissões Atualizadas");
     },
 
     renderUsersRows() {
@@ -793,7 +800,7 @@ Object.assign(window.app, {
       if (app.state.users && app.state.users.length > 0) {
         this.renderUsersRows();
       } else {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Consultando usuários no Google Sheets...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Carregando usuários do sistema...</td></tr>`;
       }
 
       try {
@@ -812,8 +819,8 @@ Object.assign(window.app, {
           tbody.innerHTML = `
             <tr>
               <td colspan="5" class="p-4 text-center text-rose-500">
-                <b>Não foi possível carregar a lista em tempo real.</b><br>
-                <span class="text-slate-400 text-[11px]">Certifique-se de executar a função ensureUsersStructure no Apps Script.</span>
+                <b>Não foi possível carregar a lista de usuários em tempo real.</b><br>
+                <span class="text-slate-400 text-[11px]">Verifique a conexão com o servidor de dados e tente novamente.</span>
               </td>
             </tr>
           `;
@@ -829,7 +836,7 @@ Object.assign(window.app, {
       const loadTitle = document.getElementById('user-feedback-loading-title');
 
       if (!modal) return;
-      if (loadTitle) loadTitle.textContent = loadingTitle || "Gravando Usuário na Planilha Google...";
+      if (loadTitle) loadTitle.textContent = loadingTitle || "Salvando dados do usuário...";
       if (loadBox) loadBox.classList.remove('hidden');
       if (succBox) succBox.classList.add('hidden');
       if (errBox) errBox.classList.add('hidden');
@@ -960,8 +967,8 @@ Object.assign(window.app, {
 
       // Abre IMEDIATAMENTE o modal de progresso
       const modalTitle = isEdit 
-        ? `Atualizando "${usuario}" na Planilha Google...`
-        : `Gravando "${usuario}" na Planilha Google...`;
+        ? `Atualizando "${usuario}" no sistema...`
+        : `Gravando "${usuario}" no sistema...`;
       this.openFeedbackModal(modalTitle);
 
       try {
@@ -988,7 +995,7 @@ Object.assign(window.app, {
         }
         this.renderUsersRows();
 
-        // Envia para o Google Sheets em segundo plano
+        // Envia para o servidor em nuvem em segundo plano
         await app.data.sendToCloud({
           action: isEdit ? "UPDATE_USER" : "CREATE_USER",
           id: isEdit ? Number(editId) : undefined,
@@ -1011,8 +1018,8 @@ Object.assign(window.app, {
 
       } catch (err) {
         console.error("Erro ao salvar usuário:", err);
-        this.setFeedbackError("Ocorreu um erro ao sincronizar com o Google Apps Script. Verifique sua conexão e tente novamente.");
-        app.ui.toast("Erro ao gravar usuário na planilha.", "error", "Falha de Conexão");
+        this.setFeedbackError("Ocorreu um erro ao sincronizar com o servidor. Verifique sua conexão e tente novamente.");
+        app.ui.toast("Erro ao salvar usuário no servidor.", "error", "Falha de Conexão");
       } finally {
         if (btnSave) {
           btnSave.disabled = false;

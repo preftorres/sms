@@ -925,7 +925,7 @@ Exemplo do formato:
             </div>
             <div>
               <h3 id="user-feedback-loading-title" class="text-base sm:text-lg font-black text-slate-900">Gravando Usuário no Sistema...</h3>
-              <p class="text-xs text-slate-500 mt-1">Sincronizando credenciais e permissões com o Google Sheets</p>
+              <p class="text-xs text-slate-500 mt-1">Sincronizando credenciais e permissões com o servidor</p>
             </div>
 
             <!-- Passos Visuais de Progresso -->
@@ -936,7 +936,7 @@ Exemplo do formato:
               </div>
               <div class="flex items-center gap-2 text-blue-700 font-bold animate-pulse">
                 <span class="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">⏳</span>
-                <span>Gravando na aba _Usuarios no Google Sheets...</span>
+                <span>Gravando credenciais no servidor em nuvem...</span>
               </div>
               <div class="flex items-center gap-2 text-slate-400">
                 <span class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">○</span>
@@ -954,7 +954,7 @@ Exemplo do formato:
             </div>
             <div>
               <h3 id="user-feedback-success-title" class="text-base sm:text-lg font-black text-slate-900">Usuário Cadastrado com Sucesso!</h3>
-              <p class="text-xs text-slate-500 mt-1">As credenciais foram salvas e sincronizadas na planilha oficial.</p>
+              <p class="text-xs text-slate-500 mt-1">As credenciais foram salvas e sincronizadas com sucesso.</p>
             </div>
 
             <div class="p-3.5 bg-slate-50 rounded-2xl border text-left text-xs space-y-1.5">
