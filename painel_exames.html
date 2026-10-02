@@ -64,16 +64,37 @@
 
         <!-- Ações Globais -->
         <div class="flex items-center flex-wrap gap-2.5">
-          <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white transition-all shadow-md active:scale-95">
+          <!-- Indicador de Status do Salvamento -->
+          <div id="save-indicator" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800/80 text-emerald-400 border border-slate-700">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="save-indicator-text">Salvo localmente</span>
+          </div>
+
+          <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white transition-all shadow-md active:scale-95" title="Baixar planilha compatível com Excel">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            Exportar CSV / Excel
+            Exportar CSV
           </button>
+
+          <!-- Backup JSON -->
+          <button onclick="exportarBackupJSON()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-blue-800 hover:bg-blue-700 text-white transition-all shadow border border-blue-600 active:scale-95" title="Exportar cópia de segurança com todas as alterações">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            Backup Dados
+          </button>
+
+          <!-- Restaurar Backup JSON -->
+          <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all shadow border border-slate-700 cursor-pointer active:scale-95" title="Carregar arquivo de backup salvo anteriormente">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Carregar Backup
+            <input type="file" id="input-backup-file" accept=".json" class="hidden" onchange="importarBackupJSON(event)">
+          </label>
+
           <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all shadow border border-slate-700 active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
             Imprimir
           </button>
-          <button onclick="resetData()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 hover:bg-rose-900 text-slate-300 hover:text-white transition-all border border-slate-700 active:scale-95" title="Restaurar quantidades originais calculadas">
-            Restaurar Valores
+
+          <button onclick="confirmarResetModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-rose-950/70 hover:bg-rose-900 text-rose-200 hover:text-white transition-all border border-rose-800 active:scale-95" title="Apagar alterações salvas e restaurar números originais">
+            Restaurar Padrão
           </button>
         </div>
       </div>
@@ -247,12 +268,39 @@
     </div>
   </main>
 
+  <!-- MODAL DE CONFIRMAÇÃO DE RESTAURAÇÃO (SEM ALERT/CONFIRM) -->
+  <div id="modal-reset" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-300">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <h3 class="text-base font-black text-slate-900">Restaurar Quantitativos Originais?</h3>
+      <p class="text-xs text-slate-600 mt-2">
+        Isso removerá todas as alterações feitas nas quantidades realizadas e redefinirá os dados das abas de Imagem e Laboratório para o cálculo original do relatório.
+      </p>
+      <div class="flex items-center justify-end gap-2.5 mt-6">
+        <button onclick="fecharModalReset()" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+          Cancelar
+        </button>
+        <button onclick="executarReset()" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow">
+          Sim, Restaurar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICAÇÃO TOAST FLUTUANTE -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 text-xs font-semibold flex items-center gap-2.5 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <span id="toast-icon" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toast-msg">Notificação</span>
+  </div>
+
   <script>
-    // Estado Global da Aplicação
+    const STORAGE_KEY = 'confronto_empenhos_betha_v1';
     let abaAtual = 'IMAGEM';
 
-    // 1. BASE DE DADOS: EXAMES DE IMAGEM (Dimagem, LM Serviços / Mais Saúde, Amplamais)
-    const DADOS_IMAGEM = [
+    // 1. BASE DE DADOS ORIGINAL: EXAMES DE IMAGEM
+    const DADOS_IMAGEM_ORIGINAL = [
       // DIMAGEM - Empenho 1704/2026
       { id: 'IMG_1', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 100, qtdRealizada: 129 },
       { id: 'IMG_2', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECODOPPLER VENOSO MEMBRO INF/SUP", unitario: 290.00, qtdEmpenhada: 16.207, qtdRealizada: 0 },
@@ -311,8 +359,8 @@
       { id: 'IMG_37', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ECO/ULTRA REGIÃO INGUINAL", unitario: 143.02, qtdEmpenhada: 10, qtdRealizada: 4 }
     ];
 
-    // 2. BASE DE DADOS: EXAMES LABORATORIAIS (Biomédico, Fontana, Exame / M.B.)
-    const DADOS_LABORATORIO = [
+    // 2. BASE DE DADOS ORIGINAL: EXAMES LABORATORIAIS
+    const DADOS_LABORATORIO_ORIGINAL = [
       // LAB. BIOMÉDICO - Empenho 2991/2026 (Atenção Básica - R$ 129.303,00)
       { id: 'LAB_1', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 2000 },
       { id: 'LAB_2', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 800 },
@@ -368,7 +416,7 @@
       { id: 'LAB_46', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 395 },
 
       // EMENDAS ESPECÍFICAS / COMPLEMENTARES LABS (14637, 14568, 14569)
-      { id: 'LAB_47', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 195 }, // Estouro quantitativo compensado
+      { id: 'LAB_47', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 195 },
       { id: 'LAB_48', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 97 },
       { id: 'LAB_49', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 205 },
       { id: 'LAB_50', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 173 },
@@ -381,32 +429,73 @@
       { id: 'LAB_55', empenho: "17849/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 19.166/2025 (Emenda 62)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46667.61, qtdRealizada: 45859.19 }
     ];
 
-    // Cópia Mutável em Memória
-    let bancoDados = {
-      IMAGEM: JSON.parse(JSON.stringify(DADOS_IMAGEM)),
-      LABS: JSON.parse(JSON.stringify(DADOS_LABORATORIO))
-    };
+    // Cópia Mutável em Memória (Carrega do localStorage se houver)
+    let bancoDados = carregarDadosLocalStorage();
 
-    // Alternância de Abas
-    function alternarAba(aba) {
-      abaAtual = aba;
-
-      const btnImg = document.getElementById('tab-btn-imagem');
-      const btnLabs = document.getElementById('tab-btn-labs');
-      const labelKpi = document.getElementById('label-aba-kpi');
-      const tituloTabela = document.getElementById('titulo-tabela');
-
-      if (aba === 'IMAGEM') {
-        btnImg.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-blue-600 text-white ring-2 ring-blue-400";
-        btnLabs.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-slate-800 hover:bg-slate-700 text-slate-300 ring-1 ring-slate-700";
-        labelKpi.textContent = "Imagem";
-        tituloTabela.textContent = "Confronto de Exames de Imagem • Saldos para Alimentação no Betha";
-      } else {
-        btnLabs.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-blue-600 text-white ring-2 ring-blue-400";
-        btnImg.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-slate-800 hover:bg-slate-700 text-slate-300 ring-1 ring-slate-700";
-        labelKpi.textContent = "Laboratórios";
-        tituloTabela.textContent = "Confronto de Exames Laboratoriais • Saldos para Alimentação no Betha";
+    // Função de carregamento inicial do localStorage
+    function carregarDadosLocalStorage() {
+      try {
+        const salvo = localStorage.getItem(STORAGE_KEY);
+        if (salvo) {
+          const parsed = JSON.parse(salvo);
+          if (parsed && parsed.IMAGEM && parsed.LABS) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn("Falha ao ler localStorage:", e);
       }
+      return {
+        IMAGEM: JSON.parse(JSON.stringify(DADOS_IMAGEM_ORIGINAL)),
+        LABS: JSON.parse(JSON.stringify(DADOS_LABORATORIO_ORIGINAL))
+      };
+    }
+
+    // Salva no localStorage com debounce/feedback visual
+    function salvarLocalStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoDados));
+        mostrarStatusSalvo();
+      } catch (e) {
+        console.error("Erro ao salvar no localStorage:", e);
+        mostrarToast("Erro ao gravar dados no navegador", "rose");
+      }
+    }
+
+    // Feedback visual de salvamento no cabeçalho
+    let saveTimeout;
+    function mostrarStatusSalvo() {
+      const indicator = document.getElementById('save-indicator');
+      const text = document.getElementById('save-indicator-text');
+      if (indicator && text) {
+        indicator.classList.remove('hidden');
+        text.textContent = "Alterações salvas!";
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          text.textContent = "Salvo localmente";
+        }, 2000);
+      }
+    }
+
+    // Toast de notificação
+    let toastTimeout;
+    function mostrarToast(msg, cor = 'emerald') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+
+      toastMsg.textContent = msg;
+      toastIcon.className = `w-2 h-2 rounded-full bg-${cor}-400`;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    }
 
       carregarFiltros();
       renderizarTabela();
@@ -457,8 +546,68 @@
       const item = bancoDados[abaAtual].find(d => d.id === id);
       if (item) {
         item.qtdRealizada = novaQtd;
+        salvarLocalStorage(); // Persistência imediata
         renderizarTabela();
       }
+    }
+
+    // Modal de Confirmação de Reset (Evita confirm() nativo)
+    function confirmarResetModal() {
+      document.getElementById('modal-reset').classList.remove('hidden');
+    }
+
+    function fecharModalReset() {
+      document.getElementById('modal-reset').classList.add('hidden');
+    }
+
+    function executarReset() {
+      bancoDados.IMAGEM = JSON.parse(JSON.stringify(DADOS_IMAGEM_ORIGINAL));
+      bancoDados.LABS = JSON.parse(JSON.stringify(DADOS_LABORATORIO_ORIGINAL));
+      salvarLocalStorage();
+      fecharModalReset();
+      renderizarTabela();
+      mostrarToast("Valores redefinidos para o padrão original!", "blue");
+    }
+
+    // Exportar Backup Completo em arquivo JSON
+    function exportarBackupJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bancoDados, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Backup_Confronto_Betha_Torres_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      mostrarToast("Arquivo de backup baixado com sucesso!");
+    }
+
+    // Importar Backup JSON
+    function importarBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const dadosImportados = JSON.parse(e.target.result);
+          if (dadosImportados && (dadosImportados.IMAGEM || dadosImportados.LABS)) {
+            if (dadosImportados.IMAGEM) bancoDados.IMAGEM = dadosImportados.IMAGEM;
+            if (dadosImportados.LABS) bancoDados.LABS = dadosImportados.LABS;
+            salvarLocalStorage();
+            renderizarTabela();
+            mostrarToast("Backup restaurado com sucesso!");
+          } else {
+            mostrarToast("Formato de arquivo inválido!", "rose");
+          }
+        } catch (err) {
+          console.error(err);
+          mostrarToast("Erro ao processar arquivo de backup!", "rose");
+        }
+      };
+      reader.readAsText(file);
+      // Limpa o input para permitir selecionar o mesmo arquivo novamente se necessário
+      event.target.value = '';
+    }
     }
 
     // Restauração dos dados
