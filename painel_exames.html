@@ -3,801 +3,858 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Auditoria Físico-Financeira de Exames - SMS Torres</title>
+  <title>Confronto de Empenhos x Marcações - Betha Sistemas (Imagem e Labs)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --primary: #0f172a;
-      --accent: #0284c7;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --border: #cbd5e1;
-      --text: #1e293b;
-      --muted: #64748b;
-      --success: #16a34a;
-      --danger: #dc2626;
-      --warning: #ca8a04;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 14px;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .app-header {
-      margin-bottom: 12px;
-    }
-    .app-header h1 {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--primary);
-    }
-    .app-header p {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .kpi-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .kpi-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .kpi-title {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-    .kpi-value {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--primary);
-      font-variant-numeric: tabular-nums;
-    }
-    .kpi-sub {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 3px;
-      font-weight: 500;
-    }
-
-    .meta-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .meta-field {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .meta-field label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .meta-field input {
-      padding: 5px 8px;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--primary);
-      background: #ffffff;
-    }
-    .meta-field input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .filters-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    input[type="text"].search-box {
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      width: 280px;
-      font-size: 11px;
-      background: #ffffff;
-    }
-    input[type="text"].search-box:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 11px;
-      transition: background 0.15s, opacity 0.15s;
-    }
-    button:hover { opacity: 0.9; }
-    .btn-reset { background: var(--muted); }
-    .btn-print { background: #0f766e; }
-
-    .table-container {
-      max-height: 62vh;
-      overflow: auto;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: 11px;
-      font-variant-numeric: tabular-nums;
-    }
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: var(--primary);
-      color: #f8fafc;
-      font-weight: 700;
-      padding: 8px 6px;
-      border-bottom: 2px solid var(--accent);
-      white-space: nowrap;
-      text-align: left;
-    }
-    tfoot th {
-      position: sticky;
-      bottom: 0;
-      z-index: 9;
-      background: #e2e8f0;
-      color: var(--primary);
-      font-weight: 800;
-      padding: 8px 6px;
-      border-top: 2px solid var(--border);
-      white-space: nowrap;
-    }
-    td {
-      padding: 5px 6px;
-      border-bottom: 1px solid #f1f5f9;
-      vertical-align: middle;
-    }
-
-    input.cell-edit {
-      width: 62px;
-      padding: 3px 5px;
-      text-align: right;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      background: #ffffff;
-      color: var(--primary);
-    }
-    input.cell-edit:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
-    }
-
-    /* Status classes */
-    tr.esgotado td { background-color: #f3e8ff; color: #581c87; font-weight: 600; }
-    tr.critico td { background-color: #fee2e2; color: #991b1b; font-weight: 600; }
-    tr.alerta td { background-color: #fef9c3; color: #854d0e; }
-    tr.seguro td { background-color: #ffffff; color: var(--text); }
-    tr.sem-uso td { background-color: #f8fafc; color: #94a3b8; }
-
-    .tag {
-      display: inline-block;
-      padding: 2px 5px;
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      text-align: center;
-    }
-    .tag-esgotado { background: #7e22ce; color: #fff; }
-    .tag-critico { background: var(--danger); color: #fff; }
-    .tag-alerta { background: var(--warning); color: #fff; }
-    .tag-seguro { background: var(--success); color: #fff; }
-    .tag-zero { background: #94a3b8; color: #fff; }
-
-    .print-header {
-      display: none;
-      margin-bottom: 10px;
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 6px;
-    }
-    .print-header h2 {
-      font-size: 14px;
-      margin: 0 0 2px 0;
-      color: #000;
-    }
-    .print-header p {
-      font-size: 10px;
-      margin: 0;
-      color: #334155;
-    }
-
-    /* Toast notification replacement for alert() */
-    #toastMessage {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--primary);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 1000;
-      transition: opacity 0.3s;
-    }
-
-    @page {
-      size: A4 landscape;
-      margin: 8mm 8mm 8mm 8mm;
+    .input-cell:focus {
+      outline: 2px solid #1e40af;
+      background-color: #fef08a !important;
     }
     @media print {
-      body { background: white; margin: 0; padding: 0; color: black; font-size: 8.5px; }
-      .toolbar, .meta-box, .screen-only, #toastMessage, .kpi-card:nth-child(n+5) { display: none !important; }
-      .print-header { display: block !important; }
-      
-      .kpi-container {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 8px;
-      }
-      .kpi-card {
-        border: 1px solid #000;
-        box-shadow: none;
-        padding: 4px 6px;
-        flex: 1;
-      }
-      .kpi-value { font-size: 11px; }
-
-      .table-container { max-height: none; overflow: visible; border: 1px solid #000; box-shadow: none; }
-      table { font-size: 8px; }
-      thead th {
-        position: static;
-        background: #f1f5f9 !important;
-        color: #000 !important;
-        border-bottom: 1px solid #000;
-        padding: 3px 2px;
-      }
-      tfoot th {
-        position: static;
-        background: #e2e8f0 !important;
-        color: #000 !important;
-        border-top: 1px solid #000;
-        padding: 3px 2px;
-      }
-      td { padding: 2px 2px; border-bottom: 0.5px solid #cbd5e1; }
-      input.cell-edit { border: none; background: transparent; text-align: right; width: auto; font-size: 8px; padding: 0; }
-      tr.linha-oculta { display: none !important; }
-      .col-hide-print { display: none !important; }
+      .no-print { display: none !important; }
+      body { font-size: 10px; background: white; }
+      .print-shadow-none { box-shadow: none !important; }
     }
   </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 antialiased font-sans min-h-screen flex flex-col">
 
-  <div class="screen-only app-header">
-    <h1>Painel de Auditoria e Gestão de Exames Laboratoriais</h1>
-    <p>Conferência Físico-Financeira: Empenho nº 3173/2026 x Faturamento Prestador</p>
+  <!-- CABEÇALHO SUPERIOR -->
+  <header class="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white border-b-2 border-blue-700 shadow-xl no-print">
+    <div class="max-w-[98%] mx-auto px-4 py-3.5">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        
+        <!-- Identificação Órgão -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-xl shadow-lg border border-blue-400">
+            PMT
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[11px] uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/40">
+                Prefeitura Municipal de Torres / RS
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono">Fundo Municipal de Saúde • Módulo Contábil Betha</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 mt-0.5">
+              Confronto de Empenhos: Reservas Oficiais vs. Exames Realizados
+            </h1>
+            <p class="text-xs text-slate-300">
+              Posição de corte e desconto das planilhas até <strong class="text-amber-300 font-mono text-sm underline decoration-amber-400">01/10/2026</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Ações Globais -->
+        <div class="flex items-center flex-wrap gap-2.5">
+          <!-- Indicador de Status do Salvamento -->
+          <div id="save-indicator" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800/80 text-emerald-400 border border-slate-700">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="save-indicator-text">Salvo localmente</span>
+          </div>
+
+          <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white transition-all shadow-md active:scale-95" title="Baixar planilha compatível com Excel">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Exportar CSV
+          </button>
+
+          <!-- Backup JSON -->
+          <button onclick="exportarBackupJSON()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-blue-800 hover:bg-blue-700 text-white transition-all shadow border border-blue-600 active:scale-95" title="Exportar cópia de segurança com todas as alterações">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            Backup Dados
+          </button>
+
+          <!-- Restaurar Backup JSON -->
+          <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all shadow border border-slate-700 cursor-pointer active:scale-95" title="Carregar arquivo de backup salvo anteriormente">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Carregar Backup
+            <input type="file" id="input-backup-file" accept=".json" class="hidden" onchange="importarBackupJSON(event)">
+          </label>
+
+          <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all shadow border border-slate-700 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Imprimir
+          </button>
+
+          <button onclick="confirmarResetModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-rose-950/70 hover:bg-rose-900 text-rose-200 hover:text-white transition-all border border-rose-800 active:scale-95" title="Apagar alterações salvas e restaurar números originais">
+            Restaurar Padrão
+          </button>
+        </div>
+      </div>
+
+      <!-- SELETOR DE ABAS PRINCIPAIS -->
+      <div class="flex items-center gap-3 mt-4 border-t border-slate-800 pt-3">
+        <button id="tab-btn-imagem" onclick="alternarAba('IMAGEM')" class="px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-blue-600 text-white ring-2 ring-blue-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          1. EXAMES DE IMAGEM
+          <span id="badge-count-imagem" class="ml-1.5 px-2 py-0.5 rounded-full text-[11px] bg-blue-900 text-blue-200">37 itens</span>
+        </button>
+
+        <button id="tab-btn-labs" onclick="alternarAba('LABS')" class="px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-slate-800 hover:bg-slate-700 text-slate-300 ring-1 ring-slate-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          2. EXAMES LABORATORIAIS
+          <span id="badge-count-labs" class="ml-1.5 px-2 py-0.5 rounded-full text-[11px] bg-slate-900 text-slate-300">55 itens</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- CORPO PRINCIPAL -->
+  <main class="max-w-[98%] mx-auto px-4 py-5 w-full flex-1">
+
+    <!-- KPI CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
+      <div class="bg-white rounded-xl p-3.5 border border-slate-300 shadow-sm flex flex-col justify-between">
+        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Total Empenhado (<span id="label-aba-kpi">Imagem</span>)</div>
+        <div class="mt-1 text-2xl font-black text-slate-900 font-mono" id="kpi-total-empenhado">R$ 0,00</div>
+        <div class="mt-1 text-xs text-slate-600 flex items-center justify-between">
+          <span>Reserva Contábil Oficial</span>
+          <span class="font-extrabold text-slate-800 font-mono" id="kpi-qtd-empenhada">0 exames</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-amber-500 border border-slate-300 shadow-sm flex flex-col justify-between bg-amber-50/20">
+        <div class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Total Realizado até 01/10/2026</div>
+        <div class="mt-1 text-2xl font-black text-amber-800 font-mono" id="kpi-total-realizado">R$ 0,00</div>
+        <div class="mt-1 text-xs text-amber-900 flex items-center justify-between">
+          <span>Marcado em Planilha</span>
+          <span class="font-black text-amber-800 font-mono" id="kpi-qtd-realizada">0 exames</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-emerald-600 border border-slate-300 shadow-sm flex flex-col justify-between bg-emerald-50/20">
+        <div class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Saldo Betha Disponível</div>
+        <div class="mt-1 text-2xl font-black text-emerald-700 font-mono" id="kpi-total-saldo">R$ 0,00</div>
+        <div class="mt-1 text-xs text-emerald-900 flex items-center justify-between">
+          <span>Limite de Lançamento</span>
+          <span class="font-black text-emerald-800 font-mono" id="kpi-qtd-saldo">0 vagas</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-3.5 border border-slate-300 shadow-sm flex flex-col justify-between">
+        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Execução do Empenho</div>
+        <div class="mt-1 flex items-baseline justify-between">
+          <span class="text-2xl font-black text-slate-900 font-mono" id="kpi-perc-consumo">0,0%</span>
+          <span class="text-xs font-bold text-slate-600" id="kpi-status-resumo">Normal</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2 overflow-hidden border border-slate-300">
+          <div id="kpi-progresso" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA DE FILTROS -->
+    <div class="bg-white p-3.5 rounded-xl border border-slate-300 shadow-sm mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 no-print">
+      <div class="flex flex-wrap items-center gap-3">
+        
+        <!-- Filtro Prestador -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Prestador / Laboratório</label>
+          <select id="filtro-credor" onchange="renderizarTabela()" class="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="TODOS">Todos os Prestadores</option>
+          </select>
+        </div>
+
+        <!-- Filtro Nota Empenho -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Nota de Empenho</label>
+          <select id="filtro-empenho" onchange="renderizarTabela()" class="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="TODOS">Todos os Empenhos</option>
+          </select>
+        </div>
+
+        <!-- Filtro Situação Saldo -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Situação do Saldo Betha</label>
+          <select id="filtro-status" onchange="renderizarTabela()" class="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="TODOS">Todas as Situações</option>
+            <option value="DISPONIVEL">Disponível (> 0)</option>
+            <option value="CRITICO">Atenção / Crítico (&le; 10)</option>
+            <option value="ESGOTADO">100% Esgotado (= 0)</option>
+            <option value="ESTOURO">Estouro / Ultrapassou (&lt; 0)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Busca Textual -->
+      <div class="w-full lg:w-80">
+        <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Pesquisar Exame, Código ou Termo</label>
+        <div class="relative">
+          <input type="text" id="filtro-busca" onkeyup="renderizarTabela()" placeholder="Ex: Hemograma, Glicose, Mamografia..." class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA CONTÁBIL DINÂMICA -->
+    <div class="bg-white rounded-xl border border-slate-300 shadow-md overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-blue-600"></span>
+          <h2 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wide" id="titulo-tabela">
+            Confronto de Exames de Imagem • Saldos para Alimentação no Betha
+          </h2>
+        </div>
+        <span class="text-xs font-bold text-slate-500 font-mono" id="contador-linhas">Carregando itens...</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-200/90 text-slate-800 uppercase font-black border-b border-slate-300 text-[11px] tracking-wider select-none">
+              <th class="py-3 px-3">Empenho / Credor</th>
+              <th class="py-3 px-3">Origem Contratual / Dotação</th>
+              <th class="py-3 px-3">Procedimento / Exame</th>
+              <th class="py-3 px-2 text-right">Vlr. Unit.</th>
+              <th class="py-3 px-2 text-center bg-blue-100/70 text-blue-950 border-l border-blue-200">Qtd. Emp.</th>
+              <th class="py-3 px-2 text-right bg-blue-100/70 text-blue-950 font-mono">Total Empenho</th>
+
+              <!-- COLUNA AMARELA COM CONTRASTE SÓLIDO E NÍTIDO -->
+              <th class="py-3 px-2 text-center bg-amber-400 text-amber-950 font-black border-l-2 border-r-2 border-amber-600 shadow-sm">
+                Realizado até 01/10
+                <span class="text-[9px] text-amber-900 block font-bold uppercase tracking-tight mt-0.5">(Clique p/ editar)</span>
+              </th>
+
+              <!-- VALOR CONSUMIDO AMARELO NÍTIDO -->
+              <th class="py-3 px-2 text-right bg-amber-200 text-amber-950 font-mono font-bold border-r border-amber-400">
+                Consumido (R$)
+              </th>
+
+              <!-- SALDO BETHA DESTACADO EM VERDE -->
+              <th class="py-3 px-2 text-center bg-emerald-100 text-emerald-950 font-black border-l border-emerald-300">
+                Saldo Betha (Qtd)
+              </th>
+              <th class="py-3 px-2 text-right bg-emerald-100 text-emerald-950 font-mono font-black border-r border-emerald-300">
+                Saldo (R$)
+              </th>
+              <th class="py-3 px-3 text-center">Situação</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-corpo" class="divide-y divide-slate-200">
+            <!-- Linhas Inseridas via JS -->
+          </tbody>
+          <tfoot class="bg-slate-900 text-white font-mono font-bold text-xs border-t-2 border-slate-950">
+            <tr>
+              <td colspan="4" class="py-3 px-3 uppercase tracking-wider text-right font-sans">Totais Gerais da Aba:</td>
+              <td id="foot-qtd-emp" class="py-3 px-2 text-center text-blue-300">0</td>
+              <td id="foot-val-emp" class="py-3 px-2 text-right text-blue-300">R$ 0,00</td>
+              <td id="foot-qtd-real" class="py-3 px-2 text-center text-amber-300 bg-amber-950/80 font-black">0</td>
+              <td id="foot-val-real" class="py-3 px-2 text-right text-amber-300 bg-amber-950/80">R$ 0,00</td>
+              <td id="foot-qtd-saldo" class="py-3 px-2 text-center text-emerald-300 font-black">0</td>
+              <td id="foot-val-saldo" class="py-3 px-2 text-right text-emerald-300 font-black">R$ 0,00</td>
+              <td class="py-3 px-3 text-center text-[10px] font-sans text-slate-400" id="foot-status-geral">Consolidado</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL DE CONFIRMAÇÃO DE RESTAURAÇÃO (SEM ALERT/CONFIRM) -->
+  <div id="modal-reset" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-300">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <h3 class="text-base font-black text-slate-900">Restaurar Quantitativos Originais?</h3>
+      <p class="text-xs text-slate-600 mt-2">
+        Isso removerá todas as alterações feitas nas quantidades realizadas e redefinirá os dados das abas de Imagem e Laboratório para o cálculo original do relatório.
+      </p>
+      <div class="flex items-center justify-end gap-2.5 mt-6">
+        <button onclick="fecharModalReset()" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+          Cancelar
+        </button>
+        <button onclick="executarReset()" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow">
+          Sim, Restaurar
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- METADADOS CONTRATUAIS EDITÁVEIS -->
-  <div class="meta-box screen-only">
-    <div class="meta-field">
-      <label for="inputEmpenho">Nº Empenho:</label>
-      <input type="text" id="inputEmpenho" style="width: 120px;" oninput="atualizarMetadados()">
-    </div>
-    <div class="meta-field">
-      <label for="inputLaboratorio">Prestador / Laboratório:</label>
-      <input type="text" id="inputLaboratorio" style="width: 340px;" oninput="atualizarMetadados()">
-    </div>
-    <div class="meta-field">
-      <label for="inputPeriodo">Período Auditado:</label>
-      <input type="text" id="inputPeriodo" style="width: 200px;" oninput="atualizarMetadados()">
-    </div>
+  <!-- NOTIFICAÇÃO TOAST FLUTUANTE -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 text-xs font-semibold flex items-center gap-2.5 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <span id="toast-icon" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toast-msg">Notificação</span>
   </div>
-
-  <!-- CABEÇALHO OFICIAL DE IMPRESSÃO (A4) -->
-  <div class="print-header">
-    <h2>RELATÓRIO CONSOLIDADO DE AUDITORIA FÍSICO-FINANCEIRA DE EXAMES</h2>
-    <p>
-      <strong>Prestador:</strong> <span id="printLab"></span> | 
-      <strong>Empenho:</strong> <span id="printEmp"></span> | 
-      <strong>Período:</strong> <span id="printPer"></span>
-    </p>
-  </div>
-
-  <div class="kpi-container">
-    <div class="kpi-card">
-      <div class="kpi-title">Teto Empenhado (Total)</div>
-      <div class="kpi-value" id="kpiEmpenhado">R$ 129.163,00</div>
-      <div class="kpi-sub">Total Contratual</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Faturado Acumulado</div>
-      <div class="kpi-value" id="kpiFaturado" style="color: #0284c7;">R$ 43.915,54</div>
-      <div class="kpi-sub" id="kpiPercFaturado">34,0% do teto consumido</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Saldo Financeiro Restante</div>
-      <div class="kpi-value" id="kpiSaldoFin" style="color: #16a34a;">R$ 85.247,46</div>
-      <div class="kpi-sub" id="kpiPercSaldo">66,0% disponível</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Procedimentos Executados</div>
-      <div class="kpi-value" id="kpiQtdExec">0</div>
-      <div class="kpi-sub" id="kpiQtdRestante">Saldo empenhado</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Itens Críticos / Esgotados</div>
-      <div class="kpi-value" id="kpiItensCriticos" style="color: #dc2626;">0</div>
-      <div class="kpi-sub">Exigem remanejamento</div>
-    </div>
-  </div>
-
-  <div class="toolbar">
-    <div class="filters-group">
-      <input type="text" id="filtro" class="search-box" onkeyup="aplicarFiltros()" placeholder="Buscar por código, número do item ou exame...">
-      <label class="checkbox-label">
-        <input type="checkbox" id="checkOcultarSemFatura" onchange="aplicarFiltros()">
-        Ocultar exames sem execução
-      </label>
-    </div>
-    <div class="btn-group">
-      <button class="btn-print" onclick="window.print()">Imprimir (A4 Paisagem)</button>
-      <button class="btn-reset" onclick="restaurarPadrao()">Restaurar Dados</button>
-      <button onclick="exportarCSV()">Exportar CSV</button>
-    </div>
-  </div>
-
-  <div class="table-container">
-    <table id="tabelaExames">
-      <thead>
-        <tr>
-          <th style="width: 38px; text-align: center;">Item</th>
-          <th>Procedimento / Exame Contratado</th>
-          <th class="col-hide-print">Referência na Execução / Fatura</th>
-          <th style="text-align: right;">Vl. Unit (R$)</th>
-          <th style="text-align: right;">Qtd Emp.</th>
-          <th style="text-align: center;">Qtd Executada</th>
-          <th style="text-align: right;">Saldo Qtd</th>
-          <th style="text-align: right;">Vl. Empenhado</th>
-          <th style="text-align: right;">Vl. Faturado (R$)</th>
-          <th style="text-align: right;">Saldo Financeiro</th>
-          <th style="text-align: right;">Consumo</th>
-          <th style="text-align: center;">Situação</th>
-        </tr>
-      </thead>
-      <tbody id="corpoTabela"></tbody>
-      <tfoot>
-        <tr>
-          <th colspan="3" id="thTotalLabel">TOTAIS CONSOLIDADOS DO CONTRATO:</th>
-          <th style="text-align: right;">—</th>
-          <th style="text-align: right;" id="totalQtdEmp">0</th>
-          <th style="text-align: center;" id="totalQtdExec">0</th>
-          <th style="text-align: right;" id="totalQtdSaldo">0</th>
-          <th style="text-align: right;" id="totalVlEmp">R$ 129.163,00</th>
-          <th style="text-align: right;" id="totalVlFat">R$ 43.915,54</th>
-          <th style="text-align: right;" id="totalVlSaldo">R$ 85.247,46</th>
-          <th style="text-align: right;" id="totalPercConsumo">34,0%</th>
-          <th style="text-align: center;">—</th>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <div id="toastMessage">Dados restaurados com sucesso!</div>
 
   <script>
-    // Helper defensivo para conversão numérica segura sem NaN
-    function safeNum(val, fallback = 0) {
-      if (val === null || val === undefined || val === '') return fallback;
-      const parsed = Number(val);
-      return isNaN(parsed) ? fallback : parsed;
-    }
+    const STORAGE_KEY = 'confronto_empenhos_betha_v1';
+    let abaAtual = 'IMAGEM';
 
-    // BASE DE DADOS COMPLETA E VALIDADA: OS 75 ITENS DO EMPENHO 3173 + CONCILIAÇÃO FISCAL (R$ 43.915,54)
-    const dadosConsolidados = [
-      { item: "1", empenho: "ÁCIDO FÓLICO (VITAMINA B9)", execucao: "0202010406 - ACIDO FOLICO", vlUnit: 15.65, qtdEmp: 150, qtdExec: 20 },
-      { item: "2", empenho: "EXAMES LABORATORIAIS ÁCIDO ÚRICO", execucao: "0202010120 - ACIDO URICO [SORO]", vlUnit: 1.85, qtdEmp: 400, qtdExec: 144 },
-      { item: "3", empenho: "EXAME ÁCIDO VALPROICO", execucao: "0202070050 - ACIDO VALPROICO [SORO]", vlUnit: 15.65, qtdEmp: 150, qtdExec: 1 },
-      { item: "4", empenho: "EXAMES LABORATORIAIS DE ALBUMINA", execucao: "Não Consta na Fatura", vlUnit: 8.12, qtdEmp: 150, qtdExec: 0 },
-      { item: "5", empenho: "EXAME AMILASE", execucao: "0202010180 - AMILASE [SORO]", vlUnit: 2.25, qtdEmp: 350, qtdExec: 7 },
-      { item: "6", empenho: "ANALISE DE CARACTERES FISICOS, URINA (EQU)", execucao: "0202050017 - EQU EXAME QUALITATIVO DE URINA", vlUnit: 3.70, qtdEmp: 600, qtdExec: 338 },
-      { item: "7", empenho: "ANTI HBC IgG", execucao: "Não Consta na Fatura", vlUnit: 18.55, qtdEmp: 100, qtdExec: 0 },
-      { item: "8", empenho: "ANTI HBC IGM", execucao: "Não Consta na Fatura", vlUnit: 18.55, qtdEmp: 100, qtdExec: 0 },
-      { item: "9", empenho: "EXAME ANTIHCV", execucao: "0202030679 - HEPATITE C, ANTICORPOS (ANTI-HCV)", vlUnit: 18.55, qtdEmp: 100, qtdExec: 4 },
-      { item: "10", empenho: "ANTICORPOS ANTI TIREOGLOBULINA", execucao: "0202030628 - TIREOGLOBULINA ANTICORPOS ANTI", vlUnit: 13.35, qtdEmp: 200, qtdExec: 3 },
-      { item: "11", empenho: "EXAME ANTIESTREPTOLISINA O", execucao: "0202030474 - ANTIESTREPTOLISINA O", vlUnit: 2.83, qtdEmp: 100, qtdExec: 2 },
-      { item: "12", empenho: "B-HCG", execucao: "0202060217 - BETA HCG [IMUNOCROMATOGRAFICO]", vlUnit: 7.85, qtdEmp: 200, qtdExec: 6 },
-      { item: "13", empenho: "BACTEROSCOPIA (GRAM)", execucao: "Não Consta na Fatura", vlUnit: 2.80, qtdEmp: 100, qtdExec: 0 },
-      { item: "14", empenho: "BILIRRUBINAS T e F", execucao: "0202010201 - BILIRRUBINA TOTAL E FRACOES", vlUnit: 2.01, qtdEmp: 100, qtdExec: 27 },
-      { item: "15", empenho: "EXAME CÁLCIO", execucao: "0202010210 - CALCIO [SORO]", vlUnit: 1.85, qtdEmp: 1200, qtdExec: 18 },
-      { item: "16", empenho: "EXAME COLESTEROL HDL", execucao: "0202010279 - COLESTEROL HDL", vlUnit: 3.51, qtdEmp: 1200, qtdExec: 421 },
-      { item: "17", empenho: "EXAME COLESTEROL LDL", execucao: "0202010287 - COLESTEROL LDL", vlUnit: 3.51, qtdEmp: 1200, qtdExec: 357 },
-      { item: "18", empenho: "EXAME COLESTEROL TOTAL", execucao: "0202010295 - COLESTEROL TOTAL [SORO]", vlUnit: 1.85, qtdEmp: 600, qtdExec: 422 },
-      { item: "19", empenho: "EXAMES LABORATORIAIS CREATININA", execucao: "0202010317 - CREATININA [SORO]", vlUnit: 1.85, qtdEmp: 1200, qtdExec: 414 },
-      { item: "20", empenho: "EXAMES LABORATORIAIS CREATINURIA EM AMOSTRA", execucao: "Não Consta na Fatura", vlUnit: 1.85, qtdEmp: 1200, qtdExec: 0 },
-      { item: "21", empenho: "EXAME CULTURA DE BACTERIAS PARA IDENTIFICAÇÃO", execucao: "0202080080 - CULTURA [URINA SIMPLES]", vlUnit: 5.62, qtdEmp: 1200, qtdExec: 156 },
-      { item: "22", empenho: "CURVA GLICÊMICA (2 DOSAGENS)", execucao: "Não Consta na Fatura", vlUnit: 3.63, qtdEmp: 600, qtdExec: 0 },
-      { item: "23", empenho: "Depuração da creatinina endógena", execucao: "0202050025 - CLEARANCE DE CREATININA", vlUnit: 3.51, qtdEmp: 200, qtdExec: 3 },
-      { item: "24", empenho: "DESIDROGENASE LÁCTICA", execucao: "0202010368 - DESIDROGENASE LACTICA [SORO]", vlUnit: 3.68, qtdEmp: 200, qtdExec: 4 },
-      { item: "25", empenho: "EXAME DOSAGEM DE PROTEÍNAS TOTAIS", execucao: "Não Consta na Fatura", vlUnit: 1.40, qtdEmp: 200, qtdExec: 0 },
-      { item: "26", empenho: "EXAME DOSAGEM DE MICROALBUMINA NA URINA", execucao: "0202050092 - MICROALBUMINURIA", vlUnit: 8.12, qtdEmp: 200, qtdExec: 184 },
-      { item: "27", empenho: "DOSAGEM CREATINOFOSFOQUINASE (CPK)", execucao: "0202010325 - CREATINOFOSFOQUINASE (CPK)", vlUnit: 3.68, qtdEmp: 200, qtdExec: 4 },
-      { item: "28", empenho: "EPF - EXAME PARASITOLÓGICO DE FEZES", execucao: "0202040046 - PARASITOLOGICO DE FEZES", vlUnit: 1.65, qtdEmp: 600, qtdExec: 57 },
-      { item: "29", empenho: "EXAME ESTRADIOL", execucao: "0202060160 - ESTRADIOL", vlUnit: 10.15, qtdEmp: 100, qtdExec: 17 },
-      { item: "30", empenho: "FAN-FATOR ANTINUCLEAR", execucao: "0202030598 - FATOR ANTINUCLEAR [SORO]", vlUnit: 17.16, qtdEmp: 100, qtdExec: 7 },
-      { item: "31", empenho: "FATOR REUMATOIDE (LÁTEX R)", execucao: "0202030075 - FATOR REUMATOIDE", vlUnit: 1.89, qtdEmp: 100, qtdExec: 9 },
-      { item: "32", empenho: "FTA-ABS", execucao: "Não Consta na Fatura", vlUnit: 10.00, qtdEmp: 100, qtdExec: 0 },
-      { item: "33", empenho: "EXAMES LABORATORIAIS FERRITINA", execucao: "0202010384 - FERRITINA", vlUnit: 15.59, qtdEmp: 100, qtdExec: 286 },
-      { item: "34", empenho: "EXAMES LABORATORIAIS FERRO SÉRICO", execucao: "0202010392 - FERRO", vlUnit: 3.51, qtdEmp: 200, qtdExec: 82 },
-      { item: "35", empenho: "FOSFATASE ALCALINA", execucao: "0202010422 - FOSFATASE ALCALINA", vlUnit: 2.01, qtdEmp: 200, qtdExec: 27 },
-      { item: "36", empenho: "EXAME FÓSFORO", execucao: "0202010430 - FOSFORO [SORO]", vlUnit: 1.85, qtdEmp: 600, qtdExec: 4 },
-      { item: "37", empenho: "EXAMES LABORATORIAIS GAMA GT", execucao: "0202010465 - GAMA GLUTAMIL TRANSFERASE", vlUnit: 3.51, qtdEmp: 600, qtdExec: 49 },
-      { item: "38", empenho: "EXAME DE GLICOSE", execucao: "0202010473 - GLICOSE [PLASMA/SORO]", vlUnit: 1.85, qtdEmp: 800, qtdExec: 411 },
-      { item: "39", empenho: "HBSAG (ANTIGENO AUSTRÁLIA)", execucao: "0202030970 - HEPATITE B, ANTIGENO (HBSAG)", vlUnit: 18.55, qtdEmp: 150, qtdExec: 4 },
-      { item: "40", empenho: "EXAME DE HEMOGLOBINA GLICOSILADA", execucao: "0202010503 - HEMOGLOBINA GLICADA (A1C)", vlUnit: 7.86, qtdEmp: 500, qtdExec: 396 },
-      { item: "41", empenho: "EXAME HEMOGRAMA COMPLETO", execucao: "0202020380 - HEMOGRAMA COMPLETO", vlUnit: 4.11, qtdEmp: 2000, qtdExec: 474 },
-      { item: "42", empenho: "HORMÔNIO FOLÍCULO ESTIMULANTE (FSH)", execucao: "0202060233 - FSH HORMONIO FOLICULO ESTIMULANTE", vlUnit: 7.89, qtdEmp: 100, qtdExec: 26 },
-      { item: "43", empenho: "HORMÔNIO LUTEINIZANTE (LH)", execucao: "0202060241 - LH HORMONIO LUTEINIZANTE", vlUnit: 8.97, qtdEmp: 100, qtdExec: 17 },
-      { item: "44", empenho: "IST (INDICE SAT. TRANSFERRINA)", execucao: "0202010660 - CALCULO INDICE SATURACAO TRANSFERRINA", vlUnit: 4.19, qtdEmp: 100, qtdExec: 4 },
-      { item: "45", empenho: "KTTP (TEMPO DE TROMBOPLATIA PARCIAL ATIVADA)", execucao: "0202020134 - TEMPO DE TROMBOPLASTINA PARCIAL (TTP)", vlUnit: 5.77, qtdEmp: 100, qtdExec: 5 },
-      { item: "46", empenho: "LIPASE", execucao: "0202010554 - LIPASE [SORO]", vlUnit: 2.25, qtdEmp: 200, qtdExec: 6 },
-      { item: "47", empenho: "LITEMIA", execucao: "0202070255 - LITIO", vlUnit: 8.12, qtdEmp: 100, qtdExec: 8 },
-      { item: "48", empenho: "EXAME MAGNÉSIO", execucao: "0202010562 - MAGNESIO [SORO]", vlUnit: 2.01, qtdEmp: 600, qtdExec: 9 },
-      { item: "49", empenho: "PCR - PROTEINA REATIVA", execucao: "0202030083 - PROTEINA C REATIVA ULTRA SENSIVEL", vlUnit: 2.83, qtdEmp: 100, qtdExec: 42 },
-      { item: "50", empenho: "ANTICORPOS ANTICROMOSSOMOS (ANTI-TPO)", execucao: "0202030555 - ANTICORPOS ANTI TIREOPEROXIDASE", vlUnit: 17.16, qtdEmp: 100, qtdExec: 2 },
-      { item: "51", empenho: "EXAMES LABORATORIAIS PLAQUETAS", execucao: "0202020380 - CONTAGEM DE PLAQUETAS", vlUnit: 2.73, qtdEmp: 1500, qtdExec: 68 },
-      { item: "52", empenho: "EXAMES LABORATORIAIS POTÁSSIO", execucao: "0202010600 - POTASSIO [SORO]", vlUnit: 1.85, qtdEmp: 1200, qtdExec: 84 },
-      { item: "53", empenho: "EXAME LABORATORIAL PROGESTERONA", execucao: "0202060292 - PROGESTERONA", vlUnit: 10.22, qtdEmp: 150, qtdExec: 7 },
-      { item: "54", empenho: "PROLACTINA", execucao: "0202060306 - PROLACTINA", vlUnit: 10.15, qtdEmp: 150, qtdExec: 5 },
-      { item: "55", empenho: "EXAME DE PSA LIVRE", execucao: "Não definido - PSAL ANTIGENO PROSTATICO LIVRE", vlUnit: 16.42, qtdEmp: 600, qtdExec: 2 },
-      { item: "56", empenho: "EXAME PSA TOTAL", execucao: "0202030105 - PSA ANTIGENO PROSTATICO ESPECIFICO", vlUnit: 16.42, qtdEmp: 600, qtdExec: 79 },
-      { item: "57", empenho: "RETICULÓCITOS", execucao: "0202020037 - RETICULOCITOS CONTAGEM", vlUnit: 2.73, qtdEmp: 200, qtdExec: 8 },
-      { item: "58", empenho: "EXAMES LABORATORIAIS SÓDIO", execucao: "0202010635 - SODIO [SORO]", vlUnit: 1.85, qtdEmp: 600, qtdExec: 80 },
-      { item: "59", empenho: "EXAMES LABORATORIAIS T4 - TIROXINA", execucao: "0202060373 - T4 TIROXINA", vlUnit: 8.76, qtdEmp: 100, qtdExec: 8 },
-      { item: "60", empenho: "EXAMES LABORATORIAIS T4 LIVRE (TIROXINA)", execucao: "0202060381 - T4 L TIROXINA LIVRE", vlUnit: 11.60, qtdEmp: 100, qtdExec: 187 },
-      { item: "61", empenho: "TEMPO DE TROMBOPLASTINA ATIVADO", execucao: "0202020134 - TEMPO DE TROMBOPLASTINA (TTPA)", vlUnit: 5.77, qtdEmp: 100, qtdExec: 3 },
-      { item: "62", empenho: "EXAMES LABORATORIAIS TESTOSTERONA TOTAL", execucao: "0202060349 - TESTOSTERONA TOTAL", vlUnit: 10.43, qtdEmp: 100, qtdExec: 8 },
-      { item: "63", empenho: "EXAMES LABORATORIAIS TGO", execucao: "0202010643 - ASPARTATO AMINO TRANSFERASE (TGO)", vlUnit: 2.01, qtdEmp: 150, qtdExec: 252 },
-      { item: "64", empenho: "EXAMES LABORATORIAIS TGP", execucao: "0202010651 - ALANINA AMINO TRANSFERASE (TGP)", vlUnit: 2.01, qtdEmp: 150, qtdExec: 248 },
-      { item: "65", empenho: "TIBC (CAPACIDADE DE FIXAÇÃO DO FERRO)", execucao: "0202010023 - CAPACIDADE TOTAL LIGACAO DO FERRO", vlUnit: 2.01, qtdEmp: 200, qtdExec: 5 },
-      { item: "66", empenho: "TIPAGEM SANGUINEA E FATOR RH", execucao: "0202120082 - FATOR RH / GRUPO SANGUINEO", vlUnit: 1.37, qtdEmp: 300, qtdExec: 8 },
-      { item: "67", empenho: "TAP (TEMPO DE ATIVIDADE DE PROTOMBINA)", execucao: "0202020142 - TEMPO DE PROTROMBINA (TP)", vlUnit: 2.73, qtdEmp: 200, qtdExec: 11 },
-      { item: "68", empenho: "EXAMES LABORATORIAIS TRIGLICERÍDEOS", execucao: "0202010678 - TRIGLICERIDEOS [SORO]", vlUnit: 3.51, qtdEmp: 800, qtdExec: 420 },
-      { item: "69", empenho: "EXAMES TSH - TIREOTROFINA", execucao: "0202060250 - TSH HORMONIO TIREOESTIMULANTE", vlUnit: 8.96, qtdEmp: 150, qtdExec: 308 },
-      { item: "70", empenho: "EXAMES LABORATORIAIS UREIA", execucao: "0202010694 - UREIA [SORO]", vlUnit: 1.85, qtdEmp: 500, qtdExec: 254 },
-      { item: "71", empenho: "VDRL PARA DETECÇÃO DE SÍFILIS", execucao: "0202031098 - VDRL [SORO]", vlUnit: 2.83, qtdEmp: 500, qtdExec: 8 },
-      { item: "72", empenho: "EXAMES LABORATORIAIS VITAMINA B12", execucao: "0202010708 - VITAMINA B12", vlUnit: 15.24, qtdEmp: 50, qtdExec: 291 },
-      { item: "73", empenho: "EXAME LABORATORIAL VITAMINA D", execucao: "0202010767 - VITAMINA D (25 HIDROXI)", vlUnit: 15.24, qtdEmp: 50, qtdExec: 283 },
-      { item: "74", empenho: "EXAME VSG/VHS (HEMOSEDIMENTAÇÃO)", execucao: "0202020150 - VELOCIDADE HEMOSSEDIMENTACAO", vlUnit: 2.73, qtdEmp: 50, qtdExec: 20 },
-      { item: "75", empenho: "Pesquisa de anticorpos EIE anticlamidia", execucao: "Não Consta na Fatura", vlUnit: 17.76, qtdEmp: 50, qtdExec: 0 },
-      { item: "NF", empenho: "CONCILIAÇÃO TÉCNICO-FISCAL (NFS-E 3205 A 3264)", execucao: "Itens Avulsos e Ajustes de Faturamento", vlUnit: 4291.20, qtdEmp: 1, qtdExec: 1 }
+    // 1. BASE DE DADOS ORIGINAL: EXAMES DE IMAGEM
+    const DADOS_IMAGEM_ORIGINAL = [
+      // DIMAGEM - Empenho 1704/2026
+      { id: 'IMG_1', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 100, qtdRealizada: 129 },
+      { id: 'IMG_2', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECODOPPLER VENOSO MEMBRO INF/SUP", unitario: 290.00, qtdEmpenhada: 16.207, qtdRealizada: 0 },
+      { id: 'IMG_3', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "RESSONÂNCIA MAGNÉTICA DE ARTICULAÇÃO", unitario: 528.00, qtdEmpenhada: 0.419, qtdRealizada: 0 },
+
+      // LM SERVIÇOS - Empenho 2223/2026
+      { id: 'IMG_4', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 100, qtdRealizada: 0 },
+      { id: 'IMG_5', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA OBSTÉTRICA SIMPLES", unitario: 111.50, qtdEmpenhada: 100, qtdRealizada: 237 },
+      { id: 'IMG_6', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA OBSTÉTRICA MEDIDA COLO ÚTERO", unitario: 245.33, qtdEmpenhada: 50, qtdRealizada: 0 },
+
+      // LM SERVIÇOS - Empenho 9172/2026 (Custeio MAC)
+      { id: 'IMG_7', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "HOLTER 24 HORAS", unitario: 99.00, qtdEmpenhada: 50, qtdRealizada: 25 },
+      { id: 'IMG_8', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "MAPA 24 HORAS", unitario: 80.00, qtdEmpenhada: 50, qtdRealizada: 16 },
+      { id: 'IMG_9', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA ABDOMINAL TOTAL", unitario: 79.99, qtdEmpenhada: 150, qtdRealizada: 47 },
+      { id: 'IMG_10', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA MAMÁRIA", unitario: 94.00, qtdEmpenhada: 150, qtdRealizada: 25 },
+      { id: 'IMG_11', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA TIREÓIDE", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 10 },
+      { id: 'IMG_12', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA VIAS URINÁRIAS", unitario: 86.99, qtdEmpenhada: 100, qtdRealizada: 28 },
+      { id: 'IMG_13', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_14', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA TRANSVAGINAL", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 69 },
+
+      // LM SERVIÇOS - Empenho 9173/2026 (Recursos Próprios - Livre)
+      { id: 'IMG_15', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "HOLTER 24 HORAS", unitario: 99.00, qtdEmpenhada: 50, qtdRealizada: 0 },
+      { id: 'IMG_16', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "MAPA 24 HORAS", unitario: 80.00, qtdEmpenhada: 50, qtdRealizada: 0 },
+      { id: 'IMG_17', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA ABDOMINAL TOTAL", unitario: 79.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_18', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA MAMÁRIA", unitario: 94.00, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_19', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA TIREÓIDE", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_20', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA VIAS URINÁRIAS", unitario: 86.99, qtdEmpenhada: 100, qtdRealizada: 0 },
+      { id: 'IMG_21', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_22', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA TRANSVAGINAL", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+
+      // DIMAGEM - Empenho 11203/2026 (Emenda Dilson Boaventura)
+      { id: 'IMG_23', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "TC ABDOME TOTAL SEM CONTRASTE", unitario: 650.00, qtdEmpenhada: 60, qtdRealizada: 27 },
+      { id: 'IMG_24', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "TC COLUNA LOMBAR SEM CONTRASTE", unitario: 310.00, qtdEmpenhada: 30, qtdRealizada: 5 },
+      { id: 'IMG_25', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "RM COLUNA CERVICAL SEM CONTRASTE", unitario: 536.00, qtdEmpenhada: 30, qtdRealizada: 15 },
+      { id: 'IMG_26', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "RM COLUNA DORSAL SEM CONTRASTE", unitario: 576.00, qtdEmpenhada: 30, qtdRealizada: 4 },
+      { id: 'IMG_27', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECOCARDIOGRAMA TRANSTORÁCICO C/ DOPPLER", unitario: 220.00, qtdEmpenhada: 276.57, qtdRealizada: 56 },
+      { id: 'IMG_28', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECODOPPLER DE CARÓTIDAS", unitario: 260.00, qtdEmpenhada: 80, qtdRealizada: 6 },
+
+      // AMPLAMAIS - Empenho 15391/2026 (Emenda Maria do Rosário)
+      { id: 'IMG_29', empenho: "15391/2026", dataEmp: "18/09/2026", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 20.402/2026 (Contrato 432/2026)", dotacao: "10.301.103 / Rec. 1.600.3110.4500", exame: "ECO/ULTRA MAMÁRIA C/ EXTENSÃO AXILAR", unitario: 222.67, qtdEmpenhada: 180, qtdRealizada: 0 },
+
+      // DIMAGEM - Empenho 15392/2026 (Emenda Maria do Rosário)
+      { id: 'IMG_30', empenho: "15392/2026", dataEmp: "18/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.405/2026 (Contrato 433/2026)", dotacao: "10.301.103 / Rec. 1.600.3110.4500", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 422, qtdRealizada: 0 },
+
+      // DIMAGEM - Empenho 16074/2026
+      { id: 'IMG_31', empenho: "16074/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.870/2026 (Emenda 24)", dotacao: "10.302.103 / Rec. 1.500.1002.3310", exame: "TC CRÂNIO SEM CONTRASTE", unitario: 300.00, qtdEmpenhada: 49.001, qtdRealizada: 0 },
+      { id: 'IMG_32', empenho: "16074/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.870/2026 (Emenda 24)", dotacao: "10.302.103 / Rec. 1.500.1002.3310", exame: "RM DE ARTICULAÇÃO SEM CONTRASTE", unitario: 528.00, qtdEmpenhada: 37, qtdRealizada: 0 },
+
+      // DIMAGEM - Empenho 16101/2026
+      { id: 'IMG_33', empenho: "16101/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.509/2026 (Emenda 57)", dotacao: "10.301.103 / Rec. 1.500.1002.3310", exame: "TC CRÂNIO SEM CONTRASTE", unitario: 300.00, qtdEmpenhada: 37, qtdRealizada: 0 },
+
+      // AMPLAMAIS - Empenho 17835/2025 (Em execução)
+      { id: 'IMG_34', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ENDOSCOPIA DIGESTIVA ALTA", unitario: 489.48, qtdEmpenhada: 50, qtdRealizada: 24 },
+      { id: 'IMG_35', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ECO/ULTRA PRÓSTATA VIA ABDOMINAL", unitario: 121.90, qtdEmpenhada: 50, qtdRealizada: 7 },
+      { id: 'IMG_36', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ELETROENCEFALOGRAMA EM SONO E VIGÍLIA", unitario: 416.67, qtdEmpenhada: 10, qtdRealizada: 5 },
+      { id: 'IMG_37', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ECO/ULTRA REGIÃO INGUINAL", unitario: 143.02, qtdEmpenhada: 10, qtdRealizada: 4 }
     ];
 
-    // Chave única com prefixo de saneamento de schema
-    const STORAGE_KEY_DATA = 'auditoria_sms_v6_clean';
-    const STORAGE_KEY_META = 'auditoria_sms_meta_v6_clean';
+    // 2. BASE DE DADOS ORIGINAL: EXAMES LABORATORIAIS
+    const DADOS_LABORATORIO_ORIGINAL = [
+      // LAB. BIOMÉDICO - Empenho 2991/2026 (Atenção Básica - R$ 129.303,00)
+      { id: 'LAB_1', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 2000 },
+      { id: 'LAB_2', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 800 },
+      { id: 'LAB_3', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 600 },
+      { id: 'LAB_4', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1200 },
+      { id: 'LAB_5', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1200 },
+      { id: 'LAB_6', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 800 },
+      { id: 'LAB_7', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 1200 },
+      { id: 'LAB_8', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 500 },
+      { id: 'LAB_9', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 600 },
+      { id: 'LAB_10', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 1198 },
+      { id: 'LAB_11', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 150 },
+      { id: 'LAB_12', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 100 },
+      { id: 'LAB_13', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA D", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_14', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA B12", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_15', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 500 },
 
-    let listaExames = [];
+      // LAB. FONTANA - Empenho 3173/2026 (Atenção Básica - R$ 129.163,00)
+      { id: 'LAB_16', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 1845 },
+      { id: 'LAB_17', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 730 },
+      { id: 'LAB_18', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 580 },
+      { id: 'LAB_19', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1110 },
+      { id: 'LAB_20', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1110 },
+      { id: 'LAB_21', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 790 },
+      { id: 'LAB_22', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 1150 },
+      { id: 'LAB_23', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 485 },
+      { id: 'LAB_24', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 590 },
+      { id: 'LAB_25', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 1140 },
+      { id: 'LAB_26', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 150 },
+      { id: 'LAB_27', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 100 },
+      { id: 'LAB_28', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA D", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_29', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA B12", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_30', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 465 },
 
-    // Carregamento robusto com sanitização estrita de schema
-    function carregarDadosComFallback() {
+      // LAB. EXAME / M.B. - Empenho 3406/2026 (Rec. Próprios - R$ 13.782,50)
+      { id: 'LAB_31', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 96 },
+      { id: 'LAB_32', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 145 },
+      { id: 'LAB_33', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "VDRL (SÍFILIS)", unitario: 2.83, qtdEmpenhada: 500, qtdRealizada: 480 },
+      { id: 'LAB_34', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 760 },
+      { id: 'LAB_35', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 470 },
+
+      // LAB. EXAME / M.B. - Empenho 3407/2026 (Custeio - R$ 115.380,50)
+      { id: 'LAB_36', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 1450 },
+      { id: 'LAB_37', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 620 },
+      { id: 'LAB_38', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 480 },
+      { id: 'LAB_39', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 890 },
+      { id: 'LAB_40', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 890 },
+      { id: 'LAB_41', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 910 },
+      { id: 'LAB_42', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 840 },
+      { id: 'LAB_43', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 510 },
+      { id: 'LAB_44', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "PSA TOTAL", unitario: 16.42, qtdEmpenhada: 600, qtdRealizada: 420 },
+      { id: 'LAB_45', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "PSA LIVRE", unitario: 16.42, qtdEmpenhada: 600, qtdRealizada: 420 },
+      { id: 'LAB_46', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 395 },
+
+      // EMENDAS ESPECÍFICAS / COMPLEMENTARES LABS (14637, 14568, 14569)
+      { id: 'LAB_47', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 195 },
+      { id: 'LAB_48', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 97 },
+      { id: 'LAB_49', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 205 },
+      { id: 'LAB_50', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 173 },
+      { id: 'LAB_51', empenho: "14569/2025", dataEmp: "15/09/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 15.887/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 189 },
+      { id: 'LAB_52', empenho: "14569/2025", dataEmp: "15/09/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 15.887/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 180 },
+
+      // EMENDAS 17846, 17848, 17849 (Novembro 2025 em execução)
+      { id: 'LAB_53', empenho: "17846/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 19.163/2025 (Emenda 130)", dotacao: "10.302.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 30000, qtdRealizada: 29830.06 },
+      { id: 'LAB_54', empenho: "17848/2025", dataEmp: "12/11/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 19.164/2025 (Emendas 62 e 54)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46665.79, qtdRealizada: 45785.19 },
+      { id: 'LAB_55', empenho: "17849/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 19.166/2025 (Emenda 62)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46667.61, qtdRealizada: 45859.19 }
+    ];
+
+    // Cópia Mutável em Memória (Carrega do localStorage se houver)
+    let bancoDados = carregarDadosLocalStorage();
+
+    // Função de carregamento inicial do localStorage
+    function carregarDadosLocalStorage() {
       try {
-        const salvos = localStorage.getItem(STORAGE_KEY_DATA);
-        if (salvos) {
-          const parsed = JSON.parse(salvos);
-          if (Array.isArray(parsed) && parsed.length >= 75) {
-            // Valida e sanitiza cada objeto individualmente
-            listaExames = parsed.map(item => ({
-              item: String(item.item || ""),
-              empenho: String(item.empenho || "Procedimento"),
-              execucao: String(item.execucao || "Não faturado"),
-              vlUnit: safeNum(item.vlUnit),
-              qtdEmp: safeNum(item.qtdEmp),
-              qtdExec: safeNum(item.qtdExec)
-            }));
-            return;
+        const salvo = localStorage.getItem(STORAGE_KEY);
+        if (salvo) {
+          const parsed = JSON.parse(salvo);
+          if (parsed && parsed.IMAGEM && parsed.LABS) {
+            return parsed;
           }
         }
-      } catch (err) {
-        console.warn("Recuperação de cache falhou, usando base oficial.", err);
-      }
-      // Se não houver cache válido, carrega a base padrão cravada
-      listaExames = JSON.parse(JSON.stringify(dadosConsolidados));
-    }
-
-    const metaPadrao = {
-      empenho: "3173/2026 (Global)",
-      laboratorio: "LABORATORIO DE ANALISES CLINICAS FONTANA LTDA",
-      periodo: "Março a Junho/2026 (NFS-e 3205 a 3264)"
-    };
-
-    let metadados = { ...metaPadrao };
-
-    function carregarMetadados() {
-      try {
-        const salvoMeta = localStorage.getItem(STORAGE_KEY_META);
-        if (salvoMeta) metadados = { ...metaPadrao, ...JSON.parse(salvoMeta) };
       } catch (e) {
-        metadados = { ...metaPadrao };
+        console.warn("Falha ao ler localStorage:", e);
       }
-      document.getElementById('inputEmpenho').value = metadados.empenho;
-      document.getElementById('inputLaboratorio').value = metadados.laboratorio;
-      document.getElementById('inputPeriodo').value = metadados.periodo;
-      aplicarTextoMetadados();
+      return {
+        IMAGEM: JSON.parse(JSON.stringify(DADOS_IMAGEM_ORIGINAL)),
+        LABS: JSON.parse(JSON.stringify(DADOS_LABORATORIO_ORIGINAL))
+      };
     }
 
-    function atualizarMetadados() {
-      metadados.empenho = document.getElementById('inputEmpenho').value || metaPadrao.empenho;
-      metadados.laboratorio = document.getElementById('inputLaboratorio').value || metaPadrao.laboratorio;
-      metadados.periodo = document.getElementById('inputPeriodo').value || metaPadrao.periodo;
+    // Salva no localStorage com debounce/feedback visual
+    function salvarLocalStorage() {
       try {
-        localStorage.setItem(STORAGE_KEY_META, JSON.stringify(metadados));
-      } catch (e) {}
-      aplicarTextoMetadados();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoDados));
+        mostrarStatusSalvo();
+      } catch (e) {
+        console.error("Erro ao salvar no localStorage:", e);
+        mostrarToast("Erro ao gravar dados no navegador", "rose");
+      }
     }
 
-    function aplicarTextoMetadados() {
-      document.getElementById('printLab').textContent = metadados.laboratorio;
-      document.getElementById('printEmp').textContent = metadados.empenho;
-      document.getElementById('printPer').textContent = metadados.periodo;
+    // Feedback visual de salvamento no cabeçalho
+    let saveTimeout;
+    function mostrarStatusSalvo() {
+      const indicator = document.getElementById('save-indicator');
+      const text = document.getElementById('save-indicator-text');
+      if (indicator && text) {
+        indicator.classList.remove('hidden');
+        text.textContent = "Alterações salvas!";
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          text.textContent = "Salvo localmente";
+        }, 2000);
+      }
     }
 
-    function formatBRL(val) {
-      return safeNum(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    // Toast de notificação
+    let toastTimeout;
+    function mostrarToast(msg, cor = 'emerald') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+
+      toastMsg.textContent = msg;
+      toastIcon.className = `w-2 h-2 rounded-full bg-${cor}-400`;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
     }
 
+    // Alternância entre as abas de Imagem e Laboratório
+    function alternarAba(aba) {
+      abaAtual = aba;
+      const btnImg = document.getElementById('tab-btn-imagem');
+      const btnLabs = document.getElementById('tab-btn-labs');
+      const titTabela = document.getElementById('titulo-tabela');
+      const labelAbaKpi = document.getElementById('label-aba-kpi');
+
+      if (aba === 'IMAGEM') {
+        btnImg.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-blue-600 text-white ring-2 ring-blue-400";
+        btnLabs.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-slate-800 hover:bg-slate-700 text-slate-300 ring-1 ring-slate-700";
+        if (titTabela) titTabela.textContent = "Confronto de Exames de Imagem • Saldos para Alimentação no Betha";
+        if (labelAbaKpi) labelAbaKpi.textContent = "Imagem";
+      } else {
+        btnLabs.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-blue-600 text-white ring-2 ring-blue-400";
+        btnImg.className = "px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-slate-800 hover:bg-slate-700 text-slate-300 ring-1 ring-slate-700";
+        if (titTabela) titTabela.textContent = "Confronto de Exames Laboratoriais • Saldos para Alimentação no Betha";
+        if (labelAbaKpi) labelAbaKpi.textContent = "Laboratório";
+      }
+
+      // Reinicia os filtros de busca ao trocar de aba para evitar itens ocultos
+      const selStatus = document.getElementById('filtro-status');
+      const inputBusca = document.getElementById('filtro-busca');
+      if (selStatus) selStatus.value = 'TODOS';
+      if (inputBusca) inputBusca.value = '';
+
+      carregarFiltros();
+      renderizarTabela();
+    }
+
+    // Carregamento Dinâmico de Filtros para a Aba Ativa
+    function carregarFiltros() {
+      const lista = bancoDados[abaAtual];
+
+      // Filtro de Credores
+      const selCredor = document.getElementById('filtro-credor');
+      const credores = [...new Set(lista.map(d => JSON.stringify({ tag: d.credorTag, nome: d.credor })))].map(s => JSON.parse(s));
+      selCredor.innerHTML = '<option value="TODOS">Todos os Prestadores</option>';
+      credores.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.tag;
+        opt.textContent = c.nome;
+        selCredor.appendChild(opt);
+      });
+
+      // Filtro de Empenhos
+      const selEmpenho = document.getElementById('filtro-empenho');
+      const empenhos = [...new Set(lista.map(d => d.empenho))].sort();
+      selEmpenho.innerHTML = '<option value="TODOS">Todos os Empenhos</option>';
+      empenhos.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e;
+        opt.textContent = `Empenho ${e}`;
+        selEmpenho.appendChild(opt);
+      });
+    }
+
+    // Formatadores
+    function formataMoeda(v) {
+      return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formataQtd(v) {
+      if (Number.isInteger(v)) return v.toString();
+      return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    }
+
+    // Edição Instantânea de Células
+    function atualizarRealizado(id, novaQtdStr) {
+      let novaQtd = parseFloat(novaQtdStr.replace(/\./g, '').replace(',', '.'));
+      if (isNaN(novaQtd) || novaQtd < 0) novaQtd = 0;
+      
+      const item = bancoDados[abaAtual].find(d => d.id === id);
+      if (item) {
+        item.qtdRealizada = novaQtd;
+        salvarLocalStorage(); // Persistência imediata
+        renderizarTabela();
+      }
+    }
+
+    // Modal de Confirmação de Reset (Evita confirm() nativo)
+    function confirmarResetModal() {
+      document.getElementById('modal-reset').classList.remove('hidden');
+    }
+
+    function fecharModalReset() {
+      document.getElementById('modal-reset').classList.add('hidden');
+    }
+
+    function executarReset() {
+      bancoDados.IMAGEM = JSON.parse(JSON.stringify(DADOS_IMAGEM_ORIGINAL));
+      bancoDados.LABS = JSON.parse(JSON.stringify(DADOS_LABORATORIO_ORIGINAL));
+      salvarLocalStorage();
+      fecharModalReset();
+      renderizarTabela();
+      mostrarToast("Valores redefinidos para o padrão original!", "blue");
+    }
+
+    // Exportar Backup Completo em arquivo JSON
+    function exportarBackupJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bancoDados, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Backup_Confronto_Betha_Torres_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      mostrarToast("Arquivo de backup baixado com sucesso!");
+    }
+
+    // Importar Backup JSON
+    function importarBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const dadosImportados = JSON.parse(e.target.result);
+          if (dadosImportados && (dadosImportados.IMAGEM || dadosImportados.LABS)) {
+            if (dadosImportados.IMAGEM) bancoDados.IMAGEM = dadosImportados.IMAGEM;
+            if (dadosImportados.LABS) bancoDados.LABS = dadosImportados.LABS;
+            salvarLocalStorage();
+            renderizarTabela();
+            mostrarToast("Backup restaurado com sucesso!");
+          } else {
+            mostrarToast("Formato de arquivo inválido!", "rose");
+          }
+        } catch (err) {
+          console.error(err);
+          mostrarToast("Erro ao processar arquivo de backup!", "rose");
+        }
+      };
+      reader.readAsText(file);
+      // Limpa o input para permitir selecionar o mesmo arquivo novamente se necessário
+      event.target.value = '';
+    }
+
+    // Renderização da Tabela
     function renderizarTabela() {
-      try {
-        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(listaExames));
-      } catch (e) {}
+      const lista = bancoDados[abaAtual];
+      const filtroCredor = document.getElementById('filtro-credor').value;
+      const filtroEmpenho = document.getElementById('filtro-empenho').value;
+      const filtroStatus = document.getElementById('filtro-status').value;
+      const filtroBusca = document.getElementById('filtro-busca').value.toLowerCase().trim();
 
-      const tbody = document.getElementById('corpoTabela');
-      if (!tbody) return;
+      const tbody = document.getElementById('tabela-corpo');
       tbody.innerHTML = '';
 
-      let sumQtdEmp = 0;
-      let sumQtdExec = 0;
-      let sumQtdSaldo = 0;
-      let sumVlEmp = 129163.00; // Teto do Empenho Global 3173
-      let sumVlFat = 0;
-      let countCriticos = 0;
+      let totEmpQtd = 0, totEmpVal = 0;
+      let totRealQtd = 0, totRealVal = 0;
+      let totSaldoQtd = 0, totSaldoVal = 0;
+      let linhasExibidas = 0;
 
-      listaExames.forEach((ex, index) => {
-        const qtdEmp = safeNum(ex.qtdEmp);
-        const qtdExec = safeNum(ex.qtdExec);
-        const vlUnit = safeNum(ex.vlUnit);
+      lista.forEach(item => {
+        const valEmp = item.qtdEmpenhada * item.unitario;
+        const valReal = item.qtdRealizada * item.unitario;
+        const saldoQtd = item.qtdEmpenhada - item.qtdRealizada;
+        const saldoVal = saldoQtd * item.unitario;
 
-        const saldoQtd = qtdEmp - qtdExec;
-        const vlTotalEmp = qtdEmp * vlUnit;
-        const vlTotalFat = qtdExec * vlUnit;
-        const vlSaldo = vlTotalEmp - vlTotalFat;
-        const percConsumo = qtdEmp > 0 ? (qtdExec / qtdEmp) * 100 : 0;
+        // Classificação do Status
+        let statusTag = "DISPONIVEL";
+        let statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-400">Disponível</span>`;
 
-        if (ex.item !== "NF") {
-          sumQtdEmp += qtdEmp;
-          sumQtdExec += qtdExec;
-          sumQtdSaldo += saldoQtd;
+        if (saldoQtd < -0.001) {
+          statusTag = "ESTOURO";
+          statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-black bg-rose-200 text-rose-950 border border-rose-500">Estouro (${formataQtd(saldoQtd)})</span>`;
+        } else if (Math.abs(saldoQtd) <= 0.001) {
+          statusTag = "ESGOTADO";
+          statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-300 text-slate-900 border border-slate-400">100% Esgotado</span>`;
+        } else if (saldoQtd <= 10) {
+          statusTag = "CRITICO";
+          statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-200 text-amber-950 border border-amber-500">Atenção (&le; 10)</span>`;
         }
-        sumVlFat += vlTotalFat;
 
-        let situacao = "Seguro";
-        let classeLinha = "seguro";
-        let classeTag = "tag-seguro";
-        const semFatura = qtdExec === 0;
+        // Filtros
+        if (filtroCredor !== "TODOS" && item.credorTag !== filtroCredor) return;
+        if (filtroEmpenho !== "TODOS" && item.empenho !== filtroEmpenho) return;
+        if (filtroStatus !== "TODOS" && statusTag !== filtroStatus) return;
+        if (filtroBusca && !item.exame.toLowerCase().includes(filtroBusca) && !item.empenho.toLowerCase().includes(filtroBusca) && !item.credor.toLowerCase().includes(filtroBusca)) return;
 
-        if (ex.item === "NF") {
-          situacao = "Conciliado";
-          classeLinha = "alerta";
-          classeTag = "tag-alerta";
-        } else if (semFatura) {
-          situacao = "Sem Uso";
-          classeLinha = "sem-uso";
-          classeTag = "tag-zero";
-        } else if (percConsumo >= 100 || saldoQtd <= 0) {
-          situacao = "Esgotado";
-          classeLinha = "esgotado";
-          classeTag = "tag-esgotado";
-          countCriticos++;
-        } else if (percConsumo >= 50) {
-          situacao = "Crítico";
-          classeLinha = "critico";
-          classeTag = "tag-critico";
-          countCriticos++;
-        } else if (percConsumo >= 30) {
-          situacao = "Alerta";
-          classeLinha = "alerta";
-          classeTag = "tag-alerta";
+        linhasExibidas++;
+        totEmpQtd += item.qtdEmpenhada;
+        totEmpVal += valEmp;
+        totRealQtd += item.qtdRealizada;
+        totRealVal += valReal;
+        totSaldoQtd += saldoQtd;
+        totSaldoVal += saldoVal;
+
+        // Estilos do Saldo
+        let saldoQtdClass = "text-emerald-800 font-black";
+        let saldoValClass = "text-emerald-800 font-black";
+        if (saldoQtd < -0.001) {
+          saldoQtdClass = "text-rose-700 font-black";
+          saldoValClass = "text-rose-700 font-bold";
+        } else if (Math.abs(saldoQtd) <= 0.001) {
+          saldoQtdClass = "text-slate-500 font-bold";
+          saldoValClass = "text-slate-500";
         }
 
         const tr = document.createElement('tr');
-        tr.className = classeLinha;
-        tr.setAttribute('data-sem-fatura', semFatura ? 'true' : 'false');
+        tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-200";
+
         tr.innerHTML = `
-          <td style="text-align: center;"><strong>${ex.item}</strong></td>
-          <td><strong>${ex.empenho}</strong></td>
-          <td class="col-hide-print"><em>${ex.execucao}</em></td>
-          <td style="text-align: right;">${formatBRL(vlUnit)}</td>
-          <td style="text-align: right;">${ex.item === "NF" ? "—" : qtdEmp.toLocaleString('pt-BR')}</td>
-          <td style="text-align: center;">
-            <input type="number" class="cell-edit" value="${qtdExec}" min="0" onchange="atualizarExecucao(${index}, this.value)">
+          <!-- Empenho / Credor -->
+          <td class="py-2.5 px-3">
+            <span class="font-bold text-slate-900 font-mono text-xs block leading-tight">${item.empenho}</span>
+            <span class="text-[11px] text-slate-600 block leading-tight truncate max-w-[190px]" title="${item.credor}">${item.credor}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${item.dataEmp}</span>
           </td>
-          <td style="text-align: right;"><strong>${ex.item === "NF" ? "—" : saldoQtd.toLocaleString('pt-BR')}</strong></td>
-          <td style="text-align: right;">${ex.item === "NF" ? "—" : formatBRL(vlTotalEmp)}</td>
-          <td style="text-align: right;"><strong>${formatBRL(vlTotalFat)}</strong></td>
-          <td style="text-align: right;">${ex.item === "NF" ? "—" : formatBRL(vlSaldo)}</td>
-          <td style="text-align: right;">${percConsumo.toFixed(1)}%</td>
-          <td style="text-align: center;"><span class="tag ${classeTag}">${situacao}</span></td>
+
+          <!-- Origem / Dotação -->
+          <td class="py-2.5 px-3">
+            <span class="text-xs text-slate-800 block font-medium truncate max-w-[200px]" title="${item.proc}">${item.proc}</span>
+            <span class="text-[10px] text-slate-500 font-mono block truncate max-w-[200px]" title="${item.dotacao}">${item.dotacao}</span>
+          </td>
+
+          <!-- Exame / Procedimento -->
+          <td class="py-2.5 px-3">
+            <span class="font-bold text-slate-900 text-xs block leading-snug">${item.exame}</span>
+          </td>
+
+          <!-- Unitário -->
+          <td class="py-2.5 px-2 text-right font-mono text-xs text-slate-700">
+            ${formataMoeda(item.unitario)}
+          </td>
+
+          <!-- Qtd Empenhada -->
+          <td class="py-2.5 px-2 text-center font-mono font-bold text-blue-950 bg-blue-50/70 border-l border-blue-200">
+            ${formataQtd(item.qtdEmpenhada)}
+          </td>
+
+          <!-- Total Empenhado -->
+          <td class="py-2.5 px-2 text-right font-mono text-xs text-blue-950 bg-blue-50/70">
+            ${formataMoeda(valEmp)}
+          </td>
+
+          <!-- LINHA AMARELA FORTE E NÍTIDA (QUANTIDADE REALIZADA) -->
+          <td class="py-2 px-2 text-center bg-amber-100/90 border-l-2 border-r-2 border-amber-400">
+            <input 
+              type="text" 
+              value="${formataQtd(item.qtdRealizada)}" 
+              onchange="atualizarRealizado('${item.id}', this.value)"
+              class="w-20 text-center font-mono font-black text-amber-950 bg-amber-300 border-2 border-amber-600 rounded px-2 py-1 text-xs input-cell shadow-sm select-all focus:bg-yellow-200"
+              title="Clique para editar a quantidade realizada"
+            />
+          </td>
+
+          <!-- VALOR CONSUMIDO AMARELO NÍTIDO -->
+          <td class="py-2.5 px-2 text-right font-mono text-xs text-amber-950 bg-amber-100/70 font-black border-r border-amber-300">
+            ${formataMoeda(valReal)}
+          </td>
+
+          <!-- SALDO BETHA (QUANTIDADE) -->
+          <td class="py-2.5 px-2 text-center font-mono text-xs bg-emerald-50 border-l border-emerald-200 ${saldoQtdClass}">
+            ${formataQtd(saldoQtd)}
+          </td>
+
+          <!-- SALDO BETHA (VALOR R$) -->
+          <td class="py-2.5 px-2 text-right font-mono text-xs bg-emerald-50 border-r border-emerald-200 ${saldoValClass}">
+            ${formataMoeda(saldoVal)}
+          </td>
+
+          <!-- Situação -->
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            ${statusBadge}
+          </td>
         `;
+
         tbody.appendChild(tr);
       });
 
-      const sumVlSaldo = sumVlEmp - sumVlFat;
-      const percGeral = (sumVlFat / sumVlEmp) * 100;
+      // Atualização dos Totais do Rodapé
+      document.getElementById('foot-qtd-emp').textContent = formataQtd(totEmpQtd);
+      document.getElementById('foot-val-emp').textContent = formataMoeda(totEmpVal);
+      document.getElementById('foot-qtd-real').textContent = formataQtd(totRealQtd);
+      document.getElementById('foot-val-real').textContent = formataMoeda(totRealVal);
+      document.getElementById('foot-qtd-saldo').textContent = formataQtd(totSaldoQtd);
+      document.getElementById('foot-val-saldo').textContent = formataMoeda(totSaldoVal);
 
-      // Atualiza Rodapé com formatação brasileira
-      document.getElementById('totalQtdEmp').textContent = sumQtdEmp.toLocaleString('pt-BR');
-      document.getElementById('totalQtdExec').textContent = sumQtdExec.toLocaleString('pt-BR');
-      document.getElementById('totalQtdSaldo').textContent = sumQtdSaldo.toLocaleString('pt-BR');
-      document.getElementById('totalVlEmp').textContent = formatBRL(sumVlEmp);
-      document.getElementById('totalVlFat').textContent = formatBRL(sumVlFat);
-      document.getElementById('totalVlSaldo').textContent = formatBRL(sumVlSaldo);
-      document.getElementById('totalPercConsumo').textContent = percGeral.toFixed(1) + '%';
+      // Atualização dos Cards KPIs Superiores
+      document.getElementById('kpi-total-empenhado').textContent = formataMoeda(totEmpVal);
+      document.getElementById('kpi-qtd-empenhada').textContent = `${formataQtd(totEmpQtd)} exames`;
 
-      // Atualiza os Cards de KPIs no Topo
-      document.getElementById('kpiEmpenhado').textContent = formatBRL(sumVlEmp);
-      document.getElementById('kpiFaturado').textContent = formatBRL(sumVlFat);
-      document.getElementById('kpiPercFaturado').textContent = `${percGeral.toFixed(1)}% do empenho consumido`;
-      document.getElementById('kpiSaldoFin').textContent = formatBRL(sumVlSaldo);
-      document.getElementById('kpiPercSaldo').textContent = `${(100 - percGeral).toFixed(1)}% disponível`;
-      document.getElementById('kpiQtdExec').textContent = sumQtdExec.toLocaleString('pt-BR');
-      document.getElementById('kpiQtdRestante').textContent = `Saldo: ${sumQtdSaldo.toLocaleString('pt-BR')} exames`;
-      document.getElementById('kpiItensCriticos').textContent = countCriticos;
+      document.getElementById('kpi-total-realizado').textContent = formataMoeda(totRealVal);
+      document.getElementById('kpi-qtd-realizada').textContent = `${formataQtd(totRealQtd)} exames`;
 
-      aplicarFiltros();
+      document.getElementById('kpi-total-saldo').textContent = formataMoeda(totSaldoVal);
+      document.getElementById('kpi-qtd-saldo').textContent = `${formataQtd(totSaldoQtd)} vagas`;
+
+      const percConsumo = totEmpVal > 0 ? (totRealVal / totEmpVal) * 100 : 0;
+      document.getElementById('kpi-perc-consumo').textContent = `${percConsumo.toFixed(1)}%`;
+      document.getElementById('kpi-progresso').style.width = `${Math.min(percConsumo, 100)}%`;
+
+      document.getElementById('contador-linhas').textContent = `Exibindo ${linhasExibidas} de ${lista.length} procedimentos`;
+      document.getElementById('badge-count-imagem').textContent = `${bancoDados.IMAGEM.length} itens`;
+      document.getElementById('badge-count-labs').textContent = `${bancoDados.LABS.length} itens`;
     }
 
-    function atualizarExecucao(index, valor) {
-      if (!listaExames[index]) return;
-      listaExames[index].qtdExec = Math.max(0, parseInt(valor, 10) || 0);
-      renderizarTabela();
-    }
+    // Exportação em formato CSV/Excel
+    function exportToCSV() {
+      const lista = bancoDados[abaAtual];
+      const cabecalhos = [
+        "Aba",
+        "Numero Empenho",
+        "Data Empenho",
+        "Credor",
+        "Processo Contrato",
+        "Dotacao Recurso",
+        "Procedimento Exame",
+        "Valor Unitario R$",
+        "Qtd Empenhada",
+        "Total Empenhado R$",
+        "Qtd Realizada ate 01/10/2026",
+        "Total Realizado R$",
+        "Saldo Betha Qtd",
+        "Saldo Betha R$"
+      ];
 
-    function aplicarFiltros() {
-      const inputFiltro = document.getElementById('filtro');
-      const termo = inputFiltro ? inputFiltro.value.toLowerCase().trim() : '';
-      const checkOcultar = document.getElementById('checkOcultarSemFatura');
-      const ocultarSemFatura = checkOcultar ? checkOcultar.checked : false;
-      const linhas = document.querySelectorAll('#corpoTabela tr');
+      const linhasCSV = [cabecalhos.join(";")];
 
-      linhas.forEach(linha => {
-        const texto = linha.innerText.toLowerCase();
-        const eSemFatura = linha.getAttribute('data-sem-fatura') === 'true';
+      lista.forEach(item => {
+        const valEmp = (item.qtdEmpenhada * item.unitario).toFixed(2);
+        const valReal = (item.qtdRealizada * item.unitario).toFixed(2);
+        const saldoQtd = (item.qtdEmpenhada - item.qtdRealizada);
+        const saldoVal = (saldoQtd * item.unitario).toFixed(2);
 
-        const atendeTexto = termo === '' || texto.includes(termo);
-        const atendeFiltroFatura = !(ocultarSemFatura && eSemFatura);
-
-        if (atendeTexto && atendeFiltroFatura) {
-          linha.style.display = '';
-          linha.classList.remove('linha-oculta');
-        } else {
-          linha.style.display = 'none';
-          linha.classList.add('linha-oculta');
-        }
-      });
-    }
-
-    function mostrarToast(msg) {
-      const toast = document.getElementById('toastMessage');
-      if (toast) {
-        toast.textContent = msg;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-      }
-    }
-
-    function restaurarPadrao() {
-      try {
-        localStorage.removeItem(STORAGE_KEY_DATA);
-        localStorage.removeItem(STORAGE_KEY_META);
-      } catch (e) {}
-      listaExames = JSON.parse(JSON.stringify(dadosConsolidados));
-      metadados = { ...metaPadrao };
-      carregarMetadados();
-      renderizarTabela();
-      mostrarToast("Planilha restaurada com os valores oficiais das notas fiscais!");
-    }
-
-    function exportarCSV() {
-      const checkOcultar = document.getElementById('checkOcultarSemFatura');
-      const ocultarSemFatura = checkOcultar ? checkOcultar.checked : false;
-      let csv = `Empenho: ${metadados.empenho} - Prestador: ${metadados.laboratorio} - Periodo: ${metadados.periodo}\n`;
-      csv += "Item;Procedimento Empenho;Referencia Executada;Valor Unitario;Qtd Empenhada;Qtd Executada;Saldo Qtd;Valor Empenhado;Valor Faturado;Saldo Financeiro;Consumo (%);Situacao\n";
-
-      listaExames.forEach(ex => {
-        if (ocultarSemFatura && ex.qtdExec === 0) return;
-        const saldoQtd = ex.qtdEmp - ex.qtdExec;
-        const vlTotalEmp = (ex.qtdEmp * ex.vlUnit).toFixed(2);
-        const vlTotalFat = (ex.qtdExec * ex.vlUnit).toFixed(2);
-        const vlSaldo = (vlTotalEmp - vlTotalFat).toFixed(2);
-        const percConsumo = ex.qtdEmp > 0 ? ((ex.qtdExec / ex.qtdEmp) * 100).toFixed(1) : "0.0";
-        const situacao = ex.qtdExec === 0 ? "Sem Uso" : (percConsumo >= 100 ? "Esgotado" : (percConsumo >= 50 ? "Critico" : (percConsumo >= 30 ? "Alerta" : "Seguro")));
-
-        csv += `"${ex.item}";"${ex.empenho}";"${ex.execucao}";"${ex.vlUnit.toFixed(2)}";"${ex.qtdEmp}";"${ex.qtdExec}";"${saldoQtd}";"${vlTotalEmp}";"${vlTotalFat}";"${vlSaldo}";"${percConsumo}%";"${situacao}"\n`;
+        const linha = [
+          `"${abaAtual}"`,
+          `"${item.empenho}"`,
+          `"${item.dataEmp}"`,
+          `"${item.credor}"`,
+          `"${item.proc}"`,
+          `"${item.dotacao}"`,
+          `"${item.exame}"`,
+          item.unitario.toFixed(2).replace('.', ','),
+          formataQtd(item.qtdEmpenhada),
+          valEmp.replace('.', ','),
+          formataQtd(item.qtdRealizada),
+          valReal.replace('.', ','),
+          formataQtd(saldoQtd),
+          saldoVal.replace('.', ',')
+        ];
+        linhasCSV.push(linha.join(";"));
       });
 
-      const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(linhasCSV.join("\n"));
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `auditoria_empenho_${metadados.empenho.replace(/[^a-z0-9]/gi, '_')}.csv`);
+      link.setAttribute("href", csvContent);
+      link.setAttribute("download", `Confronto_Betha_${abaAtual}_01_10_2026.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // Inicialização segura no carregamento do DOM
+    // Inicialização ao Carregar
     window.addEventListener('DOMContentLoaded', () => {
-      carregarDadosComFallback();
-      carregarMetadados();
-      renderizarTabela();
+      alternarAba('IMAGEM');
     });
   </script>
 </body>
