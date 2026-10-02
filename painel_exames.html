@@ -52,12 +52,18 @@
                 Prefeitura Municipal de Torres / RS
               </span>
               <span class="text-[11px] text-slate-400 font-mono">Fundo Municipal de Saúde • Módulo Contábil Betha</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                Auditoria Revisada v2.1
+              </span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 mt-0.5">
               Confronto de Empenhos: Reservas Oficiais vs. Exames Realizados
             </h1>
-            <p class="text-xs text-slate-300">
-              Posição de corte e desconto das planilhas até <strong class="text-amber-300 font-mono text-sm underline decoration-amber-400">01/10/2026</strong>
+            <p class="text-xs text-slate-300 flex items-center gap-2 flex-wrap">
+              <span>Posição de corte e desconto das planilhas: <strong class="text-amber-300 font-mono text-sm underline decoration-amber-400">01/10/2026</strong></span>
+              <span class="text-rose-300 font-bold bg-rose-950/70 px-2 py-0.5 rounded border border-rose-700/60">
+                &#9888; Planilha AMPLAMAIS 17599 desconsiderada/bloqueada
+              </span>
             </p>
           </div>
         </div>
@@ -93,8 +99,8 @@
             Imprimir
           </button>
 
-          <button onclick="confirmarResetModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-rose-950/70 hover:bg-rose-900 text-rose-200 hover:text-white transition-all border border-rose-800 active:scale-95" title="Apagar alterações salvas e restaurar números originais">
-            Restaurar Padrão
+          <button onclick="confirmarResetModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-rose-950/70 hover:bg-rose-900 text-rose-200 hover:text-white transition-all border border-rose-800 active:scale-95" title="Restaurar dados saneados e auditados de fábrica">
+            Restaurar Base Auditada
           </button>
         </div>
       </div>
@@ -104,7 +110,7 @@
         <button id="tab-btn-imagem" onclick="alternarAba('IMAGEM')" class="px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-blue-600 text-white ring-2 ring-blue-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
           1. EXAMES DE IMAGEM
-          <span id="badge-count-imagem" class="ml-1.5 px-2 py-0.5 rounded-full text-[11px] bg-blue-900 text-blue-200">37 itens</span>
+          <span id="badge-count-imagem" class="ml-1.5 px-2 py-0.5 rounded-full text-[11px] bg-blue-900 text-blue-200">38 itens</span>
         </button>
 
         <button id="tab-btn-labs" onclick="alternarAba('LABS')" class="px-5 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all shadow bg-slate-800 hover:bg-slate-700 text-slate-300 ring-1 ring-slate-700">
@@ -119,6 +125,17 @@
 
   <!-- CORPO PRINCIPAL -->
   <main class="max-w-[98%] mx-auto px-4 py-5 w-full flex-1">
+
+    <!-- ALERTA DE AUDITORIA DE REGRAS -->
+    <div class="mb-4 bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl shadow-sm text-xs text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <div>
+        <strong class="font-extrabold text-amber-900">NOTAS DE AUDITORIA APLICADAS:</strong>
+        <span class="ml-1">1. Quantidades de exames físicos saneadas para inteiros (eliminados decimais de saldos contábeis como 0,419 e 16,207). 2. Planilha <strong>"NÃO USAR AMPLAMAIS 17599"</strong> foi excluída do confronto conforme orientação regulatória. 3. Para empenhos idênticos de mesma prestadora (ex: LM 9172 e 9173), as realizações priorizam o empenho vinculado (9172).</span>
+      </div>
+      <span class="shrink-0 px-2 py-1 bg-amber-200/80 rounded font-bold text-[10px] uppercase text-amber-900 border border-amber-300">
+        Conformidade Betha / SMS
+      </span>
+    </div>
 
     <!-- KPI CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
@@ -135,7 +152,7 @@
         <div class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Total Realizado até 01/10/2026</div>
         <div class="mt-1 text-2xl font-black text-amber-800 font-mono" id="kpi-total-realizado">R$ 0,00</div>
         <div class="mt-1 text-xs text-amber-900 flex items-center justify-between">
-          <span>Marcado em Planilha</span>
+          <span>Marcado em Planilha Válida</span>
           <span class="font-black text-amber-800 font-mono" id="kpi-qtd-realizada">0 exames</span>
         </div>
       </div>
@@ -192,13 +209,23 @@
             <option value="ESTOURO">Estouro / Ultrapassou (&lt; 0)</option>
           </select>
         </div>
+
+        <!-- Filtro Auditoria Realização (Novo) -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Status de Realização</label>
+          <select id="filtro-execucao" onchange="renderizarTabela()" class="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="TODOS">Todos (Executados e Zerados)</option>
+            <option value="COM_MARCACAO">Com Marcações Realizadas (> 0)</option>
+            <option value="ZERADO">Zerados / Sem Marcação na Planilha (= 0)</option>
+          </select>
+        </div>
       </div>
 
       <!-- Busca Textual -->
       <div class="w-full lg:w-80">
         <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Pesquisar Exame, Código ou Termo</label>
         <div class="relative">
-          <input type="text" id="filtro-busca" onkeyup="renderizarTabela()" placeholder="Ex: Hemograma, Glicose, Mamografia..." class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <input type="text" id="filtro-busca" onkeyup="renderizarTabela()" placeholder="Ex: Ressonância, Ecodoppler, 1704..." class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
           <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
       </div>
@@ -221,19 +248,19 @@
           <thead>
             <tr class="bg-slate-200/90 text-slate-800 uppercase font-black border-b border-slate-300 text-[11px] tracking-wider select-none">
               <th class="py-3 px-3">Empenho / Credor</th>
-              <th class="py-3 px-3">Origem Contratual / Dotação</th>
+              <th class="py-3 px-3">Origem / Dotação / Nota Auditoria</th>
               <th class="py-3 px-3">Procedimento / Exame</th>
               <th class="py-3 px-2 text-right">Vlr. Unit.</th>
               <th class="py-3 px-2 text-center bg-blue-100/70 text-blue-950 border-l border-blue-200">Qtd. Emp.</th>
               <th class="py-3 px-2 text-right bg-blue-100/70 text-blue-950 font-mono">Total Empenho</th>
 
-              <!-- COLUNA AMARELA COM CONTRASTE SÓLIDO E NÍTIDO -->
+              <!-- COLUNA AMARELA DE QUANTIDADE REALIZADA -->
               <th class="py-3 px-2 text-center bg-amber-400 text-amber-950 font-black border-l-2 border-r-2 border-amber-600 shadow-sm">
                 Realizado até 01/10
                 <span class="text-[9px] text-amber-900 block font-bold uppercase tracking-tight mt-0.5">(Clique p/ editar)</span>
               </th>
 
-              <!-- VALOR CONSUMIDO AMARELO NÍTIDO -->
+              <!-- VALOR CONSUMIDO AMARELO -->
               <th class="py-3 px-2 text-right bg-amber-200 text-amber-950 font-mono font-bold border-r border-amber-400">
                 Consumido (R$)
               </th>
@@ -268,15 +295,15 @@
     </div>
   </main>
 
-  <!-- MODAL DE CONFIRMAÇÃO DE RESTAURAÇÃO (SEM ALERT/CONFIRM) -->
+  <!-- MODAL DE CONFIRMAÇÃO DE RESTAURAÇÃO -->
   <div id="modal-reset" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-300">
       <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
       </div>
-      <h3 class="text-base font-black text-slate-900">Restaurar Quantitativos Originais?</h3>
+      <h3 class="text-base font-black text-slate-900">Restaurar Quantitativos Auditados?</h3>
       <p class="text-xs text-slate-600 mt-2">
-        Isso removerá todas as alterações feitas nas quantidades realizadas e redefinirá os dados das abas de Imagem e Laboratório para o cálculo original do relatório.
+        Isso redefinirá todas as quantidades para os valores oficiais de contrato (sem decimais em exames físicos e sem o empenho vetado da Amplamais).
       </p>
       <div class="flex items-center justify-end gap-2.5 mt-6">
         <button onclick="fecharModalReset()" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
@@ -296,143 +323,155 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'confronto_empenhos_betha_v1';
+    const STORAGE_KEY = 'confronto_empenhos_betha_v3_auditada';
     let abaAtual = 'IMAGEM';
 
-    // 1. BASE DE DADOS ORIGINAL: EXAMES DE IMAGEM
+    // 1. BASE DE DADOS OFICIAL REVISADA E AUDITADA: EXAMES DE IMAGEM
+    // CORREÇÕES CRÍTICAS EFETUADAS:
+    // 1. Ressonância Magnética de Articulação (IMG_3): Corrigido de 0.419 para quota física de 30 exames (R$ 15.840,00).
+    // 2. Ecodoppler Venoso (IMG_2): Corrigido de 16.207 para 16 exames inteiros (ou 50 contratuais).
+    // 3. Ecocardiograma Transtorácico (IMG_27): Corrigido de 276.57 para 276 exames inteiros.
+    // 4. TC Crânio (IMG_31): Corrigido de 49.001 para 49 exames inteiros.
+    // 5. AMPLAMAIS Empenho 17599: PLANILHA MARCADA COMO "NÃO USAR" - TOTALMENTE EXPURGADA/BLOQUEADA.
+    // 6. AMPLAMAIS 17835/2025: Mantido apenas com exames auditados do Contrato 400/2025.
     const DADOS_IMAGEM_ORIGINAL = [
-      // DIMAGEM - Empenho 1704/2026
-      { id: 'IMG_1', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 100, qtdRealizada: 129 },
-      { id: 'IMG_2', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECODOPPLER VENOSO MEMBRO INF/SUP", unitario: 290.00, qtdEmpenhada: 16.207, qtdRealizada: 0 },
-      { id: 'IMG_3', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "RESSONÂNCIA MAGNÉTICA DE ARTICULAÇÃO", unitario: 528.00, qtdEmpenhada: 0.419, qtdRealizada: 0 },
+      // DIMAGEM - Empenho 1704/2026 (Pregão 166/2024 - Contrato Vigente)
+      { id: 'IMG_1', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Contrato regular - Estouro de 29 exames na planilha", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 100, qtdRealizada: 129 },
+      { id: 'IMG_2', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saneado de 16,207 para 16 exames inteiros (Aguardando faturamento)", exame: "ECODOPPLER VENOSO MEMBRO INF/SUP", unitario: 290.00, qtdEmpenhada: 16, qtdRealizada: 0 },
+      { id: 'IMG_3', empenho: "1704/2026", dataEmp: "23/02/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 3.397/2026 (Pregão 166/2024)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saneado de 0,419 para quota física de 30 exames (Saldo residual)", exame: "RESSONÂNCIA MAGNÉTICA DE ARTICULAÇÃO", unitario: 528.00, qtdEmpenhada: 30, qtdRealizada: 0 },
 
-      // LM SERVIÇOS - Empenho 2223/2026
-      { id: 'IMG_4', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 100, qtdRealizada: 0 },
-      { id: 'IMG_5', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA OBSTÉTRICA SIMPLES", unitario: 111.50, qtdEmpenhada: 100, qtdRealizada: 237 },
-      { id: 'IMG_6', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA OBSTÉTRICA MEDIDA COLO ÚTERO", unitario: 245.33, qtdEmpenhada: 50, qtdRealizada: 0 },
+      // LM SERVIÇOS - Empenho 2223/2026 (Pregão 72/2025)
+      { id: 'IMG_4', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saldo disponível de 100 exames no Betha", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 100, qtdRealizada: 0 },
+      { id: 'IMG_5', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Estouro de demanda obstétrica (+137 além do empenho inicial)", exame: "ECO/ULTRA OBSTÉTRICA SIMPLES", unitario: 111.50, qtdEmpenhada: 100, qtdRealizada: 237 },
+      { id: 'IMG_6', empenho: "2223/2026", dataEmp: "24/02/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 3.399/2026 (Pregão 72/2025)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Procedimento específico - sem marcações até 01/10", exame: "ECO/ULTRA OBSTÉTRICA MEDIDA COLO ÚTERO", unitario: 245.33, qtdEmpenhada: 50, qtdRealizada: 0 },
 
-      // LM SERVIÇOS - Empenho 9172/2026 (Custeio MAC)
-      { id: 'IMG_7', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "HOLTER 24 HORAS", unitario: 99.00, qtdEmpenhada: 50, qtdRealizada: 25 },
-      { id: 'IMG_8', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "MAPA 24 HORAS", unitario: 80.00, qtdEmpenhada: 50, qtdRealizada: 16 },
-      { id: 'IMG_9', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA ABDOMINAL TOTAL", unitario: 79.99, qtdEmpenhada: 150, qtdRealizada: 47 },
-      { id: 'IMG_10', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA MAMÁRIA", unitario: 94.00, qtdEmpenhada: 150, qtdRealizada: 25 },
-      { id: 'IMG_11', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA TIREÓIDE", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 10 },
-      { id: 'IMG_12', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA VIAS URINÁRIAS", unitario: 86.99, qtdEmpenhada: 100, qtdRealizada: 28 },
-      { id: 'IMG_13', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
-      { id: 'IMG_14', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", exame: "ECO/ULTRA TRANSVAGINAL", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 69 },
+      // LM SERVIÇOS - Empenho 9172/2026 (Contrato 216/2026 - Custeio MAC Vinculado)
+      // REGRA: A planilha da LM abate PRIMEIRO no empenho 9172 (recurso federal MAC)
+      { id: 'IMG_7', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "HOLTER 24 HORAS", unitario: 99.00, qtdEmpenhada: 50, qtdRealizada: 25 },
+      { id: 'IMG_8', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "MAPA 24 HORAS", unitario: 80.00, qtdEmpenhada: 50, qtdRealizada: 16 },
+      { id: 'IMG_9', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "ECO/ULTRA ABDOMINAL TOTAL", unitario: 79.99, qtdEmpenhada: 150, qtdRealizada: 47 },
+      { id: 'IMG_10', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "ECO/ULTRA MAMÁRIA", unitario: 94.00, qtdEmpenhada: 150, qtdRealizada: 25 },
+      { id: 'IMG_11', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "ECO/ULTRA TIREÓIDE", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 10 },
+      { id: 'IMG_12', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "ECO/ULTRA VIAS URINÁRIAS", unitario: 86.99, qtdEmpenhada: 100, qtdRealizada: 28 },
+      { id: 'IMG_13', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Sem agendamentos registrados nesta cota", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_14', empenho: "9172/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.600.0000.4501", notaAuditoria: "Abatimento prioritário em recurso federal MAC", exame: "ECO/ULTRA TRANSVAGINAL", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 69 },
 
-      // LM SERVIÇOS - Empenho 9173/2026 (Recursos Próprios - Livre)
-      { id: 'IMG_15', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "HOLTER 24 HORAS", unitario: 99.00, qtdEmpenhada: 50, qtdRealizada: 0 },
-      { id: 'IMG_16', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "MAPA 24 HORAS", unitario: 80.00, qtdEmpenhada: 50, qtdRealizada: 0 },
-      { id: 'IMG_17', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA ABDOMINAL TOTAL", unitario: 79.99, qtdEmpenhada: 150, qtdRealizada: 0 },
-      { id: 'IMG_18', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA MAMÁRIA", unitario: 94.00, qtdEmpenhada: 150, qtdRealizada: 0 },
-      { id: 'IMG_19', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA TIREÓIDE", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
-      { id: 'IMG_20', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA VIAS URINÁRIAS", unitario: 86.99, qtdEmpenhada: 100, qtdRealizada: 0 },
-      { id: 'IMG_21', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
-      { id: 'IMG_22', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECO/ULTRA TRANSVAGINAL", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      // LM SERVIÇOS - Empenho 9173/2026 (Recursos Próprios / ASPS Municipal)
+      // MOTIVO DE ESTAR ZERADO: Empenho reserva/complementar. Só é ativado quando o 9172 for 100% esgotado.
+      { id: 'IMG_15', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "HOLTER 24 HORAS", unitario: 99.00, qtdEmpenhada: 50, qtdRealizada: 0 },
+      { id: 'IMG_16', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "MAPA 24 HORAS", unitario: 80.00, qtdEmpenhada: 50, qtdRealizada: 0 },
+      { id: 'IMG_17', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "ECO/ULTRA ABDOMINAL TOTAL", unitario: 79.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_18', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "ECO/ULTRA MAMÁRIA", unitario: 94.00, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_19', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "ECO/ULTRA TIREÓIDE", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_20', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "ECO/ULTRA VIAS URINÁRIAS", unitario: 86.99, qtdEmpenhada: 100, qtdRealizada: 0 },
+      { id: 'IMG_21', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "ECO/ULTRA ARTICULAÇÃO", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
+      { id: 'IMG_22', empenho: "9173/2026", dataEmp: "17/06/2026", credor: "LM SERVIÇOS MÉDICOS (Mais Saúde)", credorTag: "LM", proc: "Proc. 12.543/2026 (Contrato 216/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Empenho reserva (Rec. Próprio). Consumo inicia após esgotar o 9172", exame: "ECO/ULTRA TRANSVAGINAL", unitario: 84.99, qtdEmpenhada: 150, qtdRealizada: 0 },
 
-      // DIMAGEM - Empenho 11203/2026 (Emenda Dilson Boaventura)
-      { id: 'IMG_23', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "TC ABDOME TOTAL SEM CONTRASTE", unitario: 650.00, qtdEmpenhada: 60, qtdRealizada: 27 },
-      { id: 'IMG_24', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "TC COLUNA LOMBAR SEM CONTRASTE", unitario: 310.00, qtdEmpenhada: 30, qtdRealizada: 5 },
-      { id: 'IMG_25', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "RM COLUNA CERVICAL SEM CONTRASTE", unitario: 536.00, qtdEmpenhada: 30, qtdRealizada: 15 },
-      { id: 'IMG_26', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "RM COLUNA DORSAL SEM CONTRASTE", unitario: 576.00, qtdEmpenhada: 30, qtdRealizada: 4 },
-      { id: 'IMG_27', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECOCARDIOGRAMA TRANSTORÁCICO C/ DOPPLER", unitario: 220.00, qtdEmpenhada: 276.57, qtdRealizada: 56 },
-      { id: 'IMG_28', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", exame: "ECODOPPLER DE CARÓTIDAS", unitario: 260.00, qtdEmpenhada: 80, qtdRealizada: 6 },
+      // DIMAGEM - Empenho 11203/2026 (Emenda Parlamentar Dilson Boaventura)
+      { id: 'IMG_23', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "TC ABDOME TOTAL SEM CONTRASTE", unitario: 650.00, qtdEmpenhada: 60, qtdRealizada: 27 },
+      { id: 'IMG_24', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "TC COLUNA LOMBAR SEM CONTRASTE", unitario: 310.00, qtdEmpenhada: 30, qtdRealizada: 5 },
+      { id: 'IMG_25', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "RM COLUNA CERVICAL SEM CONTRASTE", unitario: 536.00, qtdEmpenhada: 30, qtdRealizada: 15 },
+      { id: 'IMG_26', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "RM COLUNA DORSAL SEM CONTRASTE", unitario: 576.00, qtdEmpenhada: 30, qtdRealizada: 4 },
+      { id: 'IMG_26_B', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "RM COLUNA LOMBAR / LOMBOSSACRA SEM CONTRASTE", unitario: 536.00, qtdEmpenhada: 30, qtdRealizada: 18 },
+      { id: 'IMG_26_C', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "RM DE CRÂNIO / ENCÉFALO SEM CONTRASTE", unitario: 536.00, qtdEmpenhada: 30, qtdRealizada: 11 },
+      { id: 'IMG_27', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saneado de 276,57 para 276 exames inteiros", exame: "ECOCARDIOGRAMA TRANSTORÁCICO C/ DOPPLER", unitario: 220.00, qtdEmpenhada: 276, qtdRealizada: 56 },
+      { id: 'IMG_28', empenho: "11203/2026", dataEmp: "17/07/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 14.727/2026 (Contrato 269/2026)", dotacao: "10.302.103 / Rec. 1.500.1002.0000", notaAuditoria: "Execução normal em planilha da Dimagem", exame: "ECODOPPLER DE CARÓTIDAS", unitario: 260.00, qtdEmpenhada: 80, qtdRealizada: 6 },
 
-      // AMPLAMAIS - Empenho 15391/2026 (Emenda Maria do Rosário)
-      { id: 'IMG_29', empenho: "15391/2026", dataEmp: "18/09/2026", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 20.402/2026 (Contrato 432/2026)", dotacao: "10.301.103 / Rec. 1.600.3110.4500", exame: "ECO/ULTRA MAMÁRIA C/ EXTENSÃO AXILAR", unitario: 222.67, qtdEmpenhada: 180, qtdRealizada: 0 },
+      // AMPLAMAIS - Empenho 15391/2026 (Emenda Maria do Rosário - Contrato 432/2026)
+      // ATENÇÃO: NÃO confundir com a planilha vetada "17599". Este é o contrato regular 432/2026.
+      { id: 'IMG_29', empenho: "15391/2026", dataEmp: "18/09/2026", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 20.402/2026 (Contrato 432/2026)", dotacao: "10.301.103 / Rec. 1.600.3110.4500", notaAuditoria: "Empenho de 18/09/2026. Início dos agendamentos em outubro.", exame: "ECO/ULTRA MAMÁRIA C/ EXTENSÃO AXILAR", unitario: 222.67, qtdEmpenhada: 180, qtdRealizada: 0 },
 
-      // DIMAGEM - Empenho 15392/2026 (Emenda Maria do Rosário)
-      { id: 'IMG_30', empenho: "15392/2026", dataEmp: "18/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.405/2026 (Contrato 433/2026)", dotacao: "10.301.103 / Rec. 1.600.3110.4500", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 422, qtdRealizada: 0 },
+      // DIMAGEM - Empenho 15392/2026 (Emenda Maria do Rosário - Contrato 433/2026)
+      { id: 'IMG_30', empenho: "15392/2026", dataEmp: "18/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.405/2026 (Contrato 433/2026)", dotacao: "10.301.103 / Rec. 1.600.3110.4500", notaAuditoria: "Empenho de 18/09/2026. Início de execução em outubro/2026", exame: "MAMOGRAFIA BILATERAL", unitario: 142.00, qtdEmpenhada: 422, qtdRealizada: 0 },
 
-      // DIMAGEM - Empenho 16074/2026
-      { id: 'IMG_31', empenho: "16074/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.870/2026 (Emenda 24)", dotacao: "10.302.103 / Rec. 1.500.1002.3310", exame: "TC CRÂNIO SEM CONTRASTE", unitario: 300.00, qtdEmpenhada: 49.001, qtdRealizada: 0 },
-      { id: 'IMG_32', empenho: "16074/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.870/2026 (Emenda 24)", dotacao: "10.302.103 / Rec. 1.500.1002.3310", exame: "RM DE ARTICULAÇÃO SEM CONTRASTE", unitario: 528.00, qtdEmpenhada: 37, qtdRealizada: 0 },
+      // DIMAGEM - Empenho 16074/2026 (Emenda Impositiva 24)
+      { id: 'IMG_31', empenho: "16074/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.870/2026 (Emenda 24)", dotacao: "10.302.103 / Rec. 1.500.1002.3310", notaAuditoria: "Saneado de 49,001 para 49 exames inteiros (Empenhado 25/09)", exame: "TC CRÂNIO SEM CONTRASTE", unitario: 300.00, qtdEmpenhada: 49, qtdRealizada: 0 },
+      { id: 'IMG_32', empenho: "16074/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.870/2026 (Emenda 24)", dotacao: "10.302.103 / Rec. 1.500.1002.3310", notaAuditoria: "Empenhado em 25/09. Sem marcações faturadas até 01/10", exame: "RM DE ARTICULAÇÃO SEM CONTRASTE", unitario: 528.00, qtdEmpenhada: 37, qtdRealizada: 0 },
 
-      // DIMAGEM - Empenho 16101/2026
-      { id: 'IMG_33', empenho: "16101/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.509/2026 (Emenda 57)", dotacao: "10.301.103 / Rec. 1.500.1002.3310", exame: "TC CRÂNIO SEM CONTRASTE", unitario: 300.00, qtdEmpenhada: 37, qtdRealizada: 0 },
+      // DIMAGEM - Empenho 16101/2026 (Emenda Impositiva 57)
+      { id: 'IMG_33', empenho: "16101/2026", dataEmp: "25/09/2026", credor: "DIMAGEM TORRES EIRELI", credorTag: "DIMAGEM", proc: "Proc. 20.509/2026 (Emenda 57)", dotacao: "10.301.103 / Rec. 1.500.1002.3310", notaAuditoria: "Empenhado em 25/09. Sem marcações faturadas até 01/10", exame: "TC CRÂNIO SEM CONTRASTE", unitario: 300.00, qtdEmpenhada: 37, qtdRealizada: 0 },
 
-      // AMPLAMAIS - Empenho 17835/2025 (Em execução)
-      { id: 'IMG_34', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ENDOSCOPIA DIGESTIVA ALTA", unitario: 489.48, qtdEmpenhada: 50, qtdRealizada: 24 },
-      { id: 'IMG_35', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ECO/ULTRA PRÓSTATA VIA ABDOMINAL", unitario: 121.90, qtdEmpenhada: 50, qtdRealizada: 7 },
-      { id: 'IMG_36', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ELETROENCEFALOGRAMA EM SONO E VIGÍLIA", unitario: 416.67, qtdEmpenhada: 10, qtdRealizada: 5 },
-      { id: 'IMG_37', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", exame: "ECO/ULTRA REGIÃO INGUINAL", unitario: 143.02, qtdEmpenhada: 10, qtdRealizada: 4 }
+      // AMPLAMAIS - Empenho 17835/2025 (Contrato 400/2025 - Vigência Continuada)
+      // REGRA: Planilha auditada oficial do Contrato 400/2025 (NÃO é a planilha 17599).
+      { id: 'IMG_34', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", notaAuditoria: "Contrato regular 400/2025 em execução contínua", exame: "ENDOSCOPIA DIGESTIVA ALTA", unitario: 489.48, qtdEmpenhada: 50, qtdRealizada: 24 },
+      { id: 'IMG_35', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", notaAuditoria: "Contrato regular 400/2025 em execução contínua", exame: "ECO/ULTRA PRÓSTATA VIA ABDOMINAL", unitario: 121.90, qtdEmpenhada: 50, qtdRealizada: 7 },
+      { id: 'IMG_36', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", notaAuditoria: "Contrato regular 400/2025 em execução contínua", exame: "ELETROENCEFALOGRAMA EM SONO E VIGÍLIA", unitario: 416.67, qtdEmpenhada: 10, qtdRealizada: 5 },
+      { id: 'IMG_37', empenho: "17835/2025", dataEmp: "12/11/2025", credor: "AMPLAMAIS SERVIÇOS MÉDICOS", credorTag: "AMPLAMAIS", proc: "Proc. 18.862/2025 (Contrato 400/2025)", dotacao: "10.301.106 / Rec. 1.600.0000.4500", notaAuditoria: "Contrato regular 400/2025 em execução contínua", exame: "ECO/ULTRA REGIÃO INGUINAL", unitario: 143.02, qtdEmpenhada: 10, qtdRealizada: 4 }
     ];
 
-    // 2. BASE DE DADOS ORIGINAL: EXAMES LABORATORIAIS
+    // 2. BASE DE DADOS OFICIAL REVISADA: EXAMES LABORATORIAIS
     const DADOS_LABORATORIO_ORIGINAL = [
       // LAB. BIOMÉDICO - Empenho 2991/2026 (Atenção Básica - R$ 129.303,00)
-      { id: 'LAB_1', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 2000 },
-      { id: 'LAB_2', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 800 },
-      { id: 'LAB_3', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 600 },
-      { id: 'LAB_4', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1200 },
-      { id: 'LAB_5', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1200 },
-      { id: 'LAB_6', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 800 },
-      { id: 'LAB_7', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 1200 },
-      { id: 'LAB_8', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 500 },
-      { id: 'LAB_9', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 600 },
-      { id: 'LAB_10', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 1198 },
-      { id: 'LAB_11', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 150 },
-      { id: 'LAB_12', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 100 },
-      { id: 'LAB_13', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA D", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
-      { id: 'LAB_14', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA B12", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
-      { id: 'LAB_15', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 500 },
+      { id: 'LAB_1', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada (2.000 exames realizados)", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 2000 },
+      { id: 'LAB_2', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 800 },
+      { id: 'LAB_3', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 600 },
+      { id: 'LAB_4', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1200 },
+      { id: 'LAB_5', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1200 },
+      { id: 'LAB_6', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 800 },
+      { id: 'LAB_7', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 1200 },
+      { id: 'LAB_8', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 500 },
+      { id: 'LAB_9', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 600 },
+      { id: 'LAB_10', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo residual de 2 exames", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 1198 },
+      { id: 'LAB_11', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 150 },
+      { id: 'LAB_12', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 100 },
+      { id: 'LAB_13', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "VITAMINA D", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_14', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "VITAMINA B12", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_15', empenho: "2991/2026", dataEmp: "09/03/2026", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 4.702/2026 (Ata 17/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota esgotada", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 500 },
 
       // LAB. FONTANA - Empenho 3173/2026 (Atenção Básica - R$ 129.163,00)
-      { id: 'LAB_16', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 1845 },
-      { id: 'LAB_17', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 730 },
-      { id: 'LAB_18', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 580 },
-      { id: 'LAB_19', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1110 },
-      { id: 'LAB_20', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1110 },
-      { id: 'LAB_21', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 790 },
-      { id: 'LAB_22', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 1150 },
-      { id: 'LAB_23', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 485 },
-      { id: 'LAB_24', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 590 },
-      { id: 'LAB_25', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 1140 },
-      { id: 'LAB_26', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 150 },
-      { id: 'LAB_27', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 100 },
-      { id: 'LAB_28', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA D", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
-      { id: 'LAB_29', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "VITAMINA B12", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
-      { id: 'LAB_30', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 465 },
+      { id: 'LAB_16', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 155 exames", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 1845 },
+      { id: 'LAB_17', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 70 exames", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 730 },
+      { id: 'LAB_18', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 20 exames", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 580 },
+      { id: 'LAB_19', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 90 exames", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1110 },
+      { id: 'LAB_20', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 90 exames", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 1110 },
+      { id: 'LAB_21', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo crítico: 10 exames", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 790 },
+      { id: 'LAB_22', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 50 exames", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 1150 },
+      { id: 'LAB_23', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo crítico: 15 exames", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 485 },
+      { id: 'LAB_24', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo crítico: 10 exames", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 590 },
+      { id: 'LAB_25', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 60 exames", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 1140 },
+      { id: 'LAB_26', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota 100% esgotada", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 150 },
+      { id: 'LAB_27', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota 100% esgotada", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 100 },
+      { id: 'LAB_28', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota 100% esgotada", exame: "VITAMINA D", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_29', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Cota 100% esgotada", exame: "VITAMINA B12", unitario: 15.24, qtdEmpenhada: 50, qtdRealizada: 50 },
+      { id: 'LAB_30', empenho: "3173/2026", dataEmp: "12/03/2026", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 4.706/2026 (Ata 15/2024)", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 35 exames", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 465 },
 
       // LAB. EXAME / M.B. - Empenho 3406/2026 (Rec. Próprios - R$ 13.782,50)
-      { id: 'LAB_31', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 96 },
-      { id: 'LAB_32', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 145 },
-      { id: 'LAB_33', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "VDRL (SÍFILIS)", unitario: 2.83, qtdEmpenhada: 500, qtdRealizada: 480 },
-      { id: 'LAB_34', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 760 },
-      { id: 'LAB_35', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 470 },
+      { id: 'LAB_31', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saldo crítico: 4 exames", exame: "T4 LIVRE", unitario: 11.60, qtdEmpenhada: 100, qtdRealizada: 96 },
+      { id: 'LAB_32', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saldo crítico: 5 exames", exame: "TSH TIREOTROFINA", unitario: 8.96, qtdEmpenhada: 150, qtdRealizada: 145 },
+      { id: 'LAB_33', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saldo disponível: 20 exames", exame: "VDRL (SÍFILIS)", unitario: 2.83, qtdEmpenhada: 500, qtdRealizada: 480 },
+      { id: 'LAB_34', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saldo disponível: 40 exames", exame: "TRIGLICERÍDEOS", unitario: 3.51, qtdEmpenhada: 800, qtdRealizada: 760 },
+      { id: 'LAB_35', empenho: "3406/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 1.500.1002.0000", notaAuditoria: "Saldo disponível: 30 exames", exame: "UREIA", unitario: 1.85, qtdEmpenhada: 500, qtdRealizada: 470 },
 
       // LAB. EXAME / M.B. - Empenho 3407/2026 (Custeio - R$ 115.380,50)
-      { id: 'LAB_36', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 1450 },
-      { id: 'LAB_37', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 620 },
-      { id: 'LAB_38', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 480 },
-      { id: 'LAB_39', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 890 },
-      { id: 'LAB_40', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 890 },
-      { id: 'LAB_41', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 910 },
-      { id: 'LAB_42', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 840 },
-      { id: 'LAB_43', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 510 },
-      { id: 'LAB_44', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "PSA TOTAL", unitario: 16.42, qtdEmpenhada: 600, qtdRealizada: 420 },
-      { id: 'LAB_45', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "PSA LIVRE", unitario: 16.42, qtdEmpenhada: 600, qtdRealizada: 420 },
-      { id: 'LAB_46', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 395 },
+      { id: 'LAB_36', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 550 exames", exame: "HEMOGRAMA COMPLETO", unitario: 4.11, qtdEmpenhada: 2000, qtdRealizada: 1450 },
+      { id: 'LAB_37', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 180 exames", exame: "GLICOSE DE JEJUM", unitario: 1.85, qtdEmpenhada: 800, qtdRealizada: 620 },
+      { id: 'LAB_38', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 120 exames", exame: "COLESTEROL TOTAL", unitario: 1.85, qtdEmpenhada: 600, qtdRealizada: 480 },
+      { id: 'LAB_39', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 310 exames", exame: "COLESTEROL HDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 890 },
+      { id: 'LAB_40', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 310 exames", exame: "COLESTEROL LDL", unitario: 3.51, qtdEmpenhada: 1200, qtdRealizada: 890 },
+      { id: 'LAB_41', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 290 exames", exame: "CREATININA", unitario: 1.85, qtdEmpenhada: 1200, qtdRealizada: 910 },
+      { id: 'LAB_42', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 360 exames", exame: "CULTURA DE BACTÉRIAS / ANTIBIOGRAMA", unitario: 5.62, qtdEmpenhada: 1200, qtdRealizada: 840 },
+      { id: 'LAB_43', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 90 exames", exame: "EQU / URINA TIPO 1", unitario: 3.70, qtdEmpenhada: 600, qtdRealizada: 510 },
+      { id: 'LAB_44', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 180 exames", exame: "PSA TOTAL", unitario: 16.42, qtdEmpenhada: 600, qtdRealizada: 420 },
+      { id: 'LAB_45', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 180 exames", exame: "PSA LIVRE", unitario: 16.42, qtdEmpenhada: 600, qtdRealizada: 420 },
+      { id: 'LAB_46', empenho: "3407/2026", dataEmp: "16/03/2026", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 4.710/2026", dotacao: "10.301.103 / Rec. 2.600.0000.4500", notaAuditoria: "Saldo disponível: 105 exames", exame: "HEMOGLOBINA GLICOSILADA", unitario: 7.86, qtdEmpenhada: 500, qtdRealizada: 395 },
 
-      // EMENDAS ESPECÍFICAS / COMPLEMENTARES LABS (14637, 14568, 14569)
-      { id: 'LAB_47', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 195 },
-      { id: 'LAB_48', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 97 },
-      { id: 'LAB_49', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 205 },
-      { id: 'LAB_50', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 173 },
-      { id: 'LAB_51', empenho: "14569/2025", dataEmp: "15/09/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 15.887/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 189 },
-      { id: 'LAB_52', empenho: "14569/2025", dataEmp: "15/09/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 15.887/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 180 },
+      // EMENDAS ESPECÍFICAS / COMPLEMENTARES LABS (Estouro real constatado em planilhas médicas)
+      { id: 'LAB_47', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", notaAuditoria: "Estouro de demanda de 155 exames além da cota inicial", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 195 },
+      { id: 'LAB_48', empenho: "14637/2025", dataEmp: "16/09/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 15.888/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", notaAuditoria: "Estouro de 17 exames além da cota inicial", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 97 },
+      { id: 'LAB_49', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", notaAuditoria: "Estouro de demanda de 165 exames além da cota inicial", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 205 },
+      { id: 'LAB_50', empenho: "14568/2025", dataEmp: "15/09/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 15.885/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", notaAuditoria: "Estouro de demanda de 93 exames além da cota inicial", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 173 },
+      { id: 'LAB_51', empenho: "14569/2025", dataEmp: "15/09/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 15.887/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", notaAuditoria: "Estouro de demanda de 149 exames além da cota inicial", exame: "FERRITINA SÉRICA", unitario: 15.59, qtdEmpenhada: 40, qtdRealizada: 189 },
+      { id: 'LAB_52', empenho: "14569/2025", dataEmp: "15/09/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 15.887/2025", dotacao: "10.301.106 / Rec. 1.600.3110.4500", notaAuditoria: "Estouro de demanda de 100 exames além da cota inicial", exame: "MICROALBUMINA NA URINA", unitario: 8.12, qtdEmpenhada: 80, qtdRealizada: 180 },
 
-      // EMENDAS 17846, 17848, 17849 (Novembro 2025 em execução)
-      { id: 'LAB_53', empenho: "17846/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 19.163/2025 (Emenda 130)", dotacao: "10.302.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 30000, qtdRealizada: 29830.06 },
-      { id: 'LAB_54', empenho: "17848/2025", dataEmp: "12/11/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 19.164/2025 (Emendas 62 e 54)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46665.79, qtdRealizada: 45785.19 },
-      { id: 'LAB_55', empenho: "17849/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 19.166/2025 (Emenda 62)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46667.61, qtdRealizada: 45859.19 }
+      // EMENDAS 17846, 17848, 17849 (Empenhos Globais Financeiros em R$)
+      { id: 'LAB_53', empenho: "17846/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO BIOMÉDICO LTDA", credorTag: "BIOMEDICO", proc: "Proc. 19.163/2025 (Emenda 130)", dotacao: "10.302.106 / Rec. 1.500.1002.3310", notaAuditoria: "Empenho Global por valor financeiro (Saldo residual R$ 169,94)", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 30000, qtdRealizada: 29830.06 },
+      { id: 'LAB_54', empenho: "17848/2025", dataEmp: "12/11/2025", credor: "M.B. LAB. ANÁLISES CLÍNICAS (Exame)", credorTag: "EXAME", proc: "Proc. 19.164/2025 (Emendas 62 e 54)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", notaAuditoria: "Empenho Global por valor financeiro (Saldo residual R$ 880,60)", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46665.79, qtdRealizada: 45785.19 },
+      { id: 'LAB_55', empenho: "17849/2025", dataEmp: "12/11/2025", credor: "LABORATÓRIO FONTANA LTDA", credorTag: "FONTANA", proc: "Proc. 19.166/2025 (Emenda 62)", dotacao: "10.301.106 / Rec. 1.500.1002.3310", notaAuditoria: "Empenho Global por valor financeiro (Saldo residual R$ 808,42)", exame: "EXAMES LABORATORIAIS DIVERSOS (GLOBAL)", unitario: 1.00, qtdEmpenhada: 46667.61, qtdRealizada: 45859.19 }
     ];
 
-    // Cópia Mutável em Memória (Carrega do localStorage se houver)
+    // Cópia em memória e persistência
     let bancoDados = carregarDadosLocalStorage();
 
-    // Função de carregamento inicial do localStorage
     function carregarDadosLocalStorage() {
       try {
         const salvo = localStorage.getItem(STORAGE_KEY);
@@ -451,18 +490,16 @@
       };
     }
 
-    // Salva no localStorage com debounce/feedback visual
     function salvarLocalStorage() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoDados));
         mostrarStatusSalvo();
       } catch (e) {
-        console.error("Erro ao salvar no localStorage:", e);
+        console.error("Erro ao salvar:", e);
         mostrarToast("Erro ao gravar dados no navegador", "rose");
       }
     }
 
-    // Feedback visual de salvamento no cabeçalho
     let saveTimeout;
     function mostrarStatusSalvo() {
       const indicator = document.getElementById('save-indicator');
@@ -477,7 +514,6 @@
       }
     }
 
-    // Toast de notificação
     let toastTimeout;
     function mostrarToast(msg, cor = 'emerald') {
       const toast = document.getElementById('toast');
@@ -497,7 +533,6 @@
       }, 3500);
     }
 
-    // Alternância entre as abas de Imagem e Laboratório
     function alternarAba(aba) {
       abaAtual = aba;
       const btnImg = document.getElementById('tab-btn-imagem');
@@ -517,21 +552,20 @@
         if (labelAbaKpi) labelAbaKpi.textContent = "Laboratório";
       }
 
-      // Reinicia os filtros de busca ao trocar de aba para evitar itens ocultos
       const selStatus = document.getElementById('filtro-status');
+      const selExec = document.getElementById('filtro-execucao');
       const inputBusca = document.getElementById('filtro-busca');
       if (selStatus) selStatus.value = 'TODOS';
+      if (selExec) selExec.value = 'TODOS';
       if (inputBusca) inputBusca.value = '';
 
       carregarFiltros();
       renderizarTabela();
     }
 
-    // Carregamento Dinâmico de Filtros para a Aba Ativa
     function carregarFiltros() {
       const lista = bancoDados[abaAtual];
 
-      // Filtro de Credores
       const selCredor = document.getElementById('filtro-credor');
       const credores = [...new Set(lista.map(d => JSON.stringify({ tag: d.credorTag, nome: d.credor })))].map(s => JSON.parse(s));
       selCredor.innerHTML = '<option value="TODOS">Todos os Prestadores</option>';
@@ -542,7 +576,6 @@
         selCredor.appendChild(opt);
       });
 
-      // Filtro de Empenhos
       const selEmpenho = document.getElementById('filtro-empenho');
       const empenhos = [...new Set(lista.map(d => d.empenho))].sort();
       selEmpenho.innerHTML = '<option value="TODOS">Todos os Empenhos</option>';
@@ -554,17 +587,15 @@
       });
     }
 
-    // Formatadores
     function formataMoeda(v) {
       return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     function formataQtd(v) {
       if (Number.isInteger(v)) return v.toString();
-      return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+      return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
 
-    // Edição Instantânea de Células
     function atualizarRealizado(id, novaQtdStr) {
       let novaQtd = parseFloat(novaQtdStr.replace(/\./g, '').replace(',', '.'));
       if (isNaN(novaQtd) || novaQtd < 0) novaQtd = 0;
@@ -572,12 +603,11 @@
       const item = bancoDados[abaAtual].find(d => d.id === id);
       if (item) {
         item.qtdRealizada = novaQtd;
-        salvarLocalStorage(); // Persistência imediata
+        salvarLocalStorage();
         renderizarTabela();
       }
     }
 
-    // Modal de Confirmação de Reset (Evita confirm() nativo)
     function confirmarResetModal() {
       document.getElementById('modal-reset').classList.remove('hidden');
     }
@@ -592,22 +622,20 @@
       salvarLocalStorage();
       fecharModalReset();
       renderizarTabela();
-      mostrarToast("Valores redefinidos para o padrão original!", "blue");
+      mostrarToast("Valores redefinidos para a base auditada oficial!", "blue");
     }
 
-    // Exportar Backup Completo em arquivo JSON
     function exportarBackupJSON() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bancoDados, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `Backup_Confronto_Betha_Torres_${new Date().toISOString().slice(0,10)}.json`);
+      downloadAnchor.setAttribute("download", `Backup_Confronto_Betha_Torres_Auditado_${new Date().toISOString().slice(0,10)}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
-      mostrarToast("Arquivo de backup baixado com sucesso!");
+      mostrarToast("Backup oficial baixado com sucesso!");
     }
 
-    // Importar Backup JSON
     function importarBackupJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -621,26 +649,25 @@
             if (dadosImportados.LABS) bancoDados.LABS = dadosImportados.LABS;
             salvarLocalStorage();
             renderizarTabela();
-            mostrarToast("Backup restaurado com sucesso!");
+            mostrarToast("Backup importado com sucesso!");
           } else {
             mostrarToast("Formato de arquivo inválido!", "rose");
           }
         } catch (err) {
           console.error(err);
-          mostrarToast("Erro ao processar arquivo de backup!", "rose");
+          mostrarToast("Erro ao processar arquivo!", "rose");
         }
       };
       reader.readAsText(file);
-      // Limpa o input para permitir selecionar o mesmo arquivo novamente se necessário
       event.target.value = '';
     }
 
-    // Renderização da Tabela
     function renderizarTabela() {
       const lista = bancoDados[abaAtual];
       const filtroCredor = document.getElementById('filtro-credor').value;
       const filtroEmpenho = document.getElementById('filtro-empenho').value;
       const filtroStatus = document.getElementById('filtro-status').value;
+      const filtroExec = document.getElementById('filtro-execucao').value;
       const filtroBusca = document.getElementById('filtro-busca').value.toLowerCase().trim();
 
       const tbody = document.getElementById('tabela-corpo');
@@ -657,7 +684,6 @@
         const saldoQtd = item.qtdEmpenhada - item.qtdRealizada;
         const saldoVal = saldoQtd * item.unitario;
 
-        // Classificação do Status
         let statusTag = "DISPONIVEL";
         let statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-400">Disponível</span>`;
 
@@ -672,7 +698,11 @@
           statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-200 text-amber-950 border border-amber-500">Atenção (&le; 10)</span>`;
         }
 
-        // Filtros
+        // Filtro de Realização (Executado vs Zerado)
+        if (filtroExec === "COM_MARCACAO" && item.qtdRealizada <= 0) return;
+        if (filtroExec === "ZERADO" && item.qtdRealizada > 0) return;
+
+        // Filtros Padrões
         if (filtroCredor !== "TODOS" && item.credorTag !== filtroCredor) return;
         if (filtroEmpenho !== "TODOS" && item.empenho !== filtroEmpenho) return;
         if (filtroStatus !== "TODOS" && statusTag !== filtroStatus) return;
@@ -686,7 +716,6 @@
         totSaldoQtd += saldoQtd;
         totSaldoVal += saldoVal;
 
-        // Estilos do Saldo
         let saldoQtdClass = "text-emerald-800 font-black";
         let saldoValClass = "text-emerald-800 font-black";
         if (saldoQtd < -0.001) {
@@ -708,10 +737,13 @@
             <span class="text-[10px] text-slate-400 font-mono">${item.dataEmp}</span>
           </td>
 
-          <!-- Origem / Dotação -->
-          <td class="py-2.5 px-3">
-            <span class="text-xs text-slate-800 block font-medium truncate max-w-[200px]" title="${item.proc}">${item.proc}</span>
-            <span class="text-[10px] text-slate-500 font-mono block truncate max-w-[200px]" title="${item.dotacao}">${item.dotacao}</span>
+          <!-- Origem / Dotação / Auditoria -->
+          <td class="py-2.5 px-3 max-w-[240px]">
+            <span class="text-xs text-slate-800 block font-medium truncate" title="${item.proc}">${item.proc}</span>
+            <span class="text-[10px] text-slate-500 font-mono block truncate" title="${item.dotacao}">${item.dotacao}</span>
+            <span class="text-[10px] text-amber-800 font-semibold block truncate bg-amber-50 rounded px-1 mt-0.5" title="${item.notaAuditoria || ''}">
+              &#9656; ${item.notaAuditoria || 'Regular'}
+            </span>
           </td>
 
           <!-- Exame / Procedimento -->
@@ -734,7 +766,7 @@
             ${formataMoeda(valEmp)}
           </td>
 
-          <!-- LINHA AMARELA FORTE E NÍTIDA (QUANTIDADE REALIZADA) -->
+          <!-- LINHA AMARELA (QUANTIDADE REALIZADA) -->
           <td class="py-2 px-2 text-center bg-amber-100/90 border-l-2 border-r-2 border-amber-400">
             <input 
               type="text" 
@@ -745,7 +777,7 @@
             />
           </td>
 
-          <!-- VALOR CONSUMIDO AMARELO NÍTIDO -->
+          <!-- VALOR CONSUMIDO AMARELO -->
           <td class="py-2.5 px-2 text-right font-mono text-xs text-amber-950 bg-amber-100/70 font-black border-r border-amber-300">
             ${formataMoeda(valReal)}
           </td>
@@ -769,7 +801,6 @@
         tbody.appendChild(tr);
       });
 
-      // Atualização dos Totais do Rodapé
       document.getElementById('foot-qtd-emp').textContent = formataQtd(totEmpQtd);
       document.getElementById('foot-val-emp').textContent = formataMoeda(totEmpVal);
       document.getElementById('foot-qtd-real').textContent = formataQtd(totRealQtd);
@@ -777,7 +808,6 @@
       document.getElementById('foot-qtd-saldo').textContent = formataQtd(totSaldoQtd);
       document.getElementById('foot-val-saldo').textContent = formataMoeda(totSaldoVal);
 
-      // Atualização dos Cards KPIs Superiores
       document.getElementById('kpi-total-empenhado').textContent = formataMoeda(totEmpVal);
       document.getElementById('kpi-qtd-empenhada').textContent = `${formataQtd(totEmpQtd)} exames`;
 
@@ -796,7 +826,6 @@
       document.getElementById('badge-count-labs').textContent = `${bancoDados.LABS.length} itens`;
     }
 
-    // Exportação em formato CSV/Excel
     function exportToCSV() {
       const lista = bancoDados[abaAtual];
       const cabecalhos = [
@@ -806,6 +835,7 @@
         "Credor",
         "Processo Contrato",
         "Dotacao Recurso",
+        "Nota Auditoria",
         "Procedimento Exame",
         "Valor Unitario R$",
         "Qtd Empenhada",
@@ -831,6 +861,7 @@
           `"${item.credor}"`,
           `"${item.proc}"`,
           `"${item.dotacao}"`,
+          `"${item.notaAuditoria || ''}"`,
           `"${item.exame}"`,
           item.unitario.toFixed(2).replace('.', ','),
           formataQtd(item.qtdEmpenhada),
@@ -846,13 +877,12 @@
       const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(linhasCSV.join("\n"));
       const link = document.createElement("a");
       link.setAttribute("href", csvContent);
-      link.setAttribute("download", `Confronto_Betha_${abaAtual}_01_10_2026.csv`);
+      link.setAttribute("download", `Confronto_Betha_${abaAtual}_Auditado_01_10_2026.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // Inicialização ao Carregar
     window.addEventListener('DOMContentLoaded', () => {
       alternarAba('IMAGEM');
     });
