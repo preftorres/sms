@@ -4,7 +4,7 @@
    ========================================================================== */
 
 @page {
-  size: A4 landscape;
+  size: auto;
   margin: 6mm 6mm 6mm 6mm;
 }
 
@@ -26,7 +26,7 @@ select {
 body {
   background-color: #ffffff !important;
   color: #000000 !important;
-  font-size: 8pt !important;
+  font-size: 7.5pt !important;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
   margin: 0 !important;
@@ -51,34 +51,41 @@ body {
 /* Cabeçalho Oficial de Impressão */
 .print-header {
   display: block !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 6px !important;
   border-bottom: 2px solid #0f172a !important;
   padding-bottom: 4px !important;
 }
 
-/* Grade de KPIs / Totais Oficiais na Folha */
+/* Grade de KPIs / Totais Oficiais na Folha (Adaptável a Retrato e Paisagem) */
 .kpi-print-grid {
   display: flex !important;
-  gap: 8px !important;
-  margin-bottom: 8px !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+  margin-bottom: 6px !important;
 }
 
 .kpi-card {
   border: 1px solid #1e293b !important;
   box-shadow: none !important;
-  padding: 4px 8px !important;
-  flex: 1 !important;
+  padding: 3px 6px !important;
+  flex: 1 1 14% !important;
+  min-width: 95px !important;
   background-color: #ffffff !important;
   border-radius: 4px !important;
 }
 
 .kpi-card .text-xs,
-.kpi-card .text-sm,
+.kpi-card .text-sm {
+  font-size: 6pt !important;
+  line-height: 1.1 !important;
+}
+
 .kpi-card .text-lg,
 .kpi-card .text-xl,
 .kpi-card .text-2xl {
-  font-size: 11pt !important;
+  font-size: 8.5pt !important;
   line-height: 1.1 !important;
+  font-weight: 800 !important;
 }
 
 /* Coluna de referência do prestador oculta na impressão para ganhar espaço */
@@ -91,9 +98,11 @@ body {
 #table-dotacoes,
 #table-painel-contratos {
   width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
   border-collapse: collapse !important;
   border: 1px solid #1e293b !important;
-  font-size: 7.5pt !important;
+  font-size: 6.8pt !important;
   font-variant-numeric: tabular-nums !important;
 }
 
@@ -104,10 +113,27 @@ body {
 #table-painel-contratos th,
 #table-painel-contratos td {
   border: 0.5px solid #64748b !important;
-  padding: 2.5px 3.5px !important;
-  font-size: 7pt !important;
+  padding: 2px 2.5px !important;
+  font-size: 6.5pt !important;
   line-height: 1.15 !important;
+  overflow: hidden !important;
+  word-break: break-word !important;
+  white-space: normal !important;
 }
+
+/* Distribuição exata das 11 colunas da Auditoria na impressão (soma 100%) */
+#table-audit th:nth-child(1), #table-audit td:nth-child(1) { width: 4% !important; text-align: center !important; }
+#table-audit th:nth-child(2), #table-audit td:nth-child(2) { width: 33% !important; text-align: left !important; }
+#table-audit th:nth-child(3), #table-audit td:nth-child(3) { display: none !important; }
+#table-audit th:nth-child(4), #table-audit td:nth-child(4) { width: 7.5% !important; text-align: right !important; }
+#table-audit th:nth-child(5), #table-audit td:nth-child(5) { width: 6.5% !important; text-align: right !important; }
+#table-audit th:nth-child(6), #table-audit td:nth-child(6) { width: 7% !important; text-align: center !important; }
+#table-audit th:nth-child(7), #table-audit td:nth-child(7) { width: 6.5% !important; text-align: right !important; }
+#table-audit th:nth-child(8), #table-audit td:nth-child(8) { width: 8.5% !important; text-align: right !important; }
+#table-audit th:nth-child(9), #table-audit td:nth-child(9) { width: 8.5% !important; text-align: right !important; }
+#table-audit th:nth-child(10), #table-audit td:nth-child(10) { width: 8.5% !important; text-align: right !important; }
+#table-audit th:nth-child(11), #table-audit td:nth-child(11) { width: 5% !important; text-align: right !important; }
+#table-audit th:nth-child(12), #table-audit td:nth-child(12) { width: 5% !important; text-align: center !important; }
 
 thead th {
   background-color: #f1f5f9 !important;

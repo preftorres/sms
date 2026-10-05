@@ -937,29 +937,29 @@ app.audit = {
       const isDown = p.diffQtd < 0;
       let badgeVar = `<span style="color:#64748b; font-weight:bold;">= 0</span>`;
       if (p.isNF) {
-        badgeVar = `<span style="background:#f1f5f9; color:#334155; font-size:7pt; padding:1px 4px; border-radius:3px; font-weight:bold;">FISCAL</span>`;
+        badgeVar = `<span style="background:#f1f5f9; color:#334155; font-size:6pt; padding:1px 3px; border-radius:3px; font-weight:bold;">FISCAL</span>`;
       } else if (isUp) {
-        badgeVar = `<span style="background:#f3e8ff; color:#6b21a8; font-size:7pt; padding:1px 4px; border-radius:3px; font-weight:bold;">+${p.diffQtd.toLocaleString('pt-BR')} (+${p.percVar.toFixed(0)}%)</span>`;
+        badgeVar = `<span style="background:#f3e8ff; color:#6b21a8; font-size:6pt; padding:1px 3px; border-radius:3px; font-weight:bold;">+${p.diffQtd.toLocaleString('pt-BR')} (+${p.percVar.toFixed(0)}%)</span>`;
       } else if (isDown) {
-        badgeVar = `<span style="background:#fef3c7; color:#92400e; font-size:7pt; padding:1px 4px; border-radius:3px; font-weight:bold;">${p.diffQtd.toLocaleString('pt-BR')} (${p.percVar.toFixed(0)}%)</span>`;
+        badgeVar = `<span style="background:#fef3c7; color:#92400e; font-size:6pt; padding:1px 3px; border-radius:3px; font-weight:bold;">${p.diffQtd.toLocaleString('pt-BR')} (${p.percVar.toFixed(0)}%)</span>`;
       }
 
       const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
 
       return `
         <tr style="background-color: ${rowBg}; page-break-inside: avoid; border-bottom: 1px solid #e2e8f0;">
-          <td style="padding: 2.5px 4px; text-align: center; font-weight: bold; font-family: monospace;">${p.item}</td>
-          <td style="padding: 2.5px 6px; font-weight: 600; color: #0f172a;">
-            <div>${p.descEmpenho}</div>
-            ${p.descPrestador ? `<div style="font-size: 6.5pt; color: #64748b; font-family: monospace;">${p.descPrestador}</div>` : ''}
+          <td class="col-item">${p.item}</td>
+          <td class="col-proc">
+            <div style="font-weight: 700; color: #0f172a; line-height: 1.15;">${p.descEmpenho}</div>
+            ${p.descPrestador ? `<div style="font-size: 5.5pt; color: #64748b; font-family: monospace;">${p.descPrestador}</div>` : ''}
           </td>
-          <td style="padding: 2.5px 4px; text-align: right; font-family: monospace;">${this.formatBRL(p.vlUnit)}</td>
-          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; color: #334155;">${p.isNF ? '—' : p.qtdEmp.toLocaleString('pt-BR')}</td>
-          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; font-weight: bold; color: ${p.fat > p.qtdEmp ? '#6b21a8' : '#1e3a8a'};">${p.isNF ? '—' : p.fat.toLocaleString('pt-BR')}</td>
-          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; color: #64748b;">${p.isNF ? '—' : p.mediaMensal.toFixed(1)}</td>
-          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace; font-weight: 900; background-color: #fffbeb; color: #78350f;">${p.isNF ? '1' : p.qtdSug.toLocaleString('pt-BR')}</td>
-          <td style="padding: 2.5px 4px; text-align: center; font-family: monospace;">${badgeVar}</td>
-          <td style="padding: 2.5px 6px; text-align: right; font-family: monospace; font-weight: bold; color: #0f172a;">${this.formatBRL(p.vlTotSug)}</td>
+          <td class="col-vlunit">${this.formatBRL(p.vlUnit)}</td>
+          <td class="col-cota-at" style="color: #334155;">${p.isNF ? '—' : p.qtdEmp.toLocaleString('pt-BR')}</td>
+          <td class="col-fat" style="font-weight: bold; color: ${p.fat > p.qtdEmp ? '#6b21a8' : '#1e3a8a'};">${p.isNF ? '—' : p.fat.toLocaleString('pt-BR')}</td>
+          <td class="col-media" style="color: #64748b;">${p.isNF ? '—' : p.mediaMensal.toFixed(1)}</td>
+          <td class="col-cota-sug" style="background-color: #fffbeb; color: #78350f;">${p.isNF ? '1' : p.qtdSug.toLocaleString('pt-BR')}</td>
+          <td class="col-var">${badgeVar}</td>
+          <td class="col-custo" style="color: #0f172a;">${this.formatBRL(p.vlTotSug)}</td>
         </tr>
       `;
     }).join('');
@@ -968,7 +968,7 @@ app.audit = {
     const totalFat = itens.reduce((acc, i) => acc + (i.isNF ? 0 : i.fat), 0);
     const totalQtdSug = itens.reduce((acc, i) => acc + (i.isNF ? 1 : i.qtdSug), 0);
 
-    const printWin = window.open('', '_blank', 'width=1150,height=800');
+    const printWin = window.open('', '_blank', 'width=1180,height=820');
     if (!printWin) {
       return app.ui.toast("Por favor, permita janelas pop-ups no navegador para visualizar a impressão A4.", "warning", "Pop-up Bloqueado");
     }
@@ -979,20 +979,24 @@ app.audit = {
       <head>
         <meta charset="utf-8">
         <title>Relatório de Cotas Balanceadas - Contrato nº ${currentContract.num} - Torres/RS</title>
-        <style>
+        <style id="orientation-style">
           @page {
             size: A4 landscape;
-            margin: 8mm 10mm 8mm 10mm;
+            margin: 6mm 8mm 6mm 8mm;
           }
+        </style>
+        <style>
           * { box-sizing: border-box; }
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #0f172a;
-            line-height: 1.3;
+            line-height: 1.25;
             margin: 0;
             padding: 0;
             background: #fff;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .no-print {
             background: #0f172a;
@@ -1001,17 +1005,35 @@ app.audit = {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
             font-size: 9pt;
             border-bottom: 2px solid #334155;
             position: sticky;
             top: 0;
             z-index: 100;
           }
-          .btn-print {
+          .orientation-btn {
+            background: #334155;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 8.5pt;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+          }
+          .orientation-btn.active {
             background: #2563eb;
+            color: #ffffff;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 1px #60a5fa;
+          }
+          .btn-print {
+            background: #16a34a;
             color: #fff;
             border: none;
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 8px;
             font-weight: 800;
             font-size: 9pt;
@@ -1020,9 +1042,9 @@ app.audit = {
             align-items: center;
             gap: 6px;
           }
-          .btn-print:hover { background: #1d4ed8; }
+          .btn-print:hover { background: #15803d; }
           .btn-close {
-            background: #334155;
+            background: #475569;
             color: #fff;
             border: none;
             padding: 6px 12px;
@@ -1030,52 +1052,69 @@ app.audit = {
             font-size: 9pt;
             cursor: pointer;
           }
-          .btn-close:hover { background: #475569; }
+          .btn-close:hover { background: #64748b; }
           @media print {
             .no-print { display: none !important; }
-            body { font-size: 7pt; }
+            body { font-size: 6.6pt; }
           }
-          .container { width: 100%; max-width: 100%; margin: 0 auto; padding: 4px; }
+          .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 2px 4px;
+          }
           .header-box {
             border-bottom: 2px solid #0f172a;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
+            padding-bottom: 4px;
+            margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
           }
-          .header-title h1 { margin: 0; font-size: 11pt; font-weight: 900; text-transform: uppercase; color: #0f172a; }
-          .header-title h2 { margin: 2px 0 0 0; font-size: 8.5pt; font-weight: 700; color: #334155; }
-          .header-title p { margin: 1px 0 0 0; font-size: 7pt; color: #64748b; }
+          .header-title h1 { margin: 0; font-size: 10pt; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+          .header-title h2 { margin: 1px 0 0 0; font-size: 8pt; font-weight: 700; color: #334155; }
+          .header-title p { margin: 1px 0 0 0; font-size: 6.5pt; color: #64748b; }
           .contract-badge {
             background: #f8fafc;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            padding: 4px 10px;
+            padding: 3px 8px;
             text-align: right;
-            font-size: 7pt;
+            font-size: 6.5pt;
+            white-space: nowrap;
+            shrink: 0;
           }
+
+          /* Grade de Indicadores (KPIs) Adaptável */
           .kpi-row {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 6px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            margin-bottom: 5px;
+          }
+          body.mode-portrait .kpi-row {
+            grid-template-columns: repeat(3, 1fr);
           }
           .kpi-col {
-            flex: 1;
             background: #f8fafc;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 4px 6px;
+            border-radius: 5px;
+            padding: 3px 5px;
             text-align: center;
           }
-          .kpi-label { font-size: 6.5pt; text-transform: uppercase; font-weight: bold; color: #64748b; }
-          .kpi-val { font-size: 9pt; font-weight: 900; font-family: monospace; color: #0f172a; margin-top: 1px; }
-          .kpi-sub { font-size: 6pt; color: #16a34a; font-weight: bold; }
+          .kpi-label { font-size: 6pt; text-transform: uppercase; font-weight: bold; color: #64748b; }
+          .kpi-val { font-size: 8.5pt; font-weight: 900; font-family: monospace; color: #0f172a; margin-top: 1px; }
+          .kpi-sub { font-size: 5.5pt; color: #16a34a; font-weight: bold; }
+
+          /* Tabela com Layout Fixo e Anti-Overflow */
           table.report-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 7.2pt;
+            width: 100% !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+            font-size: 6.8pt;
             border: 1px solid #cbd5e1;
+            font-variant-numeric: tabular-nums;
           }
           table.report-table thead {
             display: table-header-group;
@@ -1087,45 +1126,79 @@ app.audit = {
             page-break-inside: avoid;
           }
           table.report-table th {
-            background: #0f172a;
-            color: #ffffff;
-            font-size: 6.8pt;
+            background: #0f172a !important;
+            color: #ffffff !important;
+            font-size: 6.5pt;
             text-transform: uppercase;
             font-weight: 800;
-            padding: 4px 4px;
+            padding: 3px 2px;
             border: 1px solid #1e293b;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
+          table.report-table td {
+            padding: 2px 2.5px;
+            border-bottom: 1px solid #e2e8f0;
+            overflow: hidden;
+            word-break: break-word;
+          }
+
+          /* Colunas Proporcionais Somando Exatamente 100% */
+          .col-item     { width: 4.5%; text-align: center; font-weight: bold; font-family: monospace; }
+          .col-proc     { width: 33.5%; text-align: left; }
+          .col-vlunit   { width: 7.5%; text-align: right; font-family: monospace; }
+          .col-cota-at  { width: 7.5%; text-align: center; font-family: monospace; }
+          .col-fat      { width: 7.5%; text-align: center; font-family: monospace; }
+          .col-media    { width: 7%; text-align: center; font-family: monospace; }
+          .col-cota-sug { width: 9%; text-align: center; font-family: monospace; font-weight: 900; }
+          .col-var      { width: 11.5%; text-align: center; font-family: monospace; }
+          .col-custo    { width: 12%; text-align: right; font-family: monospace; font-weight: bold; }
+
+          /* Ajustes Quando em Modo Retrato */
+          body.mode-portrait table.report-table { font-size: 6.2pt; }
+          body.mode-portrait .col-proc { width: 31%; }
+          body.mode-portrait .col-var  { width: 12.5%; }
+          body.mode-portrait .col-custo { width: 13.5%; }
+
           .notes-box {
-            margin-top: 8px;
-            padding: 5px 8px;
+            margin-top: 6px;
+            padding: 4px 6px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 6.5pt;
+            border-radius: 5px;
+            font-size: 6pt;
             color: #475569;
-            line-height: 1.35;
+            line-height: 1.3;
           }
           .sign-row {
             display: flex;
             justify-content: space-between;
-            margin-top: 22px;
+            margin-top: 18px;
             page-break-inside: avoid;
-            gap: 20px;
+            gap: 16px;
           }
           .sign-col {
             flex: 1;
             text-align: center;
             border-top: 1px solid #0f172a;
-            padding-top: 4px;
-            font-size: 7pt;
+            padding-top: 3px;
+            font-size: 6.5pt;
           }
-          .sign-col strong { display: block; font-size: 7.5pt; color: #0f172a; }
+          .sign-col strong { display: block; font-size: 7pt; color: #0f172a; }
         </style>
       </head>
-      <body>
+      <body class="mode-landscape">
         <div class="no-print">
-          <div>
-            <strong>📄 Relatório Oficial de Cotas Balanceadas (Folha A4 Paisagem)</strong> — Contrato nº ${currentContract.num} (${itens.length} itens)
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <strong>🖨️ Relatório de Cotas Balanceadas</strong>
+              <span style="color: #94a3b8; font-size: 8pt; margin-left: 4px;">(${itens.length} itens)</span>
+            </div>
+            <div style="display: inline-flex; align-items: center; gap: 4px; background: #1e293b; padding: 2px 4px; border-radius: 8px; border: 1px solid #334155;">
+              <span style="font-size: 7.5pt; color: #94a3b8; margin: 0 4px; font-weight: 600;">Orientação:</span>
+              <button id="btn-mode-landscape" onclick="setOrientation('landscape')" class="orientation-btn active" title="Layout em Paisagem (Horizontal)">📜 Paisagem (Recomendado)</button>
+              <button id="btn-mode-portrait" onclick="setOrientation('portrait')" class="orientation-btn" title="Layout em Retrato (Vertical)">📄 Retrato</button>
+            </div>
           </div>
           <div style="display: flex; gap: 8px;">
             <button onclick="window.print()" class="btn-print">🖨️ Imprimir / Salvar PDF</button>
@@ -1177,10 +1250,10 @@ app.audit = {
             </div>
             <div class="kpi-col">
               <div class="kpi-label">Critérios do Algoritmo</div>
-              <div style="font-size: 6.8pt; font-weight: bold; margin-top: 2px;">
+              <div style="font-size: 6.8pt; font-weight: bold; margin-top: 1px;">
                 Hist: ${parametros.mesesHist}m | Proj: ${parametros.mesesProj}m
               </div>
-              <div style="font-size: 6.2pt; color: #475569;">
+              <div style="font-size: 5.8pt; color: #475569;">
                 Margem: +${(parametros.margem * 100).toFixed(0)}% | Reserva: ${parametros.reservaMin}un
               </div>
             </div>
@@ -1190,15 +1263,15 @@ app.audit = {
           <table class="report-table">
             <thead>
               <tr>
-                <th style="width: 5%; text-align: center;">Item</th>
-                <th style="width: 33%; text-align: left;">Procedimento Laboratorial (SUS)</th>
-                <th style="width: 8%; text-align: right;">Vl. Unit.</th>
-                <th style="width: 8%; text-align: center;">Cota Atual</th>
-                <th style="width: 7%; text-align: center;">Fat. Real</th>
-                <th style="width: 7%; text-align: center;">Média/Mês</th>
-                <th style="width: 9%; text-align: center; background: #b45309;">Cota Sugerida</th>
-                <th style="width: 10%; text-align: center;">Variação (Δ)</th>
-                <th style="width: 13%; text-align: right;">Custo Novo</th>
+                <th class="col-item">Item</th>
+                <th class="col-proc">Procedimento Laboratorial (SUS)</th>
+                <th class="col-vlunit">Vl. Unit.</th>
+                <th class="col-cota-at">Cota Atual</th>
+                <th class="col-fat">Fat. Real</th>
+                <th class="col-media">Média/Mês</th>
+                <th class="col-cota-sug" style="background: #b45309;">Cota Sugerida</th>
+                <th class="col-var">Variação (Δ)</th>
+                <th class="col-custo">Custo Novo</th>
               </tr>
             </thead>
             <tbody>
@@ -1206,13 +1279,13 @@ app.audit = {
             </tbody>
             <tfoot>
               <tr style="background: #0f172a; color: #fff; font-weight: bold; font-family: monospace;">
-                <td colspan="3" style="padding: 4px 6px; text-align: right; text-transform: uppercase;">TOTAIS GERAIS CONSOLIDADOS:</td>
-                <td style="padding: 4px; text-align: center;">${totalQtdEmp.toLocaleString('pt-BR')}</td>
-                <td style="padding: 4px; text-align: center;">${totalFat.toLocaleString('pt-BR')}</td>
-                <td style="padding: 4px; text-align: center;">—</td>
-                <td style="padding: 4px; text-align: center; background: #b45309; color: #fff;">${totalQtdSug.toLocaleString('pt-BR')}</td>
-                <td style="padding: 4px; text-align: center;">—</td>
-                <td style="padding: 4px 6px; text-align: right; font-size: 8.5pt;">${this.formatBRL(totais.custoNovo)}</td>
+                <td colspan="3" style="padding: 3px 5px; text-align: right; text-transform: uppercase;">TOTAIS GERAIS CONSOLIDADOS:</td>
+                <td class="col-cota-at" style="color: #fff;">${totalQtdEmp.toLocaleString('pt-BR')}</td>
+                <td class="col-fat" style="color: #fff;">${totalFat.toLocaleString('pt-BR')}</td>
+                <td class="col-media" style="color: #94a3b8;">—</td>
+                <td class="col-cota-sug" style="background: #b45309; color: #fff;">${totalQtdSug.toLocaleString('pt-BR')}</td>
+                <td class="col-var" style="color: #94a3b8;">—</td>
+                <td class="col-custo" style="padding: 3px 5px; font-size: 7.5pt; color: #fff;">${this.formatBRL(totais.custoNovo)}</td>
               </tr>
             </tfoot>
           </table>
@@ -1240,10 +1313,29 @@ app.audit = {
         </div>
 
         <script>
-          window.onload = function() {
-            window.focus();
-            window.print();
-          };
+          function setOrientation(mode) {
+            const styleEl = document.getElementById('orientation-style');
+            const btnL = document.getElementById('btn-mode-landscape');
+            const btnP = document.getElementById('btn-mode-portrait');
+            if (mode === 'portrait') {
+              document.body.classList.remove('mode-landscape');
+              document.body.classList.add('mode-portrait');
+              styleEl.innerHTML = '@page { size: A4 portrait; margin: 6mm 6mm 6mm 6mm; }';
+              btnP.classList.add('active');
+              btnL.classList.remove('active');
+            } else {
+              document.body.classList.remove('mode-portrait');
+              document.body.classList.add('mode-landscape');
+              styleEl.innerHTML = '@page { size: A4 landscape; margin: 6mm 8mm 6mm 8mm; }';
+              btnL.classList.add('active');
+              btnP.classList.remove('active');
+            }
+          }
+
+          // Inicia em modo paisagem por padrão (recomendado para 9 colunas)
+          setOrientation('landscape');
+
+          window.focus();
         </script>
       </body>
       </html>
@@ -1722,8 +1814,9 @@ app.render.auditoriaDetalhe = function(el) {
             <button onclick="app.data.syncFromCloud(true)" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
               <span>🔄</span> Sincronizar
             </button>
-            <button onclick="app.audit.exportCSV()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow transition">Exportar (.CSV)</button>
-            <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition">Imprimir (A4 Paisagem)</button>
+            <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition flex items-center gap-1.5" title="Imprimir Relatório de Auditoria em folha A4 (escolha Retrato ou Paisagem na impressora)">
+              <span>🖨️</span> Imprimir Relatório (A4)
+            </button>
             ${canManageProc ? `
               <button onclick="app.admin.trigger(true)" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow transition">⚙️ Procedimentos</button>
             ` : ''}
