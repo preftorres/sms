@@ -40,7 +40,7 @@ app.contratos = {
 
   // MODAIS DE CADASTRO E EDIÇÃO
   openNewModal() {
-    if (!app.admin.isGestorFinanceiro()) return alert("Apenas Administrador e Gestor Financeiro podem cadastrar contratos no painel.");
+    if (!app.admin.isGestorFinanceiro()) return app.ui.toast("Apenas Administrador e Gestor Financeiro podem cadastrar contratos no painel.", "warning", "Acesso Restrito");
     const m = document.getElementById('modal-novo-painel-contrato');
     if (m) {
       m.classList.remove('hidden'); m.classList.add('flex');
@@ -69,7 +69,7 @@ app.contratos = {
     const prazoTxt = document.getElementById('panel-new-prazo-txt').value.trim();
     const objeto = document.getElementById('panel-new-objeto').value.trim();
 
-    if (!empresa || !numeroCtt || !dataIso) return alert("Preencha ao menos Empresa, Nº Contrato e Vencimento.");
+    if (!empresa || !numeroCtt || !dataIso) return app.ui.toast("Preencha ao menos Empresa, Nº Contrato e Vencimento.", "warning", "Campos Obrigatórios");
 
     const now = new Date();
     const criadoEm = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -155,7 +155,7 @@ app.contratos = {
 
   // EXCLUSÃO BLINDADA (DIGITAÇÃO OBRIGATÓRIA SEM COLAR - SÓ ADMIN "DEUS")
   openDeleteModal(id) {
-    if (!app.admin.isAdminUser()) return alert("Apenas o Administrador Geral ('Deus') tem permissão para excluir contratos.");
+    if (!app.admin.isAdminUser()) return app.ui.toast("Apenas o Administrador Geral ('Deus') tem permissão para excluir contratos.", "warning", "Acesso Restrito");
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
 
@@ -181,7 +181,7 @@ app.contratos = {
 
   blockPaste(e) {
     e.preventDefault();
-    alert("Por segurança institucional, digite o número do contrato manualmente.");
+    app.ui.toast("Por segurança institucional, digite o número do contrato manualmente.", "warning", "Bloqueio de Colagem");
     return false;
   },
 
@@ -208,32 +208,109 @@ app.contratos = {
       id: target.id
     });
 
-    alert(`Contrato ${target.numeroCtt} (${target.empresa}) excluído definitivamente.`);
+    app.ui.toast(`Contrato ${target.numeroCtt} (${target.empresa}) excluído definitivamente.`, "info", "Contrato Excluído");
   },
 
-  // FILTROS
+  // FILTROS & BUSCA EM TEMPO REAL (SEM PERDER FOCO DO INPUT)
   setFilter(f) {
     app.state.panelContractsFilter = f;
-    app.render.contratosHub(document.getElementById('app-viewport'));
+    const container = document.getElementById('painel-contratos-content');
+    if (container) {
+      document.querySelectorAll('[data-panel-filter]').forEach(btn => {
+        const filterType = btn.getAttribute('data-panel-filter');
+        if (filterType === f) {
+          if (filterType === 'CRITICOS') {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap bg-rose-600 text-white shadow-xs";
+          } else if (filterType === 'ATENCAO') {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-amber-500 text-slate-950 shadow-xs";
+          } else if (filterType === 'ARQUIVADOS') {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-600 text-white shadow-xs";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-900 text-white shadow-xs";
+          }
+        } else {
+          if (filterType === 'CRITICOS') {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap bg-rose-100 text-rose-800 hover:bg-rose-200";
+          } else if (filterType === 'ATENCAO') {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-amber-100 text-amber-800 hover:bg-amber-200";
+          } else if (filterType === 'ARQUIVADOS') {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-100 text-slate-500 hover:bg-slate-200";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200";
+          }
+        }
+      });
+      this.updateContent();
+    } else {
+      app.render.contratosHub(document.getElementById('app-viewport'));
+    }
   },
 
   setFiscal(fiscal) {
     app.state.panelFiscalFilter = fiscal;
-    app.render.contratosHub(document.getElementById('app-viewport'));
+    this.updateContent();
   },
 
   setSearch(val) {
-    app.state.panelSearch = val.toLowerCase().trim();
-    app.render.contratosHub(document.getElementById('app-viewport'));
+    app.state.panelSearch = (val || '').toLowerCase();
+    const clearBtn = document.getElementById('panel-contratos-search-clear');
+    if (clearBtn) {
+      if (app.state.panelSearch.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+    }
+    this.updateContent();
+  },
+
+  clearSearch() {
+    app.state.panelSearch = '';
+    const inp = document.getElementById('panel-contratos-search-input');
+    if (inp) {
+      inp.value = '';
+      inp.focus();
+    }
+    const clearBtn = document.getElementById('panel-contratos-search-clear');
+    if (clearBtn) clearBtn.classList.add('hidden');
+    this.updateContent();
   },
 
   switchViewMode(mode) {
     app.state.panelViewMode = mode;
-    app.render.contratosHub(document.getElementById('app-viewport'));
+    const isCards = mode === 'CARDS';
+    const btnCards = document.getElementById('panel-btn-cards');
+    const btnTabela = document.getElementById('panel-btn-tabela');
+    if (btnCards && btnTabela) {
+      btnCards.className = `p-1.5 rounded-lg text-xs font-bold transition ${isCards ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}`;
+      btnTabela.className = `p-1.5 rounded-lg text-xs font-bold transition ${!isCards ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}`;
+    }
+    this.updateContent();
+  },
+
+  updateContent() {
+    const container = document.getElementById('painel-contratos-content');
+    if (container) {
+      container.innerHTML = this.renderContentHtml();
+    } else {
+      const vp = document.getElementById('app-viewport');
+      if (vp) app.render.contratosHub(vp);
+    }
+    const countEl = document.getElementById('panel-filtered-count');
+    if (countEl) {
+      const list = this.getFilteredList();
+      const total = (app.state.panelContracts || []).length;
+      countEl.textContent = `Exibindo ${list.length} de ${total} contratos`;
+    }
   },
 
   getFilteredList() {
     let list = app.state.panelContracts || [];
+
+    const normalize = (str) => String(str || '')
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
 
     return list.filter(c => {
       const semaforo = this.calculateStatus(c.dataVencimentoIso, c.status);
@@ -247,18 +324,152 @@ app.contratos = {
       else if (app.state.panelContractsFilter === 'ARQUIVADOS') matchStatus = c.status === 'Arquivado';
 
       // Filtro Fiscal
-      let matchFiscal = (app.state.panelFiscalFilter === 'TODOS') || (c.fiscal === app.state.panelFiscalFilter);
+      let matchFiscal = (!app.state.panelFiscalFilter || app.state.panelFiscalFilter === 'TODOS') || (c.fiscal === app.state.panelFiscalFilter);
 
-      // Busca Textual
-      let s = app.state.panelSearch || '';
-      let matchSearch = !s ||
-        c.empresa.toLowerCase().includes(s) ||
-        c.numeroCtt.toLowerCase().includes(s) ||
-        c.fiscal.toLowerCase().includes(s) ||
-        (c.objeto && c.objeto.toLowerCase().includes(s));
+      // Busca Textual Normalizada
+      let s = (app.state.panelSearch || '').trim();
+      let matchSearch = true;
+      if (s) {
+        const normS = normalize(s);
+        const searchable = [
+          c.empresa,
+          c.numeroCtt,
+          c.fiscal,
+          c.objeto,
+          c.prazoVencimento,
+          c.status,
+          semaforo.label
+        ].map(x => normalize(x)).join(' ');
+
+        matchSearch = searchable.includes(normS);
+      }
 
       return matchStatus && matchFiscal && matchSearch;
     });
+  },
+
+  renderCard(c) {
+    const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
+    const isArch = c.status === 'Arquivado';
+    return `
+      <div class="bg-white rounded-[2rem] p-5 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between group relative ${isArch ? 'opacity-70 bg-slate-50' : ''}">
+          <div>
+              <!-- TOPO DO CARD: SEMÁFORO E FISCAL -->
+              <div class="flex items-center justify-between gap-1.5 mb-3">
+                  <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${sem.badgeClass}">
+                      ${sem.label}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-md bg-slate-100 font-mono text-[10px] font-black text-slate-700">
+                      FISCAL: ${c.fiscal}
+                  </span>
+              </div>
+
+              <!-- NOME DA EMPRESA E NÚMERO DO CONTRATO -->
+              <h3 class="text-sm font-black text-slate-900 group-hover:text-blue-600 transition leading-snug line-clamp-2" title="${c.empresa}">
+                  ${c.empresa}
+              </h3>
+              <span class="block text-xs font-mono font-bold text-blue-600 mt-1">CTT: ${c.numeroCtt}</span>
+
+              <!-- DADOS FINANCEIROS E PRAZO -->
+              <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+                  <div class="flex justify-between">
+                      <span class="text-slate-400 font-bold text-[10px] uppercase">Valor Anual:</span>
+                      <span class="font-black text-slate-900 text-xs">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div class="flex justify-between">
+                      <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento:</span>
+                      <span class="font-bold text-slate-700 text-[11px]">${c.prazoVencimento}</span>
+                  </div>
+              </div>
+
+              ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
+          </div>
+
+          <!-- AÇÕES NO RODAPÉ -->
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-slate-400 hover:text-slate-700">
+                  ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
+              </button>
+
+              <div class="flex items-center gap-1.5">
+                  <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
+                      ✏️
+                  </button>
+                  ${app.admin.isAdminUser() ? `
+                    <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Só Admin)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
+                        🗑️
+                    </button>
+                  ` : ''}
+              </div>
+          </div>
+      </div>
+    `;
+  },
+
+  renderTableRow(c) {
+    const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
+    return `
+      <tr class="hover:bg-slate-50">
+          <td class="p-3.5 font-bold text-slate-900">${c.empresa}</td>
+          <td class="p-3.5 font-mono text-blue-700 font-bold">${c.numeroCtt}</td>
+          <td class="p-3.5 text-right font-black text-slate-900">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold text-[10px]">${c.fiscal}</span></td>
+          <td class="p-3.5 text-slate-600 text-xs">${c.prazoVencimento}</td>
+          <td class="p-3.5 text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${sem.badgeClass}">${sem.label}</span>
+          </td>
+          <td class="p-3.5 text-center whitespace-nowrap print:hidden">
+              <button onclick="app.contratos.openEditModal(${c.id})" class="text-slate-600 hover:text-amber-700 font-bold mr-1.5">✏️</button>
+              <button onclick="app.contratos.toggleArchive(${c.id})" class="text-slate-400 hover:text-slate-700 font-bold mr-1.5" title="Arquivar">📁</button>
+              ${app.admin.isAdminUser() ? `<button onclick="app.contratos.openDeleteModal(${c.id})" class="text-rose-500 hover:text-rose-700 font-bold" title="Excluir">🗑️</button>` : ''}
+          </td>
+      </tr>
+    `;
+  },
+
+  renderContentHtml() {
+    const filteredList = this.getFilteredList();
+    const isCardsMode = (app.state.panelViewMode || 'CARDS') === 'CARDS';
+
+    if (filteredList.length === 0) {
+      return `
+        <div class="col-span-full p-12 text-center text-slate-400 font-medium text-xs bg-white rounded-2xl border border-slate-200">
+          <span class="block text-2xl mb-2">🔍</span>
+          Nenhum contrato encontrado para os filtros ou busca selecionados.
+        </div>
+      `;
+    }
+
+    if (isCardsMode) {
+      return `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          ${filteredList.map(c => this.renderCard(c)).join('')}
+        </div>
+      `;
+    } else {
+      return `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="custom-scroll overflow-y-auto max-h-[640px] relative">
+            <table id="table-painel-contratos" class="w-full text-left border-collapse text-xs">
+              <thead class="sticky-thead bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
+                <tr>
+                  <th class="p-3.5 min-w-[220px]">Empresa / Prestador</th>
+                  <th class="p-3.5 w-28">Nº CTT</th>
+                  <th class="p-3.5 text-right w-36">Valor Contrato (R$)</th>
+                  <th class="p-3.5 w-28">Fiscal</th>
+                  <th class="p-3.5 min-w-[200px]">Vencimento / Prazo</th>
+                  <th class="p-3.5 text-center w-36">Situação</th>
+                  <th class="p-3.5 text-center w-28 print:hidden">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 font-medium">
+                ${filteredList.map(c => this.renderTableRow(c)).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
   },
 
   exportCSV() {
@@ -370,18 +581,19 @@ app.render.contratosHub = function(el) {
         </div>
 
         <!-- BARRA DE FILTROS & FISCAIS -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
             
-            <!-- BUSCA -->
+            <!-- BUSCA EM TEMPO REAL -->
             <div class="relative flex-1">
-                <input type="text" oninput="app.contratos.setSearch(this.value)" value="${app.state.panelSearch || ''}" placeholder="Buscar por empresa, número CTT, fiscal ou serviço..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border rounded-xl text-xs outline-none focus:border-blue-500">
-                <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                <input type="text" id="panel-contratos-search-input" oninput="app.contratos.setSearch(this.value)" value="${app.state.panelSearch || ''}" placeholder="Buscar em tempo real por empresa, número CTT, fiscal ou serviço..." class="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 transition font-medium">
+                <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+                <button id="panel-contratos-search-clear" onclick="app.contratos.clearSearch()" class="${(app.state.panelSearch || '').trim() ? '' : 'hidden'} absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
             </div>
 
             <!-- FILTRO POR FISCAL -->
             <div class="flex items-center gap-2">
                 <span class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Fiscal:</span>
-                <select onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 border rounded-xl text-xs font-bold text-slate-700 outline-none">
+                <select onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500">
                     <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
                     <option value="NAIARA" ${app.state.panelFiscalFilter === 'NAIARA' ? 'selected' : ''}>NAIARA</option>
                     <option value="SANDRO" ${app.state.panelFiscalFilter === 'SANDRO' ? 'selected' : ''}>SANDRO</option>
@@ -394,134 +606,41 @@ app.render.contratosHub = function(el) {
 
             <!-- FILTRO POR SEMÁFORO / STATUS -->
             <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-                <button onclick="app.contratos.setFilter('ATIVOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.panelContractsFilter === 'ATIVOS' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                <button data-panel-filter="ATIVOS" onclick="app.contratos.setFilter('ATIVOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.panelContractsFilter === 'ATIVOS' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                     Ativos (${activeContracts.length})
                 </button>
-                <button onclick="app.contratos.setFilter('CRITICOS')" class="px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${app.state.panelContractsFilter === 'CRITICOS' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}">
+                <button data-panel-filter="CRITICOS" onclick="app.contratos.setFilter('CRITICOS')" class="px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${app.state.panelContractsFilter === 'CRITICOS' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}">
                     🔴 Críticos (< 30d)
                 </button>
-                <button onclick="app.contratos.setFilter('ATENCAO')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.panelContractsFilter === 'ATENCAO' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
+                <button data-panel-filter="ATENCAO" onclick="app.contratos.setFilter('ATENCAO')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.panelContractsFilter === 'ATENCAO' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
                     🟡 Atenção
                 </button>
-                <button onclick="app.contratos.setFilter('ARQUIVADOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.panelContractsFilter === 'ARQUIVADOS' ? 'bg-slate-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+                <button data-panel-filter="ARQUIVADOS" onclick="app.contratos.setFilter('ARQUIVADOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${app.state.panelContractsFilter === 'ARQUIVADOS' ? 'bg-slate-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
                     📁 Arquivados
                 </button>
             </div>
 
             <!-- ALTERNAR MURAL / TABELA -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
-                <button onclick="app.contratos.switchViewMode('CARDS')" title="Mural de Cards (Estilo Parede)" class="p-1.5 rounded-lg text-xs font-bold transition ${isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}">
+                <button id="panel-btn-cards" onclick="app.contratos.switchViewMode('CARDS')" title="Mural de Cards (Estilo Parede)" class="p-1.5 rounded-lg text-xs font-bold transition ${isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}">
                     🗂️ Mural
                 </button>
-                <button onclick="app.contratos.switchViewMode('TABELA')" title="Tabela Analítica Financeira" class="p-1.5 rounded-lg text-xs font-bold transition ${!isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}">
+                <button id="panel-btn-tabela" onclick="app.contratos.switchViewMode('TABELA')" title="Tabela Analítica Financeira" class="p-1.5 rounded-lg text-xs font-bold transition ${!isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}">
                     📊 Tabela
                 </button>
             </div>
 
         </div>
 
-        <!-- CONTEÚDO: MURAL DE CARDS OU TABELA ANALÍTICA -->
-        ${isCardsMode ? `
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                ${filteredList.map(c => {
-                  const sem = app.contratos.calculateStatus(c.dataVencimentoIso, c.status);
-                  const isArch = c.status === 'Arquivado';
-                  return `
-                    <div class="bg-white rounded-[2rem] p-5 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between group relative ${isArch ? 'opacity-70 bg-slate-50' : ''}">
-                        <div>
-                            <!-- TOPO DO CARD: SEMÁFORO E FISCAL -->
-                            <div class="flex items-center justify-between gap-1.5 mb-3">
-                                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${sem.badgeClass}">
-                                    ${sem.label}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 font-mono text-[10px] font-black text-slate-700">
-                                    FISCAL: ${c.fiscal}
-                                </span>
-                            </div>
+        <!-- CONTADOR DE CONTRATOS -->
+        <div class="flex items-center justify-between text-[11px] text-slate-500 mb-3 px-1">
+            <span id="panel-filtered-count">Exibindo ${filteredList.length} de ${allContracts.length} contratos</span>
+        </div>
 
-                            <!-- NOME DA EMPRESA E NÚMERO DO CONTRATO -->
-                            <h3 class="text-sm font-black text-slate-900 group-hover:text-blue-600 transition leading-snug line-clamp-2" title="${c.empresa}">
-                                ${c.empresa}
-                            </h3>
-                            <span class="block text-xs font-mono font-bold text-blue-600 mt-1">CTT: ${c.numeroCtt}</span>
-
-                            <!-- DADOS FINANCEIROS E PRAZO -->
-                            <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
-                                <div class="flex justify-between">
-                                    <span class="text-slate-400 font-bold text-[10px] uppercase">Valor Anual:</span>
-                                    <span class="font-black text-slate-900 text-xs">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento:</span>
-                                    <span class="font-bold text-slate-700 text-[11px]">${c.prazoVencimento}</span>
-                                </div>
-                            </div>
-
-                            ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
-                        </div>
-
-                        <!-- AÇÕES NO RODAPÉ -->
-                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                            <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-slate-400 hover:text-slate-700">
-                                ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
-                            </button>
-
-                            <div class="flex items-center gap-1.5">
-                                <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
-                                    ✏️
-                                </button>
-                                ${app.admin.isAdminUser() ? `
-                                  <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Só Admin)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
-                                      🗑️
-                                  </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                  `;
-                }).join('')}
-            </div>
-        ` : `
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="custom-scroll overflow-y-auto max-h-[640px] relative">
-                    <table id="table-painel-contratos" class="w-full text-left border-collapse text-xs">
-                        <thead class="sticky-thead bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
-                            <tr>
-                                <th class="p-3.5 min-w-[220px]">Empresa / Prestador</th>
-                                <th class="p-3.5 w-28">Nº CTT</th>
-                                <th class="p-3.5 text-right w-36">Valor Contrato (R$)</th>
-                                <th class="p-3.5 w-28">Fiscal</th>
-                                <th class="p-3.5 min-w-[200px]">Vencimento / Prazo</th>
-                                <th class="p-3.5 text-center w-36">Situação</th>
-                                <th class="p-3.5 text-center w-28 print:hidden">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 font-medium">
-                            ${filteredList.map(c => {
-                              const sem = app.contratos.calculateStatus(c.dataVencimentoIso, c.status);
-                              return `
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3.5 font-bold text-slate-900">${c.empresa}</td>
-                                    <td class="p-3.5 font-mono text-blue-700 font-bold">${c.numeroCtt}</td>
-                                    <td class="p-3.5 text-right font-black text-slate-900">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                    <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold text-[10px]">${c.fiscal}</span></td>
-                                    <td class="p-3.5 text-slate-600 text-xs">${c.prazoVencimento}</td>
-                                    <td class="p-3.5 text-center">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${sem.badgeClass}">${sem.label}</span>
-                                    </td>
-                                    <td class="p-3.5 text-center whitespace-nowrap print:hidden">
-                                        <button onclick="app.contratos.openEditModal(${c.id})" class="text-slate-600 hover:text-amber-700 font-bold mr-1.5">✏️</button>
-                                        <button onclick="app.contratos.toggleArchive(${c.id})" class="text-slate-400 hover:text-slate-700 font-bold mr-1.5" title="Arquivar">📁</button>
-                                        ${app.admin.isAdminUser() ? `<button onclick="app.contratos.openDeleteModal(${c.id})" class="text-rose-500 hover:text-rose-700 font-bold" title="Excluir">🗑️</button>` : ''}
-                                    </td>
-                                </tr>
-                              `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `}
+        <!-- CONTEÚDO DINÂMICO (MURAL DE CARDS OU TABELA ANALÍTICA) -->
+        <div id="painel-contratos-content">
+            ${app.contratos.renderContentHtml()}
+        </div>
 
     </div>
   `;
