@@ -246,8 +246,8 @@ Object.assign(window.app, {
       if (app.state.activeContractTab === "Contrato_73_2026") {
         let parsed = null;
         try { parsed = rawExamsCache ? JSON.parse(rawExamsCache) : null; } catch(e){}
-        // Se a cache local estiver vazia ou com menos de 70 exames, restaura imediatamente todos os 76 procedimentos reais
-        if (!parsed || !Array.isArray(parsed) || parsed.length < 70) {
+        // Se a cache local estiver vazia, com menos de 70 exames ou com valores zerados (corrompida), restaura imediatamente os 76 procedimentos reais
+        if (!parsed || !Array.isArray(parsed) || parsed.length < 70 || !parsed[0].vlUnit) {
           app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
           this.saveLocalExams();
         } else {
@@ -338,10 +338,10 @@ Object.assign(window.app, {
           }
 
           if (Array.isArray(res.exams) && res.exams.length > 0) {
-            // Proteção contra sobrescrita com dados legados incompletos (< 70 exames)
-            if (app.state.activeContractTab === "Contrato_73_2026" && res.exams.length < 70) {
+            // Proteção contra sobrescrita com dados legados incompletos (< 70 exames) ou zerados
+            if (app.state.activeContractTab === "Contrato_73_2026" && (res.exams.length < 70 || !res.exams[0].vlUnit)) {
               console.warn("Nuvem retornou exames legados/incompletos para o Contrato 73. Mantendo os 76 procedimentos oficiais.");
-              if (!app.state.exams || app.state.exams.length < 70) {
+              if (!app.state.exams || app.state.exams.length < 70 || !app.state.exams[0].vlUnit) {
                 app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
                 this.saveLocalExams();
               }
@@ -358,7 +358,7 @@ Object.assign(window.app, {
               app.state.exams = res.exams;
               this.saveLocalExams();
             }
-          } else if (app.state.activeContractTab === "Contrato_73_2026" && (!app.state.exams || app.state.exams.length < 70)) {
+          } else if (app.state.activeContractTab === "Contrato_73_2026" && (!app.state.exams || app.state.exams.length < 70 || !app.state.exams[0].vlUnit)) {
             app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
             this.saveLocalExams();
           }
@@ -426,6 +426,9 @@ Object.assign(window.app, {
         targetView = 'auditoria_hub';
       } else if (hash.startsWith('auditoria_contrato=')) {
         app.state.activeContractTab = hash.split('=')[1];
+        if (app.audit && typeof app.audit.ensureContractExamsLoaded === 'function') {
+          app.audit.ensureContractExamsLoaded(app.state.activeContractTab);
+        }
         targetView = 'auditoria_detalhe';
       } else if (hash === 'dotacoes' || hash === 'dotacoes_hub') {
         targetView = 'dotacoes_hub';

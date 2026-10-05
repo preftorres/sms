@@ -10,15 +10,18 @@ window.app = window.app || {};
 window.app.render = window.app.render || {};
 
 app.audit = {
-  openContractDetail(tabName) {
+  ensureContractExamsLoaded(tabName) {
+    if (!tabName) tabName = app.state.activeContractTab || "Contrato_73_2026";
     app.state.activeContractTab = tabName;
-    app.data.saveLocalContracts();
 
     const rawExams = localStorage.getItem(`${CONFIG.keys.examsCache}_${tabName}`);
     if (tabName === "Contrato_73_2026") {
       let parsed = null;
       try { parsed = rawExams ? JSON.parse(rawExams) : null; } catch(e){}
-      if (!parsed || !Array.isArray(parsed) || parsed.length < 70) {
+      
+      // Valida se possui os 76 procedimentos e se o item 1 tem vlUnit válido (> 0)
+      const isCorrupted = !parsed || !Array.isArray(parsed) || parsed.length < 70 || !parsed[0].vlUnit;
+      if (isCorrupted) {
         app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
         app.data.saveLocalExams();
       } else {
@@ -29,14 +32,19 @@ app.audit = {
           }
         });
         app.state.exams = parsed;
-        app.data.saveLocalExams();
       }
     } else if (rawExams) {
       try { app.state.exams = JSON.parse(rawExams); } catch(e){ app.state.exams = []; }
     } else {
       app.state.exams = [];
     }
+    return app.state.exams;
+  },
 
+  openContractDetail(tabName) {
+    app.state.activeContractTab = tabName;
+    app.data.saveLocalContracts();
+    this.ensureContractExamsLoaded(tabName);
     window.location.hash = `auditoria_contrato=${tabName}`;
   },
 
@@ -1406,6 +1414,437 @@ app.audit = {
     printWin.document.close();
   },
 
+  imprimirRelatorioAudit() {
+    const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
+    this.ensureContractExamsLoaded(currentContract.tabName);
+
+    const exams = app.state.exams || [];
+    if (exams.length === 0) {
+      return (app.ui && app.ui.toast)
+        ? app.ui.toast("Nenhum procedimento encontrado para este contrato.", "warning", "Relatório de Auditoria")
+        : alert("Nenhum procedimento encontrado para este contrato.");
+    }
+
+    let sumQtdEmp = 0, sumQtdExec = 0, sumQtdSaldo = 0;
+    let sumVlEmp = 0, sumVlFat = 0;
+
+    exams.forEach(item => {
+      const c = this.calculate(item);
+      const isNF = String(item.item).trim().toUpperCase() === "NF";
+      if (!isNF) {
+        sumQtdEmp += c.qtdEmp;
+        sumQtdExec += c.qtdExec;
+        sumQtdSaldo += c.saldoQtd;
+      }
+      sumVlEmp += c.vlTotalEmp;
+      sumVlFat += c.vlTotalFat;
+    });
+
+    const sumVlSaldo = sumVlEmp - sumVlFat;
+    const percGeral = sumVlEmp > 0 ? (sumVlFat / sumVlEmp) * 100 : 0;
+    const dataExtenso = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const rowsHtml = exams.map(item => {
+      const c = this.calculate(item);
+      const isNF = String(item.item).trim().toUpperCase() === "NF";
+
+      let badgeStyle = "background: #16a34a; color: #fff;";
+      if (c.situacao === "Esgotado") badgeStyle = "background: #7e22ce; color: #fff;";
+      else if (c.situacao === "Crítico") badgeStyle = "background: #dc2626; color: #fff;";
+      else if (c.situacao === "Alerta") badgeStyle = "background: #ca8a04; color: #fff;";
+      else if (c.situacao === "Sem Movimento") badgeStyle = "background: #94a3b8; color: #fff;";
+      else if (c.situacao === "Conciliado") badgeStyle = "background: #ca8a04; color: #fff;";
+
+      let rowBg = "";
+      if (c.situacao === "Esgotado") rowBg = "background: #faf5ff;";
+      else if (c.situacao === "Crítico") rowBg = "background: #fef2f2;";
+      else if (c.situacao === "Alerta") rowBg = "background: #fefce8;";
+      else if (c.situacao === "Sem Movimento") rowBg = "background: #f8fafc;";
+
+      return `
+        <tr style="${rowBg}">
+          <td class="col-item">${item.item}</td>
+          <td class="col-proc">${item.descEmpenho}</td>
+          <td class="col-vlunit">${this.formatBRL(c.vlUnit)}</td>
+          <td class="col-qtdemp">${isNF ? '—' : c.qtdEmp.toLocaleString('pt-BR')}</td>
+          <td class="col-qtdexec">${c.qtdExec.toLocaleString('pt-BR')}</td>
+          <td class="col-saldoqtd" style="${c.saldoQtd < 0 ? 'color: #7e22ce; font-weight: 900;' : ''}">${isNF ? '—' : c.saldoQtd.toLocaleString('pt-BR')}</td>
+          <td class="col-vlemp">${isNF ? '—' : this.formatBRL(c.vlTotalEmp)}</td>
+          <td class="col-vlfat" style="font-weight: 800; color: #0f172a;">${this.formatBRL(c.vlTotalFat)}</td>
+          <td class="col-saldofin" style="font-weight: 800; color: ${c.vlSaldo < 0 ? '#7e22ce' : (c.vlSaldo === 0 ? '#475569' : '#15803d')};">${isNF ? '—' : this.formatBRL(c.vlSaldo)}</td>
+          <td class="col-consumo">${c.percConsumo.toFixed(1)}%</td>
+          <td class="col-situacao">
+            <span class="badge" style="${badgeStyle}">${c.situacao}</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      return alert("O bloqueador de pop-ups impediu a abertura do relatório. Permita pop-ups para imprimir.");
+    }
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>Relatório Oficial de Auditoria — Contrato nº ${currentContract.num}</title>
+        <style id="orientation-style">
+          @page {
+            size: A4 landscape;
+            margin: 6mm 8mm 6mm 8mm;
+          }
+        </style>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #fff;
+            color: #0f172a;
+            font-size: 6.8pt;
+            line-height: 1.2;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 8.5pt;
+          }
+          .orientation-btn {
+            background: #334155;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+          }
+          .orientation-btn:hover { background: #475569; color: #fff; }
+          .orientation-btn.active {
+            background: #2563eb;
+            color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+          }
+          .btn-print {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 8pt;
+            font-weight: 800;
+            cursor: pointer;
+          }
+          .btn-print:hover { background: #1d4ed8; }
+          .btn-close {
+            background: #475569;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 8pt;
+            font-weight: bold;
+            cursor: pointer;
+          }
+          @media print {
+            .no-print { display: none !important; }
+            body { background: #fff !important; font-size: 6.5pt !important; }
+          }
+          .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 4px 6px;
+          }
+          .header-box {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+          .header-title h1 {
+            font-size: 7pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0f172a;
+          }
+          .header-title h2 {
+            font-size: 9pt;
+            font-weight: 900;
+            color: #0284c7;
+            letter-spacing: -0.3px;
+            margin-top: 1px;
+          }
+          .header-title p {
+            font-size: 6pt;
+            color: #475569;
+            margin-top: 1px;
+          }
+          .contract-badge {
+            text-align: right;
+            font-size: 6.2pt;
+            line-height: 1.3;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+          }
+          .kpi-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+          }
+          .kpi-col {
+            flex: 1;
+            padding: 4px 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            background: #ffffff;
+          }
+          .kpi-label { font-size: 5.5pt; font-weight: 700; color: #64748b; text-transform: uppercase; }
+          .kpi-val { font-size: 9pt; font-weight: 900; color: #0f172a; margin-top: 1px; }
+          .kpi-sub { font-size: 5.5pt; color: #475569; }
+
+          table.report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6.5pt;
+            table-layout: fixed;
+          }
+          table.report-table thead {
+            display: table-header-group;
+          }
+          table.report-table tfoot {
+            display: table-footer-group;
+          }
+          table.report-table th, table.report-table td {
+            border: 0.5px solid #94a3b8;
+            padding: 2.2px 3px;
+            line-height: 1.15;
+            vertical-align: middle;
+            word-break: break-word;
+            overflow: hidden;
+          }
+          table.report-table th {
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 5.8pt;
+          }
+          table.report-table tr {
+            page-break-inside: avoid;
+          }
+
+          /* Distribuição das colunas no layout Paisagem (Soma 100%) */
+          .col-item     { width: 3.5%; text-align: center; font-weight: bold; font-family: monospace; }
+          .col-proc     { width: 28%; text-align: left; font-weight: 600; color: #0f172a; }
+          .col-vlunit   { width: 7.5%; text-align: right; font-family: monospace; }
+          .col-qtdemp   { width: 6%; text-align: right; font-family: monospace; }
+          .col-qtdexec  { width: 6.5%; text-align: center; font-family: monospace; font-weight: bold; background: rgba(59, 130, 246, 0.05); }
+          .col-saldoqtd { width: 6%; text-align: right; font-family: monospace; font-weight: bold; }
+          .col-vlemp    { width: 8.5%; text-align: right; font-family: monospace; }
+          .col-vlfat    { width: 8.5%; text-align: right; font-family: monospace; background: rgba(59, 130, 246, 0.05); }
+          .col-saldofin { width: 8.5%; text-align: right; font-family: monospace; }
+          .col-consumo  { width: 7.5%; text-align: right; font-family: monospace; font-weight: 700; }
+          .col-situacao { width: 9.5%; text-align: center; }
+
+          /* Ajustes Quando em Modo Retrato */
+          body.mode-portrait table.report-table { font-size: 5.6pt; }
+          body.mode-portrait .col-proc { width: 26%; }
+          body.mode-portrait .col-vlunit { width: 7.5%; }
+          body.mode-portrait .col-vlemp { width: 8.5%; }
+          body.mode-portrait .col-vlfat { width: 8.5%; }
+          body.mode-portrait .col-saldofin { width: 8.5%; }
+          body.mode-portrait .col-situacao { width: 10.5%; }
+
+          .badge {
+            display: inline-block;
+            padding: 1.5px 4px;
+            border-radius: 3px;
+            font-size: 5.5pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+          }
+
+          .sign-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+            page-break-inside: avoid;
+            gap: 16px;
+          }
+          .sign-col {
+            flex: 1;
+            text-align: center;
+            border-top: 1px solid #0f172a;
+            padding-top: 3px;
+            font-size: 6.5pt;
+          }
+          .sign-col strong { display: block; font-size: 7pt; color: #0f172a; }
+        </style>
+      </head>
+      <body class="mode-landscape">
+        <div class="no-print">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <strong>🖨️ Relatório Oficial de Auditoria Físico-Financeira</strong>
+              <span style="color: #94a3b8; font-size: 8pt; margin-left: 4px;">(${exams.length} procedimentos)</span>
+            </div>
+            <div style="display: inline-flex; align-items: center; gap: 4px; background: #1e293b; padding: 2px 4px; border-radius: 8px; border: 1px solid #334155;">
+              <span style="font-size: 7.5pt; color: #94a3b8; margin: 0 4px; font-weight: 600;">Orientação:</span>
+              <button id="btn-mode-landscape" onclick="setOrientation('landscape')" class="orientation-btn active" title="Layout em Paisagem (Horizontal)">📜 Paisagem (Recomendado)</button>
+              <button id="btn-mode-portrait" onclick="setOrientation('portrait')" class="orientation-btn" title="Layout em Retrato (Vertical)">📄 Retrato</button>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-print">🖨️ Imprimir / Salvar PDF</button>
+            <button onclick="window.close()" class="btn-close">Fechar</button>
+          </div>
+        </div>
+
+        <div class="container">
+          <!-- CABEÇALHO OFICIAL -->
+          <div class="header-box">
+            <div class="header-title">
+              <h1>Prefeitura Municipal de Torres — Secretaria Municipal da Saúde</h1>
+              <h2>RELATÓRIO CONSOLIDADO DE AUDITORIA FÍSICO-FINANCEIRA DE EXAMES</h2>
+              <p>Rua José Bonifácio, 642 — Torres/RS | Sistema de Auditoria Pública do SUS | Emissão: ${dataExtenso}</p>
+            </div>
+            <div class="contract-badge">
+              <div><strong>Contrato nº:</strong> ${currentContract.num}</div>
+              <div><strong>Prestador:</strong> ${currentContract.prestador}</div>
+              <div><strong>Empenho:</strong> ${currentContract.empenhos}</div>
+              <div><strong>Auditado:</strong> Competências Março a Junho/2026 (NFS-e 3205 a 3264)</div>
+            </div>
+          </div>
+
+          <!-- RESUMO DOS INDICADORES E METAS ORÇAMENTÁRIAS -->
+          <div class="kpi-row">
+            <div class="kpi-col">
+              <div class="kpi-label">Teto Empenhado (Total)</div>
+              <div class="kpi-val">${this.formatBRL(sumVlEmp)}</div>
+              <div class="kpi-sub">Total Contratual</div>
+            </div>
+            <div class="kpi-col" style="background: #eff6ff; border-color: #bfdbfe;">
+              <div class="kpi-label" style="color:#1e40af;">Faturado Acumulado</div>
+              <div class="kpi-val" style="color:#1d4ed8;">${this.formatBRL(sumVlFat)}</div>
+              <div class="kpi-sub" style="color:#2563eb;">${percGeral.toFixed(1)}% do teto consumido</div>
+            </div>
+            <div class="kpi-col" style="background: #f0fdf4; border-color: #bbf7d0;">
+              <div class="kpi-label" style="color:#166534;">Saldo Financeiro Restante</div>
+              <div class="kpi-val" style="color:#15803d;">${this.formatBRL(sumVlSaldo)}</div>
+              <div class="kpi-sub" style="color:#16a34a;">${(100 - percGeral).toFixed(1)}% disponível</div>
+            </div>
+            <div class="kpi-col">
+              <div class="kpi-label">Total de Procedimentos</div>
+              <div class="kpi-val">${sumQtdExec.toLocaleString('pt-BR')}</div>
+              <div class="kpi-sub">Saldo: ${sumQtdSaldo.toLocaleString('pt-BR')} exames</div>
+            </div>
+          </div>
+
+          <!-- TABELA COMPLETA COM QUEBRA AUTOMÁTICA EM FOLHAS A4 -->
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th class="col-item">Item</th>
+                <th class="col-proc">Procedimento / Exame Contratado</th>
+                <th class="col-vlunit">Vl. Unit (R$)</th>
+                <th class="col-qtdemp">Qtd Emp.</th>
+                <th class="col-qtdexec">Qtd Exec. (Real)</th>
+                <th class="col-saldoqtd">Saldo Qtd</th>
+                <th class="col-vlemp">Vl. Empenhado</th>
+                <th class="col-vlfat">Vl. Faturado (R$)</th>
+                <th class="col-saldofin">Saldo Financeiro</th>
+                <th class="col-consumo">Consumo</th>
+                <th class="col-situacao">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr style="background: #0f172a; color: #fff; font-weight: bold; font-family: monospace;">
+                <td colspan="2" style="padding: 3px 5px; text-align: right; text-transform: uppercase;">TOTAIS GERAIS DO CONTRATO:</td>
+                <td class="col-vlunit" style="color: #94a3b8;">—</td>
+                <td class="col-qtdemp" style="color: #fff;">${sumQtdEmp.toLocaleString('pt-BR')}</td>
+                <td class="col-qtdexec" style="color: #fff;">${sumQtdExec.toLocaleString('pt-BR')}</td>
+                <td class="col-saldoqtd" style="color: #fff;">${sumQtdSaldo.toLocaleString('pt-BR')}</td>
+                <td class="col-vlemp" style="color: #fff;">${this.formatBRL(sumVlEmp)}</td>
+                <td class="col-vlfat" style="color: #93c5fd;">${this.formatBRL(sumVlFat)}</td>
+                <td class="col-saldofin" style="color: #86efac;">${this.formatBRL(sumVlSaldo)}</td>
+                <td class="col-consumo" style="color: #fff;">${percGeral.toFixed(1)}%</td>
+                <td class="col-situacao" style="color: #94a3b8;">—</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- ASSINATURAS OFICIAIS -->
+          <div class="sign-row">
+            <div class="sign-col">
+              <strong>Setor de Auditoria Físico-Financeira</strong>
+              <span>Secretaria Municipal da Saúde de Torres</span>
+            </div>
+            <div class="sign-col">
+              <strong>Fiscal do Contrato Administrativo</strong>
+              <span>Controle e Execução Contratual</span>
+            </div>
+            <div class="sign-col">
+              <strong>Secretário(a) Municipal da Saúde</strong>
+              <span>Ordenador(a) de Despesa</span>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          function setOrientation(mode) {
+            const styleEl = document.getElementById('orientation-style');
+            const btnL = document.getElementById('btn-mode-landscape');
+            const btnP = document.getElementById('btn-mode-portrait');
+            if (mode === 'portrait') {
+              document.body.classList.remove('mode-landscape');
+              document.body.classList.add('mode-portrait');
+              styleEl.innerHTML = '@page { size: A4 portrait; margin: 6mm 6mm 6mm 6mm; }';
+              btnP.classList.add('active');
+              btnL.classList.remove('active');
+            } else {
+              document.body.classList.remove('mode-portrait');
+              document.body.classList.add('mode-landscape');
+              styleEl.innerHTML = '@page { size: A4 landscape; margin: 6mm 8mm 6mm 8mm; }';
+              btnL.classList.add('active');
+              btnP.classList.remove('active');
+            }
+          }
+
+          // Inicia em modo paisagem por padrão (recomendado para 11 colunas)
+          setOrientation('landscape');
+
+          window.focus();
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  },
+
   async confirmarAplicacaoCotas() {
     if (!this._simulacaoState) return app.ui.toast("Simulação não realizada.", "warning", "Atenção");
     if (!app.permissions.can('audit_edit_values')) return app.ui.toast("Sem permissão para alterar cotas de exames.", "warning", "Acesso Restrito");
@@ -1761,6 +2200,7 @@ app.render.auditoriaHub = function(el) {
 
 app.render.auditoriaDetalhe = function(el) {
   const currentContract = app.state.contracts.find(c => c.tabName === app.state.activeContractTab) || app.state.contracts[0];
+  app.audit.ensureContractExamsLoaded(currentContract.tabName);
   const canManageProc = app.permissions.can('audit_manage_procedures');
 
   el.innerHTML = `
@@ -1792,8 +2232,9 @@ app.render.auditoriaDetalhe = function(el) {
       <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 print:hidden">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-2.5 mb-2 flex-wrap">
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 uppercase">Aba: ${currentContract.tabName}</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 uppercase">📋 ${app.state.exams.length} Procedimentos no Contrato</span>
               <span id="cloud-sync-status" class="hidden text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold"></span>
             </div>
             <h2 class="text-xl sm:text-2xl font-black text-slate-900">Auditoria Físico-Financeira — Contrato nº ${currentContract.num}</h2>
@@ -1814,7 +2255,12 @@ app.render.auditoriaDetalhe = function(el) {
             <button onclick="app.data.syncFromCloud(true)" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1">
               <span>🔄</span> Sincronizar
             </button>
-            <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition flex items-center gap-1.5" title="Imprimir Relatório de Auditoria em folha A4 (escolha Retrato ou Paisagem na impressora)">
+            ${currentContract.tabName === "Contrato_73_2026" ? `
+              <button onclick="app.audit.restoreContrato73()" class="px-3 py-2 text-xs font-bold rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition flex items-center gap-1" title="Restaura os 76 procedimentos oficiais do Contrato nº 73/2026 (Laboratório Fontana - R$ 129.163,00)">
+                <span>🔄</span> Restaurar 76 Exames
+              </button>
+            ` : ''}
+            <button onclick="app.audit.imprimirRelatorioAudit()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow transition flex items-center gap-1.5" title="Imprimir Relatório de Auditoria em folha A4 (escolha Retrato ou Paisagem na visualização)">
               <span>🖨️</span> Imprimir Relatório (A4)
             </button>
             ${canManageProc ? `
