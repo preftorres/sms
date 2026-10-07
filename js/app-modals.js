@@ -610,6 +610,7 @@ Exemplo do formato:
             <button id="admin-tab-btn-contrato" onclick="app.admin.switchTab('contrato')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">Exames & Procedimentos</button>
             <button id="admin-tab-btn-usuarios" onclick="app.admin.switchTab('usuarios')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">Usuários & Acessos</button>
             <button id="admin-tab-btn-permissoes" onclick="app.admin.switchTab('permissoes')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">Matriz de Permissões</button>
+            <button id="admin-tab-btn-logs" onclick="app.admin.switchTab('logs')" class="px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap">📜 Trilha de Auditoria (Logs)</button>
           </div>
 
           <!-- CORPO DAS ABAS DO ADMIN -->
@@ -799,6 +800,88 @@ Exemplo do formato:
                     <tr><td class="p-3 pl-6 text-slate-700">Arquivar / Desarquivar Contrato</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_archive" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_archive" class="w-4 h-4 accent-indigo-600"></td></tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            <!-- ABA 5: TRILHA DE AUDITORIA & REGISTRO DE LOGS -->
+            <div id="admin-view-logs" class="hidden space-y-4">
+              <!-- BARRA SUPERIOR DE CONTROLE E FILTROS -->
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <span class="font-black text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>📜</span> Trilha de Auditoria Institucional
+                    </span>
+                    <p class="text-[11px] text-slate-500">Histórico de ações, alterações e usuários gravado no Google Sheets</p>
+                  </div>
+                  <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <button onclick="app.admin.loadAuditLogs(true)" title="Recarregar dados da nuvem" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                      <span>🔄</span> Atualizar Logs
+                    </button>
+                    <button onclick="app.admin.exportAuditLogsReport()" title="Imprimir Relatório Oficial" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-xs">
+                      <span>🖨️</span> Imprimir Relatório A4
+                    </button>
+                  </div>
+                </div>
+
+                <!-- FILTROS AVANÇADOS -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-1 text-xs">
+                  <div class="sm:col-span-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Buscar por Palavra-Chave</label>
+                    <input type="text" id="adm-logs-filter-search" oninput="app.admin.setAuditLogsFilter('search', this.value)" placeholder="Buscar qualquer termo..." class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl outline-none font-medium text-slate-800">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Filtrar por Usuário</label>
+                    <select id="adm-logs-filter-user" onchange="app.admin.setAuditLogsFilter('user', this.value)" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl outline-none font-bold text-slate-800">
+                      <option value="todos">Todos os Usuários</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Filtrar por Módulo</label>
+                    <select id="adm-logs-filter-modulo" onchange="app.admin.setAuditLogsFilter('modulo', this.value)" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl outline-none font-bold text-slate-800">
+                      <option value="todos">Todos os Módulos</option>
+                      <option value="Dotações">Dotações</option>
+                      <option value="Contratos LDO">Contratos LDO</option>
+                      <option value="Auditoria de Exames">Auditoria de Exames</option>
+                      <option value="Gestão de Usuários">Gestão de Usuários</option>
+                      <option value="Permissões">Permissões</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Data Específica</label>
+                    <input type="date" id="adm-logs-filter-date" onchange="app.admin.setAuditLogsFilter('data', this.value)" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl outline-none font-medium text-slate-800">
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] pt-1 text-slate-500">
+                  <span id="adm-logs-count-info" class="font-bold">Carregando registros...</span>
+                  <button onclick="document.getElementById('adm-logs-filter-search').value=''; document.getElementById('adm-logs-filter-user').value='todos'; document.getElementById('adm-logs-filter-modulo').value='todos'; document.getElementById('adm-logs-filter-date').value=''; app.admin.setAuditLogsFilter('search',''); app.admin.setAuditLogsFilter('user','todos'); app.admin.setAuditLogsFilter('modulo','todos'); app.admin.setAuditLogsFilter('data','');" class="text-blue-600 hover:underline font-bold text-[10px]">Limpar Filtros</button>
+                </div>
+              </div>
+
+              <!-- TABELA DE REGISTROS -->
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div class="max-h-[460px] overflow-y-auto custom-scroll relative">
+                  <table class="w-full text-left border-collapse text-xs">
+                    <thead class="sticky top-0 bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300 z-10">
+                      <tr>
+                        <th class="p-3 w-36">Data / Hora</th>
+                        <th class="p-3 w-28">Usuário</th>
+                        <th class="p-3 w-32">Módulo</th>
+                        <th class="p-3 w-36">Ação</th>
+                        <th class="p-3">Detalhes da Operação</th>
+                        <th class="p-3 w-24">Ref / ID</th>
+                      </tr>
+                    </thead>
+                    <tbody id="adm-logs-list-tbody" class="divide-y divide-slate-100">
+                      <!-- Linhas geradas via JavaScript -->
+                    </tbody>
+                  </table>
+                  <div id="adm-logs-empty" class="hidden p-10 text-center text-slate-400 font-medium text-xs">
+                    <span class="block text-2xl mb-1">🔍</span>
+                    Nenhum log de auditoria encontrado para os filtros selecionados.
+                  </div>
+                </div>
               </div>
             </div>
 

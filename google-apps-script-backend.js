@@ -66,6 +66,7 @@ const USERS_SHEET = "_Usuarios";
 const DOTACOES_SHEET = "_Dotacoes";
 const PANEL_SHEET = "_Painel_Contratos";
 const PERMISSIONS_SHEET = "_Permissoes";
+const AUDIT_LOGS_SHEET = "_Logs_Auditoria";
 
 const HEADERS_PANEL = [
   "id", "empresa", "numeroCtt", "prazoVencimento", "dataVencimentoIso",
@@ -78,6 +79,9 @@ const HEADERS_DOTACOES = [
   "id", "sf", "ata", "processo", "objeto", "doc1", "empenho", "situacao", "patrimonio",
   "status", "comprador", "compradorLogin", "dataSolicitacao",
   "validador", "validadorLogin", "dataValidacao", "valor", "motivoCancelamento"
+];
+const HEADERS_AUDIT_LOGS = [
+  "id", "dataHora", "usuario", "modulo", "acao", "detalhes", "registroId"
 ];
 
 // OS 42 CONTRATOS REAIS DA SAÚDE DE TORRES (R$ 14.230.950,50)
@@ -477,6 +481,74 @@ function getShortcutsList(ss) {
 }
 
 // ============================================================================
+// TRILHA DE AUDITORIA & REGISTRO DE LOGS INSTITUCIONAIS
+// ============================================================================
+
+function ensureAuditLogsStructure(ss) {
+  ss = ss || SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(AUDIT_LOGS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(AUDIT_LOGS_SHEET);
+    sheet.appendRow(HEADERS_AUDIT_LOGS);
+    try {
+      sheet.getRange(1, 1, 1, HEADERS_AUDIT_LOGS.length)
+        .setFontWeight("bold")
+        .setBackground("#0f172a")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    } catch(e) {}
+  }
+  return sheet;
+}
+
+function logAudit(ss, logData) {
+  try {
+    ss = ss || SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ensureAuditLogsStructure(ss);
+    const agora = new Date();
+    const dataHoraStr = Utilities.formatDate(agora, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm:ss");
+    const id = logData.id || agora.getTime();
+    const usuario = String(logData.usuario || "sistema").trim();
+    const modulo = String(logData.modulo || "Geral").trim();
+    const acao = String(logData.acao || "Alteração").trim();
+    const detalhes = String(logData.detalhes || "").trim();
+    const registroId = String(logData.registroId || "").trim();
+
+    sheet.appendRow([id, dataHoraStr, usuario, modulo, acao, detalhes, registroId]);
+  } catch (err) {
+    Logger.log("Erro ao registrar log de auditoria: " + err.toString());
+  }
+}
+
+function getAuditLogsList(ss, maxLimit) {
+  ss = ss || SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ensureAuditLogsStructure(ss);
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+
+  const limit = maxLimit || 500;
+  const startRow = Math.max(2, lastRow - limit + 1);
+  const numRows = lastRow - startRow + 1;
+  const values = sheet.getRange(startRow, 1, numRows, HEADERS_AUDIT_LOGS.length).getValues();
+
+  const logs = [];
+  for (let i = values.length - 1; i >= 0; i--) {
+    const row = values[i];
+    if (!row[0] && row[0] !== 0) continue;
+    logs.push({
+      id: row[0],
+      dataHora: String(row[1] || ""),
+      usuario: String(row[2] || "sistema"),
+      modulo: String(row[3] || "Geral"),
+      acao: String(row[4] || ""),
+      detalhes: String(row[5] || ""),
+      registroId: String(row[6] || "")
+    });
+  }
+  return logs;
+}
+
+// ============================================================================
 // REQUISIÇÕES GET
 // ============================================================================
 
@@ -518,6 +590,14 @@ function doGet(e) {
       }));
       return ContentService.createTextOutput(JSON.stringify({
         status: "success", users: users
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "GET_AUDIT_LOGS") {
+      const limit = Number(e.parameter.limit) || 500;
+      const logs = getAuditLogsList(ss, limit);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success", logs: logs
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -611,12 +691,37 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents);
     const action = payload.action;
 
+    // --- CONSULTA E REGISTRO DIRETO DE LOGS DE AUDITORIA ---
+    if (action === "GET_AUDIT_LOGS") {
+      const limit = Number(payload.limit) || 500;
+      const logs = getAuditLogsList(ss, limit);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", logs: logs })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "RECORD_AUDIT_LOG") {
+      logAudit(ss, {
+        usuario: payload.currentUser || payload.usuario || "sistema",
+        modulo: payload.modulo || "Geral",
+        acao: payload.actionName || payload.acao || "Registro",
+        detalhes: payload.detalhes || "",
+        registroId: payload.registroId || ""
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // --- MÓDULO DE PERMISSÕES INSTITUCIONAIS ---
     if (action === "SAVE_PERMISSIONS") {
       const sheet = ensurePermissionsStructure(ss);
       sheet.clearContents();
       sheet.appendRow(["perfil", "permissoesJson"]);
       sheet.appendRow(["Matriz_Geral", JSON.stringify(payload.permissions)]);
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Permissões",
+        acao: "Atualizar Matriz",
+        detalhes: "Matriz geral de permissões atualizada",
+        registroId: "Matriz_Geral"
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -628,6 +733,13 @@ function doPost(e) {
         c.id || Date.now(), c.empresa, c.numeroCtt, c.prazoVencimento, c.dataVencimentoIso,
         c.valorContrato, c.fiscal, "Ativo", c.objeto || "", c.criadoEm || "", c.criadoPor || ""
       ]);
+      logAudit(ss, {
+        usuario: payload.currentUser || c.criadoPor || "admin",
+        modulo: "Contratos LDO",
+        acao: "Cadastrar Contrato",
+        detalhes: `Contrato nº ${c.numeroCtt} - ${c.empresa} (R$ ${Number(c.valorContrato || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`,
+        registroId: c.numeroCtt
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -648,30 +760,55 @@ function doPost(e) {
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Contratos LDO",
+        acao: "Editar Contrato",
+        detalhes: `Contrato nº ${c.numeroCtt} - ${c.empresa} (Venc: ${c.prazoVencimento})`,
+        registroId: c.numeroCtt
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "ARCHIVE_PANEL_CONTRACT") {
       const sheet = ensurePanelContractsStructure(ss);
       const rows = sheet.getDataRange().getValues();
+      let cttNum = payload.id;
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(payload.id)) {
           sheet.getRange(i + 1, 8).setValue(payload.status);
+          cttNum = rows[i][2] || payload.id;
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Contratos LDO",
+        acao: payload.status === "Arquivado" ? "Arquivar Contrato" : "Desarquivar Contrato",
+        detalhes: `Contrato ${cttNum} marcado como ${payload.status}`,
+        registroId: cttNum
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "DELETE_PANEL_CONTRACT") {
       const sheet = ensurePanelContractsStructure(ss);
       const rows = sheet.getDataRange().getValues();
+      let cttNum = payload.id;
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(payload.id)) {
+          cttNum = `${rows[i][2]} (${rows[i][1]})`;
           sheet.deleteRow(i + 1);
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Contratos LDO",
+        acao: "Excluir Contrato",
+        detalhes: `Contrato ${cttNum} excluído em definitivo`,
+        registroId: payload.id
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -685,6 +822,13 @@ function doPost(e) {
         d.status || "AGUARDANDO", d.comprador || "", d.compradorLogin || "", d.dataSolicitacao || "",
         d.validador || "", d.validadorLogin || "", d.dataValidacao || "", d.valor || "", d.motivoCancelamento || ""
       ]);
+      logAudit(ss, {
+        usuario: payload.currentUser || d.compradorLogin || "comprador",
+        modulo: "Dotações",
+        acao: "Criar Pedido",
+        detalhes: `SF ${d.sf}: ${d.objeto ? d.objeto.substring(0, 70) : "Sem objeto"} (Doc 1: ${d.doc1 || "-"})`,
+        registroId: d.sf
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -709,15 +853,24 @@ function doPost(e) {
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "usuario",
+        modulo: "Dotações",
+        acao: d.status === "CANCELADO" ? "Cancelar Pedido" : (d.empenho ? "Atualizar Empenho/Situação" : "Editar Pedido"),
+        detalhes: `SF ${d.sf}: ${d.motivoCancelamento ? 'Motivo: ' + d.motivoCancelamento : (d.situacao || d.objeto || '').substring(0, 70)}`,
+        registroId: d.sf
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "UPDATE_DOTACAO_STATUS") {
       const sheet = ensureDotacoesStructure(ss);
       const rows = sheet.getDataRange().getValues();
+      let sfRef = payload.id;
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(payload.id)) {
           const rowNum = i + 1;
+          sfRef = rows[i][1] || payload.id;
           sheet.getRange(rowNum, 10).setValue(payload.status);
           if (payload.validador) sheet.getRange(rowNum, 14).setValue(payload.validador);
           if (payload.validadorLogin) sheet.getRange(rowNum, 15).setValue(payload.validadorLogin);
@@ -726,18 +879,34 @@ function doPost(e) {
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || payload.validadorLogin || "financeiro",
+        modulo: "Dotações",
+        acao: "Validar Dotação",
+        detalhes: `SF ${sfRef} validado com status ${payload.status} por ${payload.validador || "Setor Financeiro"}`,
+        registroId: sfRef
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "DELETE_DOTACAO") {
       const sheet = ensureDotacoesStructure(ss);
       const rows = sheet.getDataRange().getValues();
+      let sfRef = payload.id;
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(payload.id)) {
+          sfRef = rows[i][1] || payload.id;
           sheet.deleteRow(i + 1);
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Dotações",
+        acao: "Excluir Pedido",
+        detalhes: `Pedido SF ${sfRef} excluído do sistema`,
+        registroId: sfRef
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -749,6 +918,13 @@ function doPost(e) {
         String(payload.nome).trim(), String(payload.perfil || "Comprador").trim(),
         String(payload.createdAt || "")
       ]);
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Gestão de Usuários",
+        acao: "Cadastrar Usuário",
+        detalhes: `Usuário "${payload.usuario}" (${payload.perfil}) cadastrado para ${payload.nome}`,
+        registroId: payload.usuario
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -767,30 +943,55 @@ function doPost(e) {
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Gestão de Usuários",
+        acao: "Editar Usuário",
+        detalhes: `Usuário "${payload.usuario}" (${payload.perfil}) atualizado`,
+        registroId: payload.id
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "DELETE_USER") {
       const sheet = ensureUsersStructure(ss);
       const rows = sheet.getDataRange().getValues();
+      let uName = payload.id;
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(payload.id)) {
+          uName = rows[i][1];
           sheet.deleteRow(i + 1);
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Gestão de Usuários",
+        acao: "Excluir Usuário",
+        detalhes: `Usuário "${uName}" excluído do sistema`,
+        registroId: payload.id
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "UPDATE_USER_PASSWORD") {
       const sheet = ensureUsersStructure(ss);
       const rows = sheet.getDataRange().getValues();
+      let uName = payload.id;
       for (let i = 1; i < rows.length; i++) {
         if (Number(rows[i][0]) === Number(payload.id)) {
+          uName = rows[i][1];
           sheet.getRange(i + 1, 3).setValue(String(payload.newPassword).trim());
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Gestão de Usuários",
+        acao: "Redefinir Senha",
+        detalhes: `Senha do usuário "${uName}" redefinida pelo administrador`,
+        registroId: payload.id
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -824,6 +1025,13 @@ function doPost(e) {
       }
 
       cfgSheet.appendRow([tabName, payload.num, payload.empenhos, payload.prestador, payload.createdAt || ""]);
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Auditoria de Exames",
+        acao: "Criar Contrato",
+        detalhes: `Contrato nº ${payload.num} (${payload.prestador}) - ${(payload.initialExams || []).length} exames`,
+        registroId: payload.num
+      });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -847,6 +1055,26 @@ function doPost(e) {
     }
 
     if (action === "UPDATE_VALUES") {
+      // Rebalanceamento em lote (76 exames)
+      if (Array.isArray(payload.exams) && payload.exams.length > 0) {
+        sheet.clearContents();
+        sheet.appendRow(HEADERS_EXAMS);
+        const rowsToAdd = payload.exams.map(item => [
+          item.id, item.item, item.cat, item.descEmpenho, item.descPrestador, item.vlUnit || 0, item.qtdEmpenho, item.saldoAnterior, item.faturado || 0
+        ]);
+        sheet.getRange(2, 1, rowsToAdd.length, HEADERS_EXAMS.length).setValues(rowsToAdd);
+
+        logAudit(ss, {
+          usuario: payload.currentUser || "admin",
+          modulo: "Auditoria de Exames",
+          acao: "Rebalancear Cotas",
+          detalhes: `Rebalanceamento aplicado ao Contrato ${targetTab} (${payload.exams.length} procedimentos readequados)`,
+          registroId: targetTab
+        });
+        return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // Atualização individual de item
       const rows = sheet.getDataRange().getValues();
       const headerRow = rows[0] || [];
       const hasVlUnit = headerRow.indexOf("vlUnit") !== -1;
@@ -883,6 +1111,15 @@ function doPost(e) {
             ];
         sheet.appendRow(newRow);
       }
+
+      logAudit(ss, {
+        usuario: payload.currentUser || "auditor",
+        modulo: "Auditoria de Exames",
+        acao: "Atualizar Faturamento",
+        detalhes: `Contrato ${targetTab}: Item ID ${payload.id} (Faturado: ${payload.faturado})`,
+        registroId: payload.id
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     } else if (action === "SAVE_EXAM") {
       const rows = sheet.getDataRange().getValues();
       const headerRow = rows[0] || [];
@@ -920,6 +1157,15 @@ function doPost(e) {
           ]);
         }
       }
+
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Auditoria de Exames",
+        acao: "Salvar Procedimento",
+        detalhes: `Contrato ${targetTab}: Item ${payload.item} - ${payload.descEmpenho} (Cota: ${payload.qtdEmpenho})`,
+        registroId: payload.item
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     } else if (action === "DELETE_EXAM") {
       const rows = sheet.getDataRange().getValues();
       for (let i = 1; i < rows.length; i++) {
@@ -928,6 +1174,14 @@ function doPost(e) {
           break;
         }
       }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Auditoria de Exames",
+        acao: "Excluir Procedimento",
+        detalhes: `Contrato ${targetTab}: Procedimento ID ${payload.id} excluído`,
+        registroId: payload.id
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);

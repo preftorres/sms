@@ -31,6 +31,8 @@ Object.assign(window.app, {
     users: [],
     permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS)),
     auth: { isLogged: false, user: null },
+    auditLogs: [],
+    auditLogsFilter: { search: '', user: 'todos', modulo: 'todos', data: '' },
     clockTimer: null,
     pendingView: null,
     filters: { search: '', category: 'ALL', hideZero: false }
@@ -466,6 +468,14 @@ Object.assign(window.app, {
         app.ui.setSyncStatus(true, "Salvando dados no servidor...");
         payload.contract = app.state.activeContractTab;
 
+        // Injeta o usuário logado para trilha de auditoria
+        if (!payload.currentUser) {
+          payload.currentUser = (app.state.auth.user && (app.state.auth.user.usuario || app.state.auth.user.nome)) || 'admin';
+        }
+        if (!payload.currentUserName) {
+          payload.currentUserName = (app.state.auth.user && app.state.auth.user.nome) || '';
+        }
+
         await fetch(GOOGLE_API_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -476,6 +486,19 @@ Object.assign(window.app, {
         console.error("Erro na sincronização:", err);
       } finally {
         setTimeout(() => app.ui.setSyncStatus(false), 800);
+      }
+    },
+
+    async fetchAuditLogs(limit = 500) {
+      if (!GOOGLE_API_URL) return [];
+      try {
+        const resp = await fetch(`${GOOGLE_API_URL}?action=GET_AUDIT_LOGS&limit=${limit}`, { redirect: 'follow' });
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        return (data && Array.isArray(data.logs)) ? data.logs : [];
+      } catch (err) {
+        console.error("Erro ao buscar logs de auditoria:", err);
+        return [];
       }
     }
   },
@@ -851,13 +874,17 @@ Object.assign(window.app, {
       const viewUsuarios = document.getElementById('admin-view-usuarios');
       const btnPermissoes = document.getElementById('admin-tab-btn-permissoes');
       const viewPermissoes = document.getElementById('admin-view-permissoes');
+      const btnLogs = document.getElementById('admin-tab-btn-logs');
+      const viewLogs = document.getElementById('admin-view-logs');
 
       if (btnUsuarios) btnUsuarios.style.display = isMasterAdmin ? 'inline-block' : 'none';
       if (btnPermissoes) btnPermissoes.style.display = isMasterAdmin ? 'inline-block' : 'none';
+      if (btnLogs) btnLogs.style.display = isMasterAdmin ? 'inline-block' : 'none';
 
       if (!isMasterAdmin) {
         if (viewUsuarios) viewUsuarios.classList.add('hidden');
         if (viewPermissoes) viewPermissoes.classList.add('hidden');
+        if (viewLogs) viewLogs.classList.add('hidden');
       }
 
       if (directToContract) this.switchTab('contrato');
@@ -878,7 +905,7 @@ Object.assign(window.app, {
     },
 
     switchTab(tab) {
-      if ((tab === 'usuarios' || tab === 'permissoes') && !this.isAdminUser()) {
+      if ((tab === 'usuarios' || tab === 'permissoes' || tab === 'logs') && !this.isAdminUser()) {
         this.switchTab('contrato');
         return;
       }
@@ -887,14 +914,16 @@ Object.assign(window.app, {
       const vContrato = document.getElementById('admin-view-contrato');
       const vUsuarios = document.getElementById('admin-view-usuarios');
       const vPerms = document.getElementById('admin-view-permissoes');
+      const vLogs = document.getElementById('admin-view-logs');
 
       const bLinks = document.getElementById('admin-tab-btn-links');
       const bContrato = document.getElementById('admin-tab-btn-contrato');
       const bUsuarios = document.getElementById('admin-tab-btn-usuarios');
       const bPerms = document.getElementById('admin-tab-btn-permissoes');
+      const bLogs = document.getElementById('admin-tab-btn-logs');
 
-      [vLinks, vContrato, vUsuarios, vPerms].forEach(v => v && v.classList.add('hidden'));
-      [bLinks, bContrato, bUsuarios, bPerms].forEach(b => {
+      [vLinks, vContrato, vUsuarios, vPerms, vLogs].forEach(v => v && v.classList.add('hidden'));
+      [bLinks, bContrato, bUsuarios, bPerms, bLogs].forEach(b => {
         if (b) b.className = "px-6 py-3 font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-slate-600 whitespace-nowrap";
       });
 
@@ -912,6 +941,10 @@ Object.assign(window.app, {
         vPerms.classList.remove('hidden');
         bPerms.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
         this.renderPermissionsMatrix();
+      } else if (tab === 'logs' && vLogs) {
+        vLogs.classList.remove('hidden');
+        bLogs.className = "px-6 py-3 font-black text-xs uppercase tracking-wider border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
+        this.loadAuditLogs();
       }
     },
 
@@ -1465,6 +1498,259 @@ Object.assign(window.app, {
         this.renderLinksList();
         await app.data.sendToCloud({ action: "SAVE_SHORTCUTS", shortcuts: app.state.links });
       }
+    },
+
+    // ------------------------------------------------------------------------
+    // TRILHA DE AUDITORIA & GESTÃO DE LOGS INSTITUCIONAIS
+    // ------------------------------------------------------------------------
+    async loadAuditLogs(forceRefresh = false) {
+      const tbody = document.getElementById('adm-logs-list-tbody');
+      if (!tbody) return;
+
+      if (!forceRefresh && app.state.auditLogs && app.state.auditLogs.length > 0) {
+        this.populateUsersFilterLogs();
+        this.renderAuditLogsTable();
+        return;
+      }
+
+      if (app.ui && app.ui.showLoading) {
+        app.ui.showLoading({
+          title: "Carregando Trilha de Auditoria",
+          subtitle: "Consultando registros na planilha Google Sheets",
+          step1: "Conectando à aba de logs de auditoria",
+          step2: "Recuperando histórico de ações e usuários",
+          step3: "Formatando linha do tempo institucional",
+          icon: "📜"
+        });
+      }
+
+      try {
+        const logs = await app.data.fetchAuditLogs(500);
+        app.state.auditLogs = logs || [];
+        this.populateUsersFilterLogs();
+        this.renderAuditLogsTable();
+      } catch (err) {
+        console.error("Erro ao carregar logs:", err);
+        app.ui.toast("Não foi possível carregar os logs da nuvem.", "danger", "Erro");
+      } finally {
+        if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+      }
+    },
+
+    populateUsersFilterLogs() {
+      const selectUser = document.getElementById('adm-logs-filter-user');
+      if (!selectUser) return;
+      const currentVal = selectUser.value || 'todos';
+
+      const setUsers = new Set();
+      (app.state.auditLogs || []).forEach(l => { if (l.usuario) setUsers.add(l.usuario); });
+      (app.state.users || []).forEach(u => { if (u.usuario) setUsers.add(u.usuario); });
+
+      const sortedUsers = Array.from(setUsers).sort();
+      selectUser.innerHTML = '<option value="todos">Todos os Usuários</option>' + 
+        sortedUsers.map(u => `<option value="${u}" ${u === currentVal ? 'selected' : ''}>${u}</option>`).join('');
+    },
+
+    setAuditLogsFilter(key, val) {
+      if (!app.state.auditLogsFilter) {
+        app.state.auditLogsFilter = { search: '', user: 'todos', modulo: 'todos', data: '' };
+      }
+      app.state.auditLogsFilter[key] = val;
+      this.renderAuditLogsTable();
+    },
+
+    renderAuditLogsTable() {
+      const tbody = document.getElementById('adm-logs-list-tbody');
+      const emptyEl = document.getElementById('adm-logs-empty');
+      const countEl = document.getElementById('adm-logs-count-info');
+      if (!tbody) return;
+
+      const f = app.state.auditLogsFilter || { search: '', user: 'todos', modulo: 'todos', data: '' };
+      const s = (f.search || '').trim().toLowerCase();
+      const u = (f.user || 'todos').toLowerCase();
+      const m = (f.modulo || 'todos').toLowerCase();
+      const d = (f.data || '').trim();
+
+      const filtered = (app.state.auditLogs || []).filter(log => {
+        if (u !== 'todos' && String(log.usuario || '').toLowerCase() !== u) return false;
+        if (m !== 'todos' && String(log.modulo || '').toLowerCase() !== m) return false;
+        if (d) {
+          const [ano, mes, dia] = d.split('-');
+          const dataBr = `${dia}/${mes}/${ano}`;
+          if (!String(log.dataHora || '').includes(dataBr)) return false;
+        }
+        if (s) {
+          const searchable = `${log.dataHora} ${log.usuario} ${log.modulo} ${log.acao} ${log.detalhes} ${log.registroId}`.toLowerCase();
+          if (!searchable.includes(s)) return false;
+        }
+        return true;
+      });
+
+      if (countEl) {
+        countEl.textContent = `Exibindo ${filtered.length} de ${(app.state.auditLogs || []).length} registros`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      if (emptyEl) emptyEl.classList.add('hidden');
+
+      const moduloBadgeClass = (mod) => {
+        const modNorm = String(mod || '').toLowerCase();
+        if (modNorm.includes('dota')) return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        if (modNorm.includes('contrato')) return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+        if (modNorm.includes('audit') || modNorm.includes('exame')) return 'bg-blue-100 text-blue-800 border-blue-200';
+        if (modNorm.includes('usuár') || modNorm.includes('permis')) return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+      };
+
+      const acaoColorClass = (acao) => {
+        const a = String(acao || '').toLowerCase();
+        if (a.includes('excluir') || a.includes('cancelar')) return 'text-rose-600 font-black';
+        if (a.includes('criar') || a.includes('cadastrar') || a.includes('validar') || a.includes('dotar')) return 'text-emerald-700 font-bold';
+        if (a.includes('editar') || a.includes('redefinir') || a.includes('atualizar')) return 'text-amber-700 font-bold';
+        if (a.includes('rebalancear')) return 'text-blue-700 font-black';
+        return 'text-slate-800 font-semibold';
+      };
+
+      tbody.innerHTML = filtered.map(log => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-xs">
+          <td class="p-3 font-mono font-medium text-slate-600 whitespace-nowrap text-[11px]">${log.dataHora || '—'}</td>
+          <td class="p-3 font-bold text-slate-900 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-800 font-mono text-[11px]">
+              👤 ${log.usuario || 'sistema'}
+            </span>
+          </td>
+          <td class="p-3 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${moduloBadgeClass(log.modulo)}">
+              ${log.modulo || 'Geral'}
+            </span>
+          </td>
+          <td class="p-3 ${acaoColorClass(log.acao)} whitespace-nowrap">${log.acao || '—'}</td>
+          <td class="p-3 text-slate-700 leading-snug max-w-md break-words">${log.detalhes || '—'}</td>
+          <td class="p-3 font-mono text-slate-500 text-[11px] whitespace-nowrap">${log.registroId || '—'}</td>
+        </tr>
+      `).join('');
+    },
+
+    exportAuditLogsReport() {
+      const f = app.state.auditLogsFilter || { search: '', user: 'todos', modulo: 'todos', data: '' };
+      const s = (f.search || '').trim().toLowerCase();
+      const u = (f.user || 'todos').toLowerCase();
+      const m = (f.modulo || 'todos').toLowerCase();
+      const d = (f.data || '').trim();
+
+      const filtered = (app.state.auditLogs || []).filter(log => {
+        if (u !== 'todos' && String(log.usuario || '').toLowerCase() !== u) return false;
+        if (m !== 'todos' && String(log.modulo || '').toLowerCase() !== m) return false;
+        if (d) {
+          const [ano, mes, dia] = d.split('-');
+          const dataBr = `${dia}/${mes}/${ano}`;
+          if (!String(log.dataHora || '').includes(dataBr)) return false;
+        }
+        if (s) {
+          const searchable = `${log.dataHora} ${log.usuario} ${log.modulo} ${log.acao} ${log.detalhes} ${log.registroId}`.toLowerCase();
+          if (!searchable.includes(s)) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        return app.ui.toast("Nenhum registro encontrado para exportar com os filtros atuais.", "warning", "Relatório Vazio");
+      }
+
+      const now = new Date();
+      const emissao = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+      const adminName = (app.state.auth.user && (app.state.auth.user.nome || app.state.auth.user.usuario)) || 'Administrador';
+
+      const win = window.open('', '_blank');
+      if (!win) return app.ui.toast("Permita pop-ups no seu navegador para imprimir o relatório.", "warning", "Pop-up Bloqueado");
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <title>Relatório Oficial de Auditoria e Logs - Prefeitura de Torres</title>
+          <style>
+            @page { size: A4 landscape; margin: 8mm; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 10px; color: #1e293b; margin: 0; padding: 8px; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 10px; }
+            .header-title h1 { margin: 0; font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
+            .header-title p { margin: 2px 0 0; font-size: 10px; color: #64748b; font-weight: bold; }
+            .header-meta { text-align: right; font-size: 9px; color: #475569; }
+            .kpis { display: flex; gap: 15px; margin-bottom: 10px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 9px; }
+            .kpis span { font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; font-size: 9px; }
+            th { background: #0f172a; color: white; text-align: left; padding: 5px 6px; font-weight: 800; text-transform: uppercase; font-size: 8px; }
+            td { padding: 4px 6px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+            tr:nth-child(even) td { background: #f8fafc; }
+            .footer { margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 6px; font-size: 8px; color: #64748b; display: flex; justify-content: space-between; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-title">
+              <h1>Prefeitura Municipal de Torres • Secretaria Municipal de Saúde</h1>
+              <p>Relatório de Trilha de Auditoria & Registro de Logs Institucionais</p>
+            </div>
+            <div class="header-meta">
+              <div>Emitido em: <strong>${emissao}</strong></div>
+              <div>Solicitado por: <strong>${adminName}</strong></div>
+            </div>
+          </div>
+
+          <div class="kpis">
+            <div>Total de Registros Impressos: <span>${filtered.length}</span></div>
+            <div>Filtro Usuário: <span>${u === 'todos' ? 'Todos' : u}</span></div>
+            <div>Filtro Módulo: <span>${m === 'todos' ? 'Todos' : m}</span></div>
+            <div>Período: <span>${d ? d : 'Histórico Completo'}</span></div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 130px;">Data / Hora</th>
+                <th style="width: 90px;">Usuário</th>
+                <th style="width: 90px;">Módulo</th>
+                <th style="width: 120px;">Ação</th>
+                <th>Detalhes da Operação Realizada</th>
+                <th style="width: 75px;">Ref / ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(l => `
+                <tr>
+                  <td style="font-family: monospace;">${l.dataHora}</td>
+                  <td><strong>${l.usuario}</strong></td>
+                  <td>${l.modulo}</td>
+                  <td>${l.acao}</td>
+                  <td>${l.detalhes}</td>
+                  <td style="font-family: monospace;">${l.registroId || '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <span>Sistema Integrado de Gestão da Saúde - Prefeitura de Torres</span>
+            <span>Documento Oficial de Controle Interno e Auditoria</span>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+        </html>
+      `;
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
     }
   },
 
