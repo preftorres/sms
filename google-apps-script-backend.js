@@ -70,7 +70,7 @@ const AUDIT_LOGS_SHEET = "_Logs_Auditoria";
 
 const HEADERS_PANEL = [
   "id", "empresa", "numeroCtt", "prazoVencimento", "dataVencimentoIso",
-  "valorContrato", "fiscal", "status", "objeto", "criadoEm", "criadoPor"
+  "valorContrato", "fiscal", "status", "objeto", "criadoEm", "criadoPor", "observacao"
 ];
 const HEADERS_EXAMS = ["id", "item", "cat", "descEmpenho", "descPrestador", "vlUnit", "qtdEmpenho", "saldoAnterior", "faturado"];
 const HEADERS_SHORTCUTS = ["id", "title", "url", "desc"];
@@ -151,7 +151,12 @@ function ensurePanelContractsStructure(ss) {
     sheet = ss.insertSheet(PANEL_SHEET);
     sheet.appendRow(HEADERS_PANEL);
     if (INITIAL_42_CONTRATOS.length > 0) {
-      sheet.getRange(2, 1, INITIAL_42_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_42_CONTRATOS);
+      sheet.getRange(2, 1, INITIAL_42_CONTRATOS.length, INITIAL_42_CONTRATOS[0].length).setValues(INITIAL_42_CONTRATOS);
+    }
+  } else {
+    const lastCol = sheet.getLastColumn();
+    if (lastCol < HEADERS_PANEL.length) {
+      sheet.getRange(1, HEADERS_PANEL.length).setValue("observacao");
     }
   }
   return sheet;
@@ -360,7 +365,8 @@ function getPanelContractsList(ss) {
       status: String(rows[i][7] || "Ativo"),
       objeto: String(rows[i][8] || ""),
       criadoEm: String(rows[i][9] || ""),
-      criadoPor: String(rows[i][10] || "")
+      criadoPor: String(rows[i][10] || ""),
+      observacao: String(rows[i][11] || "")
     });
   }
   return list;
@@ -731,7 +737,8 @@ function doPost(e) {
       const c = payload.contract;
       sheet.appendRow([
         c.id || Date.now(), c.empresa, c.numeroCtt, c.prazoVencimento, c.dataVencimentoIso,
-        c.valorContrato, c.fiscal, "Ativo", c.objeto || "", c.criadoEm || "", c.criadoPor || ""
+        c.valorContrato, c.fiscal, "Ativo", c.objeto || "", c.criadoEm || "", c.criadoPor || "",
+        c.observacao || ""
       ]);
       logAudit(ss, {
         usuario: payload.currentUser || c.criadoPor || "admin",
@@ -757,6 +764,7 @@ function doPost(e) {
           sheet.getRange(rowNum, 6).setValue(c.valorContrato);
           sheet.getRange(rowNum, 7).setValue(c.fiscal);
           sheet.getRange(rowNum, 9).setValue(c.objeto);
+          sheet.getRange(rowNum, 12).setValue(c.observacao || "");
           break;
         }
       }

@@ -38,17 +38,163 @@ app.contratos = {
     }
   },
 
+  DEFAULT_FISCAIS: ["ADRI", "FRAN", "LASIER", "NAIARA", "PREFEITURA", "SANDRO"],
+
+  getFiscais() {
+    let list = [];
+    try {
+      const raw = localStorage.getItem('torres_fiscais_v1');
+      if (raw) list = JSON.parse(raw);
+    } catch(e) {}
+    if (!Array.isArray(list) || list.length === 0) {
+      list = [...this.DEFAULT_FISCAIS];
+    }
+    if (app.state.panelContracts) {
+      app.state.panelContracts.forEach(c => {
+        if (c.fiscal) {
+          const fUpper = String(c.fiscal).trim().toUpperCase();
+          if (fUpper && !list.includes(fUpper)) list.push(fUpper);
+        }
+      });
+    }
+    return Array.from(new Set(list.map(f => String(f).trim().toUpperCase()))).filter(Boolean).sort();
+  },
+
+  saveFiscais(list) {
+    try {
+      localStorage.setItem('torres_fiscais_v1', JSON.stringify(list));
+    } catch(e) {}
+  },
+
+  populateFiscalSelect(selectEl, selectedVal) {
+    if (!selectEl) return;
+    const fiscais = this.getFiscais();
+    const curr = (selectedVal || selectEl.value || fiscais[0] || '').toUpperCase();
+    selectEl.innerHTML = fiscais.map(f => `<option value="${f}" ${f === curr ? 'selected' : ''}>${f}</option>`).join('');
+    if (!fiscais.includes(curr) && curr) {
+      selectEl.innerHTML += `<option value="${curr}" selected>${curr}</option>`;
+    }
+  },
+
+  populateYearSelect(selectEl, selectedYear) {
+    if (!selectEl) return;
+    const currentYear = 2026;
+    const startYear = 2018;
+    const target = Number(selectedYear) || currentYear;
+    let html = '';
+    for (let y = currentYear; y >= startYear; y--) {
+      html += `<option value="${y}" ${y === target ? 'selected' : ''}>${y}</option>`;
+    }
+    if (target < startYear) {
+      html += `<option value="${target}" selected>${target}</option>`;
+    }
+    selectEl.innerHTML = html;
+  },
+
+  openAddFiscalModal(targetSelectId) {
+    app.state.targetFiscalSelectId = targetSelectId;
+    const m = document.getElementById('modal-adicionar-fiscal');
+    const input = document.getElementById('input-novo-fiscal');
+    if (input) input.value = '';
+    if (m) {
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      setTimeout(() => input && input.focus(), 80);
+    }
+  },
+
+  closeAddFiscalModal() {
+    const m = document.getElementById('modal-adicionar-fiscal');
+    if (m) {
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+    app.state.targetFiscalSelectId = null;
+  },
+
+  saveNewFiscalFromModal() {
+    const input = document.getElementById('input-novo-fiscal');
+    const nome = input ? input.value.trim().toUpperCase() : '';
+    if (!nome) return app.ui.toast("Digite o nome ou sigla do fiscal.", "warning", "Campo Obrigatório");
+    
+    let list = this.getFiscais();
+    if (!list.includes(nome)) {
+      list.push(nome);
+      list.sort();
+      this.saveFiscais(list);
+    }
+    
+    const targetId = app.state.targetFiscalSelectId;
+    if (targetId) {
+      const selectEl = document.getElementById(targetId);
+      if (selectEl) {
+        this.populateFiscalSelect(selectEl, nome);
+        selectEl.value = nome;
+      }
+    }
+    this.closeAddFiscalModal();
+    app.ui.toast(`Fiscal "${nome}" cadastrado com sucesso!`, "success", "Fiscais");
+  },
+
+  deleteSelectedFiscal(selectId) {
+    if (!app.admin.isAdminUser()) {
+      return app.ui.toast("Apenas o Administrador Geral ('Deus') tem permissão para excluir fiscais cadastrados.", "warning", "Acesso Restrito");
+    }
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl) return;
+    const fiscal = selectEl.value;
+    if (!fiscal) return;
+
+    if (!confirm(`Deseja realmente remover o fiscal "${fiscal}" da lista de fiscais?`)) return;
+
+    let list = this.getFiscais().filter(f => f !== fiscal);
+    this.saveFiscais(list);
+    this.populateFiscalSelect(selectEl, list[0] || '');
+    app.ui.toast(`Fiscal "${fiscal}" removido com sucesso.`, "info", "Fiscais");
+  },
+
+  onDateChange(mode) {
+    const dateInput = document.getElementById(mode === 'new' ? 'panel-new-venc-iso' : 'panel-edit-venc-iso');
+    const prazoInput = document.getElementById(mode === 'new' ? 'panel-new-prazo-txt' : 'panel-edit-prazo-txt');
+    if (!dateInput || !prazoInput) return;
+    const val = dateInput.value;
+    if (val && !prazoInput.value.trim()) {
+      const [ano, mes, dia] = val.split('-');
+      if (ano && mes && dia) {
+        prazoInput.value = `Até ${dia}/${mes}/${ano}`;
+      }
+    }
+  },
+
+  applyRubrica(novoTexto, textoOriginal, usuario) {
+    const novo = String(novoTexto || '').trim();
+    const orig = String(textoOriginal || '').trim();
+    if (!novo) return '';
+    if (novo === orig) return orig;
+
+    const now = new Date();
+    const dataHora = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    
+    if (!novo.startsWith('[')) {
+      return `[${usuario} em ${dataHora}]: ${novo}`;
+    }
+    return `${novo} | [${usuario} em ${dataHora}]`;
+  },
+
   openNewModal() {
     if (!app.permissions.can('panel_create')) return app.ui.toast("Sem permissão para cadastrar contratos no painel.", "warning", "Acesso Restrito");
     const m = document.getElementById('modal-novo-painel-contrato');
     if (m) {
       m.classList.remove('hidden'); m.classList.add('flex');
       document.getElementById('panel-new-empresa').value = '';
-      document.getElementById('panel-new-ctt').value = '';
+      document.getElementById('panel-new-ctt-num').value = '';
+      this.populateYearSelect(document.getElementById('panel-new-ctt-ano'), 2026);
+      this.populateFiscalSelect(document.getElementById('panel-new-fiscal'));
       document.getElementById('panel-new-valor').value = '';
       document.getElementById('panel-new-venc-iso').value = '';
       document.getElementById('panel-new-prazo-txt').value = '';
       document.getElementById('panel-new-objeto').value = '';
+      document.getElementById('panel-new-observacao').value = '';
       setTimeout(() => document.getElementById('panel-new-empresa').focus(), 80);
     }
   },
@@ -61,23 +207,27 @@ app.contratos = {
   async saveNewContract(e) {
     e.preventDefault();
     const empresa = document.getElementById('panel-new-empresa').value.trim();
-    const numeroCtt = document.getElementById('panel-new-ctt').value.trim();
+    let numCtt = document.getElementById('panel-new-ctt-num').value.replace(/[^0-9]/g, '').slice(0, 5);
+    const anoCtt = document.getElementById('panel-new-ctt-ano').value;
     const valor = parseFloat(document.getElementById('panel-new-valor').value) || 0;
     const dataIso = document.getElementById('panel-new-venc-iso').value;
-    const fiscal = document.getElementById('panel-new-fiscal').value;
+    const fiscal = document.getElementById('panel-new-fiscal').value.toUpperCase();
     const prazoTxt = document.getElementById('panel-new-prazo-txt').value.trim();
     const objeto = document.getElementById('panel-new-objeto').value.trim();
+    const obsTxt = document.getElementById('panel-new-observacao').value.trim();
 
-    if (!empresa || !numeroCtt || !dataIso) return app.ui.toast("Preencha ao menos Empresa, Nº Contrato e Vencimento.", "warning", "Campos Obrigatórios");
+    if (!empresa || !numCtt || !dataIso) return app.ui.toast("Preencha ao menos Empresa, Nº do Contrato e Vencimento.", "warning", "Campos Obrigatórios");
 
+    const numeroCtt = `${numCtt}/${anoCtt}`;
     const now = new Date();
     const criadoEm = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     const criadoPor = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
+    const observacao = obsTxt ? this.applyRubrica(obsTxt, '', criadoPor) : '';
 
     const newObj = {
       id: Date.now(), empresa, numeroCtt, prazoVencimento: prazoTxt,
       dataVencimentoIso: dataIso, valorContrato: valor, fiscal,
-      status: "Ativo", objeto, criadoEm, criadoPor
+      status: "Ativo", objeto, criadoEm, criadoPor, observacao
     };
 
     if (!app.state.panelContracts) app.state.panelContracts = [];
@@ -121,12 +271,35 @@ app.contratos = {
 
     document.getElementById('panel-edit-id').value = item.id;
     document.getElementById('panel-edit-empresa').value = item.empresa;
-    document.getElementById('panel-edit-ctt').value = item.numeroCtt;
+
+    let num = '';
+    let ano = '2026';
+    if (String(item.numeroCtt).includes('/')) {
+      const parts = String(item.numeroCtt).split('/');
+      num = parts[0].replace(/[^0-9]/g, '').slice(0, 5);
+      ano = parts[1].trim() || '2026';
+    } else {
+      num = String(item.numeroCtt).replace(/[^0-9]/g, '').slice(0, 5);
+    }
+    document.getElementById('panel-edit-ctt-num').value = num;
+    this.populateYearSelect(document.getElementById('panel-edit-ctt-ano'), ano);
+    this.populateFiscalSelect(document.getElementById('panel-edit-fiscal'), item.fiscal);
+
     document.getElementById('panel-edit-valor').value = item.valorContrato;
     document.getElementById('panel-edit-venc-iso').value = item.dataVencimentoIso;
-    document.getElementById('panel-edit-fiscal').value = item.fiscal;
     document.getElementById('panel-edit-prazo-txt').value = item.prazoVencimento;
     document.getElementById('panel-edit-objeto').value = item.objeto || '';
+    
+    const obsEl = document.getElementById('panel-edit-observacao');
+    const badgeEl = document.getElementById('panel-edit-obs-rubrica-badge');
+    obsEl.value = item.observacao || '';
+    if (item.observacao) {
+      badgeEl.textContent = 'Possui registro';
+      badgeEl.title = item.observacao;
+    } else {
+      badgeEl.textContent = '';
+      badgeEl.title = '';
+    }
 
     const m = document.getElementById('modal-editar-painel-contrato');
     if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
@@ -144,13 +317,22 @@ app.contratos = {
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
 
+    let numCtt = document.getElementById('panel-edit-ctt-num').value.replace(/[^0-9]/g, '').slice(0, 5);
+    const anoCtt = document.getElementById('panel-edit-ctt-ano').value;
+    if (!numCtt) return app.ui.toast("Preencha o número do contrato.", "warning", "Campo Obrigatório");
+
+    const currentUser = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
+    const newObs = document.getElementById('panel-edit-observacao').value.trim();
+    const obsFinal = this.applyRubrica(newObs, item.observacao || '', currentUser);
+
     item.empresa = document.getElementById('panel-edit-empresa').value.trim();
-    item.numeroCtt = document.getElementById('panel-edit-ctt').value.trim();
+    item.numeroCtt = `${numCtt}/${anoCtt}`;
     item.valorContrato = parseFloat(document.getElementById('panel-edit-valor').value) || 0;
     item.dataVencimentoIso = document.getElementById('panel-edit-venc-iso').value;
-    item.fiscal = document.getElementById('panel-edit-fiscal').value;
+    item.fiscal = document.getElementById('panel-edit-fiscal').value.toUpperCase();
     item.prazoVencimento = document.getElementById('panel-edit-prazo-txt').value.trim();
     item.objeto = document.getElementById('panel-edit-objeto').value.trim();
+    item.observacao = obsFinal;
 
     if (app.data && app.data.saveLocalPanelContracts) {
       app.data.saveLocalPanelContracts(app.state.panelContracts);
@@ -429,6 +611,7 @@ app.contratos = {
           c.numeroCtt,
           c.fiscal,
           c.objeto,
+          c.observacao,
           c.prazoVencimento,
           c.status,
           semaforo.label
@@ -476,6 +659,16 @@ app.contratos = {
               </div>
 
               ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
+
+              <!-- OBSERVAÇÃO INSTITUCIONAL COM RUBRICA -->
+              ${c.observacao ? `
+                <div class="mt-2.5 p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 leading-snug">
+                  <span class="font-black text-[10px] text-amber-800 uppercase tracking-wide flex items-center gap-1 mb-0.5">
+                    📝 Observação:
+                  </span>
+                  <span class="break-words line-clamp-3" title="${c.observacao}">${c.observacao}</span>
+                </div>
+              ` : ''}
           </div>
 
           <!-- AÇÕES NO RODAPÉ -->
@@ -507,7 +700,10 @@ app.contratos = {
     const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
     return `
       <tr class="hover:bg-slate-50">
-          <td class="p-3.5 font-bold text-slate-900">${c.empresa}</td>
+          <td class="p-3.5 font-bold text-slate-900">
+              <div>${c.empresa}</div>
+              ${c.observacao ? `<div class="text-[10px] text-amber-800 font-semibold italic mt-0.5 max-w-sm truncate" title="${c.observacao}">📝 ${c.observacao}</div>` : ''}
+          </td>
           <td class="p-3.5 font-mono text-blue-700 font-bold">${c.numeroCtt}</td>
           <td class="p-3.5 text-right font-black text-slate-900">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
           <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold text-[10px]">${c.fiscal}</span></td>
@@ -580,12 +776,12 @@ app.contratos = {
 
   exportCSV() {
     const list = this.getFilteredList();
-    const headers = ["ID", "Empresa", "Numero_CTT", "Objeto", "Fiscal", "Prazo_Vencimento", "Vencimento_ISO", "Valor_Contrato", "Situacao"];
+    const headers = ["ID", "Empresa", "Numero_CTT", "Objeto", "Observacao", "Fiscal", "Prazo_Vencimento", "Vencimento_ISO", "Valor_Contrato", "Situacao"];
     const rows = list.map(c => {
       const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
       return [
         c.id, `"${c.empresa.replace(/"/g, '""')}"`, `"${c.numeroCtt}"`, `"${(c.objeto || '').replace(/"/g, '""')}"`,
-        `"${c.fiscal}"`, `"${c.prazoVencimento}"`, `"${c.dataVencimentoIso}"`, c.valorContrato, `"${sem.label}"`
+        `"${(c.observacao || '').replace(/"/g, '""')}"`, `"${c.fiscal}"`, `"${c.prazoVencimento}"`, `"${c.dataVencimentoIso}"`, c.valorContrato, `"${sem.label}"`
       ].join(";");
     });
 
@@ -699,14 +895,9 @@ app.render.contratosHub = function(el) {
             <!-- FILTRO POR FISCAL -->
             <div class="flex items-center gap-2">
                 <span class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Fiscal:</span>
-                <select onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500">
+                <select onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 uppercase">
                     <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
-                    <option value="NAIARA" ${app.state.panelFiscalFilter === 'NAIARA' ? 'selected' : ''}>NAIARA</option>
-                    <option value="SANDRO" ${app.state.panelFiscalFilter === 'SANDRO' ? 'selected' : ''}>SANDRO</option>
-                    <option value="FRAN" ${app.state.panelFiscalFilter === 'FRAN' ? 'selected' : ''}>FRAN</option>
-                    <option value="LASIER" ${app.state.panelFiscalFilter === 'LASIER' ? 'selected' : ''}>LASIER</option>
-                    <option value="ADRI" ${app.state.panelFiscalFilter === 'ADRI' ? 'selected' : ''}>ADRI</option>
-                    <option value="PREFEITURA" ${app.state.panelFiscalFilter === 'PREFEITURA' ? 'selected' : ''}>PREFEITURA GERAL</option>
+                    ${app.contratos.getFiscais().map(f => `<option value="${f}" ${app.state.panelFiscalFilter === f ? 'selected' : ''}>${f}</option>`).join('')}
                 </select>
             </div>
 

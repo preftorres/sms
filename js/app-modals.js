@@ -447,7 +447,10 @@ Exemplo do formato:
       <div id="modal-novo-painel-contrato" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-black text-slate-900">Novo Contrato no Mural Geral (LDO)</h3>
+            <div>
+              <h3 class="text-base font-black text-slate-900">Novo Contrato no Mural Geral (LDO)</h3>
+              <p class="text-[11px] text-slate-500">Cadastrar novo ajuste formal de despesa continuada</p>
+            </div>
             <button onclick="app.contratos.closeNewModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
           </div>
           <form onsubmit="app.contratos.saveNewContract(event)" class="space-y-3 text-xs">
@@ -455,40 +458,56 @@ Exemplo do formato:
               <label class="block font-bold text-slate-600 mb-1">Empresa / Razão Social</label>
               <input type="text" id="panel-new-empresa" required placeholder="Ex: ECOPOÁ COMÉRCIO DE RESÍDUOS LTDA" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Nº do Contrato (CTT)</label>
-                <input type="text" id="panel-new-ctt" required placeholder="Ex: 014/2022" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-mono font-bold">
+                <label class="block font-bold text-slate-600 mb-1">Nº do Contrato (Nº / Ano)</label>
+                <div class="flex items-center gap-1.5">
+                  <input type="text" id="panel-new-ctt-num" required maxlength="5" pattern="\d*" placeholder="Ex: 014" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)" class="w-24 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-mono font-bold text-center">
+                  <span class="text-slate-400 font-black text-sm">/</span>
+                  <select id="panel-new-ctt-ano" class="flex-1 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-mono font-bold">
+                    <!-- Preenchido via script até o ano atual -->
+                  </select>
+                </div>
               </div>
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Valor Anual (R$)</label>
                 <input type="number" step="0.01" id="panel-new-valor" required placeholder="Ex: 48900.00" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Data Vencimento (ISO)</label>
-                <input type="date" id="panel-new-venc-iso" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-semibold">
+                <label class="block font-bold text-slate-600 mb-1">Vencimento do Contrato</label>
+                <input type="date" id="panel-new-venc-iso" required onchange="app.contratos.onDateChange('new')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-semibold">
               </div>
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Fiscal Responsável</label>
-                <select id="panel-new-fiscal" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
-                  <option value="NAIARA">NAIARA</option>
-                  <option value="SANDRO">SANDRO</option>
-                  <option value="FRAN">FRAN</option>
-                  <option value="LASIER">LASIER</option>
-                  <option value="ADRI">ADRI</option>
-                  <option value="PREFEITURA">PREFEITURA GERAL</option>
-                </select>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block font-bold text-slate-600">Fiscal Responsável</label>
+                  <button type="button" onclick="app.contratos.openAddFiscalModal('panel-new-fiscal')" class="text-[10px] font-black text-blue-600 hover:text-blue-800 transition">+ Fiscal</button>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <select id="panel-new-fiscal" class="flex-1 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold uppercase">
+                    <!-- Fiscais dinâmicos -->
+                  </select>
+                  <button type="button" onclick="app.contratos.deleteSelectedFiscal('panel-new-fiscal')" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-bold text-xs" title="Excluir Fiscal Selecionado (Apenas Administrador)">
+                    🗑️
+                  </button>
+                </div>
               </div>
             </div>
             <div>
-              <label class="block font-bold text-slate-600 mb-1">Prazo / Informação de Vencimento (Texto)</label>
-              <input type="text" id="panel-new-prazo-txt" placeholder="Ex: 11/02/2027 (Renovável até 2027)" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500">
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-600">Prazo / Informação de Vencimento</label>
+                <span class="text-[10px] text-slate-400">Texto ou Período para alertas</span>
+              </div>
+              <input type="text" id="panel-new-prazo-txt" placeholder="Ex: 12 Meses até 11/02/2027 (Renovável)" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500">
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Objeto do Contrato</label>
               <textarea id="panel-new-objeto" rows="2" placeholder="Ex: Coleta, transporte e incineração de resíduos de saúde..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Observação Institucional (Opcional)</label>
+              <textarea id="panel-new-observacao" rows="2" placeholder="Observações, ressalvas ou histórico administrativo (assinatura/rubrica automática ao gravar)..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
             </div>
             <div class="pt-3 flex gap-2">
               <button type="button" onclick="app.contratos.closeNewModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
@@ -504,7 +523,10 @@ Exemplo do formato:
       <div id="modal-editar-painel-contrato" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-black text-slate-900">Editar Contrato no Mural (LDO)</h3>
+            <div>
+              <h3 class="text-base font-black text-slate-900">Editar Contrato no Mural (LDO)</h3>
+              <p class="text-[11px] text-slate-500">Atualizar vigência, valores, fiscal e apontamentos</p>
+            </div>
             <button onclick="app.contratos.closeEditModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
           </div>
           <form onsubmit="app.contratos.confirmEdit(event)" class="space-y-3 text-xs">
@@ -513,46 +535,88 @@ Exemplo do formato:
               <label class="block font-bold text-slate-600 mb-1">Empresa / Razão Social</label>
               <input type="text" id="panel-edit-empresa" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Nº do Contrato (CTT)</label>
-                <input type="text" id="panel-edit-ctt" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold">
+                <label class="block font-bold text-slate-600 mb-1">Nº do Contrato (Nº / Ano)</label>
+                <div class="flex items-center gap-1.5">
+                  <input type="text" id="panel-edit-ctt-num" required maxlength="5" pattern="\d*" placeholder="Ex: 014" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)" class="w-24 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold text-center">
+                  <span class="text-slate-400 font-black text-sm">/</span>
+                  <select id="panel-edit-ctt-ano" class="flex-1 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold">
+                    <!-- Preenchido via script até o ano atual -->
+                  </select>
+                </div>
               </div>
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Valor Anual (R$)</label>
                 <input type="number" step="0.01" id="panel-edit-valor" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Data Vencimento (ISO)</label>
-                <input type="date" id="panel-edit-venc-iso" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-semibold">
+                <label class="block font-bold text-slate-600 mb-1">Vencimento do Contrato</label>
+                <input type="date" id="panel-edit-venc-iso" required onchange="app.contratos.onDateChange('edit')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-semibold">
               </div>
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Fiscal Responsável</label>
-                <select id="panel-edit-fiscal" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
-                  <option value="NAIARA">NAIARA</option>
-                  <option value="SANDRO">SANDRO</option>
-                  <option value="FRAN">FRAN</option>
-                  <option value="LASIER">LASIER</option>
-                  <option value="ADRI">ADRI</option>
-                  <option value="PREFEITURA">PREFEITURA GERAL</option>
-                </select>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block font-bold text-slate-600">Fiscal Responsável</label>
+                  <button type="button" onclick="app.contratos.openAddFiscalModal('panel-edit-fiscal')" class="text-[10px] font-black text-amber-700 hover:text-amber-900 transition">+ Fiscal</button>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <select id="panel-edit-fiscal" class="flex-1 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold uppercase">
+                    <!-- Fiscais dinâmicos -->
+                  </select>
+                  <button type="button" onclick="app.contratos.deleteSelectedFiscal('panel-edit-fiscal')" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-bold text-xs" title="Excluir Fiscal Selecionado (Apenas Administrador)">
+                    🗑️
+                  </button>
+                </div>
               </div>
             </div>
             <div>
-              <label class="block font-bold text-slate-600 mb-1">Prazo / Informação de Vencimento</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-600">Prazo / Informação de Vencimento</label>
+                <span class="text-[10px] text-slate-400">Texto ou Período para alertas</span>
+              </div>
               <input type="text" id="panel-edit-prazo-txt" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500">
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Objeto do Contrato</label>
               <textarea id="panel-edit-objeto" rows="2" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500"></textarea>
             </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-600">Observação Institucional (Opcional)</label>
+                <span id="panel-edit-obs-rubrica-badge" class="text-[10px] text-amber-700 font-bold truncate max-w-[240px]"></span>
+              </div>
+              <textarea id="panel-edit-observacao" rows="2" placeholder="Observações, ressalvas ou histórico administrativo..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500"></textarea>
+            </div>
             <div class="pt-3 flex gap-2">
               <button type="button" onclick="app.contratos.closeEditModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
               <button type="submit" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl shadow-md">Atualizar Contrato</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- MODAL AUXILIAR: ADICIONAR NOVO FISCAL                             -->
+      <!-- ================================================================= -->
+      <div id="modal-adicionar-fiscal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-black text-slate-900">Cadastrar Novo Fiscal</h4>
+            <button onclick="app.contratos.closeAddFiscalModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">Digite o nome ou sigla do servidor responsável. O sistema formatará automaticamente em maiúsculas.</p>
+          <div class="space-y-3">
+            <div>
+              <label class="block font-bold text-slate-600 text-xs mb-1">Nome do Fiscal</label>
+              <input type="text" id="input-novo-fiscal" placeholder="Ex: MARCOS" oninput="this.value = this.value.toUpperCase()" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold uppercase text-xs">
+            </div>
+            <div class="flex gap-2 pt-1">
+              <button type="button" onclick="app.contratos.closeAddFiscalModal()" class="flex-1 py-2 border rounded-xl font-bold text-slate-600 hover:bg-slate-100 text-xs">Cancelar</button>
+              <button type="button" onclick="app.contratos.saveNewFiscalFromModal()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md text-xs">Adicionar Fiscal</button>
+            </div>
+          </div>
         </div>
       </div>
 
