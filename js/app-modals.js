@@ -628,7 +628,7 @@ Exemplo do formato:
           <div class="text-center mb-4">
             <span class="inline-block p-3 bg-rose-50 text-rose-600 rounded-2xl mb-2">🗑️</span>
             <h3 class="text-base font-black text-slate-900">Excluir Contrato do Mural</h3>
-            <p class="text-xs text-slate-500 mt-1">Ação restrita ao Administrador Geral</p>
+            <p class="text-xs text-slate-500 mt-1">Ação restrita ao Administrador</p>
           </div>
           <div class="p-3 bg-slate-50 rounded-2xl border text-xs space-y-1 mb-4">
             <div class="flex justify-between"><span class="text-slate-400 font-bold">Empresa:</span><span id="panel-delete-preview-empresa" class="font-bold"></span></div>
@@ -760,7 +760,7 @@ Exemplo do formato:
                   <select id="user-field-perfil" class="p-2.5 bg-white border rounded-xl outline-none font-bold">
                     <option value="Comprador">Comprador (Lança Dotações)</option>
                     <option value="Gestor Financeiro">Gestor Financeiro (Audita & Dá Baixa)</option>
-                    <option value="Administrador">Administrador Geral</option>
+                    <option value="Administrador">Administrador</option>
                   </select>
                 </div>
                 <div class="flex justify-end gap-2 pt-1">

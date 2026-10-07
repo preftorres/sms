@@ -184,7 +184,7 @@ function ensureUsersStructure(ss) {
   if (!sheet) {
     sheet = ss.insertSheet(USERS_SHEET);
     sheet.appendRow(HEADERS_USERS);
-    sheet.appendRow([1, "admin", "admin123", "Administrador Geral", "Administrador", "12/09/2026 às 08:30"]);
+    sheet.appendRow([1, "admin", "admin123", "Administrador", "Administrador", "12/09/2026 às 08:30"]);
   }
   return sheet;
 }

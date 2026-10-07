@@ -231,7 +231,7 @@ Object.assign(window.app, {
         console.warn("Falha de autenticação:", error);
         // Fallback silencioso exclusivo para contingência administrativa se o servidor estiver inacessível
         if (u === "admin" && p === "admin123") {
-          const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador Geral", perfil: "Administrador" };
+          const fallbackUser = { id: 1, usuario: "admin", nome: "Administrador", perfil: "Administrador" };
           app.state.auth.isLogged = true;
           app.state.auth.user = fallbackUser;
           sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(fallbackUser));
@@ -1005,7 +1005,7 @@ Object.assign(window.app, {
 
     async savePermissions() {
       if (!this.isAdminUser()) {
-        return app.ui.toast("Apenas o Administrador Geral tem permissão para alterar a matriz de segurança.", "warning", "Acesso Restrito");
+        return app.ui.toast("Apenas o Administrador tem permissão para alterar a matriz de segurança.", "warning", "Acesso Restrito");
       }
 
       const keys = [
@@ -1215,7 +1215,7 @@ Object.assign(window.app, {
 
     async saveUser() {
       if (!this.isAdminUser()) {
-        return app.ui.toast("Apenas Administrador Geral pode cadastrar ou alterar usuários.", "warning", "Acesso Restrito");
+        return app.ui.toast("Apenas Administrador pode cadastrar ou alterar usuários.", "warning", "Acesso Restrito");
       }
 
       const editId = (document.getElementById('user-edit-id')?.value || '').trim();
@@ -1306,7 +1306,7 @@ Object.assign(window.app, {
 
     openDeleteUserModal(id, usuario) {
       if (!this.isAdminUser()) {
-        return app.ui.toast("Apenas Administrador Geral pode excluir usuários.", "warning", "Acesso Restrito");
+        return app.ui.toast("Apenas Administrador pode excluir usuários.", "warning", "Acesso Restrito");
       }
 
       const modal = document.getElementById('modal-confirm-delete-user');
@@ -1355,7 +1355,7 @@ Object.assign(window.app, {
 
     openResetPasswordModal(id, usuario) {
       if (!this.isAdminUser()) {
-        return app.ui.toast("Apenas Administrador Geral pode alterar senhas.", "warning", "Acesso Restrito");
+        return app.ui.toast("Apenas Administrador pode alterar senhas.", "warning", "Acesso Restrito");
       }
 
       const modal = document.getElementById('modal-reset-password');
@@ -1385,7 +1385,7 @@ Object.assign(window.app, {
     async confirmResetPassword(e) {
       e.preventDefault();
       if (!this.isAdminUser()) {
-        return app.ui.toast("Apenas Administrador Geral pode alterar senhas.", "warning", "Acesso Restrito");
+        return app.ui.toast("Apenas Administrador pode alterar senhas.", "warning", "Acesso Restrito");
       }
 
       const id = Number(document.getElementById('reset-pass-target-id').value);

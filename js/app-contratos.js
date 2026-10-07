@@ -138,7 +138,7 @@ app.contratos = {
 
   deleteSelectedFiscal(selectId) {
     if (!app.admin.isAdminUser()) {
-      return app.ui.toast("Apenas o Administrador Geral ('Deus') tem permissão para excluir fiscais cadastrados.", "warning", "Acesso Restrito");
+      return app.ui.toast("Apenas o Administrador tem permissão para excluir fiscais cadastrados.", "warning", "Acesso Restrito");
     }
     const selectEl = document.getElementById(selectId);
     if (!selectEl) return;
@@ -407,9 +407,9 @@ app.contratos = {
     }
   },
 
-  // EXCLUSÃO BLINDADA (DIGITAÇÃO OBRIGATÓRIA SEM COLAR - SÓ ADMIN "DEUS")
+  // EXCLUSÃO BLINDADA (DIGITAÇÃO OBRIGATÓRIA SEM COLAR - SÓ ADMINISTRADOR)
   openDeleteModal(id) {
-    if (!app.admin.isAdminUser()) return app.ui.toast("Apenas o Administrador Geral ('Deus') tem permissão para excluir contratos.", "warning", "Acesso Restrito");
+    if (!app.admin.isAdminUser()) return app.ui.toast("Apenas o Administrador tem permissão para excluir contratos.", "warning", "Acesso Restrito");
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
 
@@ -686,7 +686,7 @@ app.contratos = {
                     </button>
                   ` : ''}
                   ${app.admin.isAdminUser() ? `
-                    <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Só Admin)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
+                    <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Administrador)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
                         🗑️
                     </button>
                   ` : ''}
