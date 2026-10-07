@@ -15,6 +15,7 @@ const CONFIG = {
     activeContractTab: 'torres_active_tab_v1',
     examsCache: 'torres_exams_cache_v1',
     dotacoesCache: 'torres_dotacoes_cache_v6',
+    panelContracts: 'torres_panel_contracts_v1',
     permissions: 'torres_permissions_matrix_v1',
     auditSession: 'torres_audit_logged_user'
   }

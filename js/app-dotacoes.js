@@ -159,11 +159,29 @@ app.dotacoes = {
     app.ui.toast(`Pedido SF ${sf} encaminhado com sucesso para a fila do Setor Financeiro!`, "success", "✓ Pedido Registrado");
     app.notifications.send("Novo Pedido de Dotação Registrado", `SF ${sf}: ${objeto.length > 55 ? objeto.substring(0, 55) + '...' : objeto}`);
 
-    // Sincroniza em segundo plano com a planilha do Google
-    await app.data.sendToCloud({
-      action: "CREATE_DOTACAO",
-      dotacao: newRecord
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Registrando Pedido de Dotação",
+        subtitle: `Enviando SF ${sf} para a planilha Google Sheets`,
+        step1: "Validando campos obrigatórios",
+        step2: "Registrando na planilha Google Sheets",
+        step3: "Notificando fila do Setor Financeiro",
+        icon: "📝"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "CREATE_DOTACAO",
+        dotacao: newRecord
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar pedido com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -257,10 +275,29 @@ app.dotacoes = {
 
     app.ui.toast(`Correções no pedido SF ${item.sf} salvas com sucesso!`, "success", "✓ Pedido Corrigido");
 
-    await app.data.sendToCloud({
-      action: "UPDATE_DOTACAO",
-      dotacao: item
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Atualizando Pedido",
+        subtitle: `Sincronizando correções de SF ${item.sf}`,
+        step1: "Processando alterações nos campos",
+        step2: "Atualizando linha no Google Sheets",
+        step3: "Finalizando sincronização",
+        icon: "✏️"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_DOTACAO",
+        dotacao: item
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar correções com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -298,15 +335,34 @@ app.dotacoes = {
     app.ui.toast(`Dotação aprovada para SF ${item.sf}! Pedido retornado ao comprador para empenho.`, "success", "✓ Pedido Dotado");
     app.notifications.send("Pedido Dotado pelo Financeiro!", `SF ${item.sf} foi validado por ${gestorNome}. Prossiga com o empenho e compra.`);
 
-    await app.data.sendToCloud({
-      action: "UPDATE_DOTACAO_STATUS",
-      id: item.id,
-      status: "DOTADO",
-      validador: gestorNome,
-      validadorLogin: gestorLogin,
-      dataValidacao: dataHoraStr,
-      situacao: item.situacao
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Confirmando Dotação",
+        subtitle: `Validando dotação financeira para SF ${item.sf}`,
+        step1: "Registrando validação do gestor",
+        step2: "Atualizando status na planilha Google Sheets",
+        step3: "Liberando pedido para empenho",
+        icon: "✓"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_DOTACAO_STATUS",
+        id: item.id,
+        status: "DOTADO",
+        validador: gestorNome,
+        validadorLogin: gestorLogin,
+        dataValidacao: dataHoraStr,
+        situacao: item.situacao
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar status de dotação com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -387,10 +443,29 @@ app.dotacoes = {
 
     app.ui.toast(`Dados de empenho e entrega vinculados ao pedido SF ${item.sf}!`, "success", "✓ Dados Atualizados");
 
-    await app.data.sendToCloud({
-      action: "UPDATE_DOTACAO",
-      dotacao: item
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Atualizando Pedido",
+        subtitle: `Registrando empenho de SF ${item.sf}`,
+        step1: "Processando dados de empenho e entrega",
+        step2: "Atualizando dados na planilha Google Sheets",
+        step3: "Finalizando atualização",
+        icon: "📦"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_DOTACAO",
+        dotacao: item
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar empenho com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -449,10 +524,29 @@ app.dotacoes = {
 
     app.ui.toast(`Pedido SF ${item.sf} marcado como Cancelado.`, "info", "Pedido Cancelado");
 
-    await app.data.sendToCloud({
-      action: "UPDATE_DOTACAO",
-      dotacao: item
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Cancelando Pedido",
+        subtitle: `Cancelando SF ${item.sf}`,
+        step1: "Registrando motivo do cancelamento",
+        step2: "Atualizando status na planilha Google Sheets",
+        step3: "Finalizando cancelamento",
+        icon: "🚫"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_DOTACAO",
+        dotacao: item
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao cancelar na planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -472,10 +566,29 @@ app.dotacoes = {
 
     app.ui.toast(`Pedido SF ${item.sf} reaberto e retornado à fila de dotação!`, "info", "✓ Pedido Reativado");
 
-    await app.data.sendToCloud({
-      action: "UPDATE_DOTACAO",
-      dotacao: item
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Reabrindo Pedido",
+        subtitle: `Reativando SF ${item.sf}`,
+        step1: "Reiniciando status do pedido",
+        step2: "Atualizando planilha Google Sheets",
+        step3: "Retornando à fila do setor financeiro",
+        icon: "↩️"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_DOTACAO",
+        dotacao: item
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao reabrir na planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -606,6 +719,19 @@ app.dotacoes = {
     const list = this.getFilteredList();
 
     if (list.length === 0) {
+      if (app.data && app.data.isSyncing) {
+        return `
+          <tr>
+            <td colspan="9" class="p-12 text-center text-slate-500 font-medium text-xs">
+              <div class="flex flex-col items-center justify-center">
+                <div class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+                <span class="text-sm font-black text-slate-800">Carregando Pedidos de Dotação...</span>
+                <span class="text-slate-400 text-xs mt-1">Sincronizando registros da planilha Google Sheets em tempo real</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
       return `
         <tr>
           <td colspan="9" class="p-12 text-center text-slate-400 font-medium text-xs">

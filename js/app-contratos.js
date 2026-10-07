@@ -82,13 +82,36 @@ app.contratos = {
 
     if (!app.state.panelContracts) app.state.panelContracts = [];
     app.state.panelContracts.unshift(newObj);
+    if (app.data && app.data.saveLocalPanelContracts) {
+      app.data.saveLocalPanelContracts(app.state.panelContracts);
+    }
     this.closeNewModal();
     app.render.contratosHub(document.getElementById('app-viewport'));
 
-    await app.data.sendToCloud({
-      action: "CREATE_PANEL_CONTRACT",
-      contract: newObj
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Cadastrando Contrato",
+        subtitle: "Gravando dados do contrato na planilha",
+        step1: "Validando dados do contrato",
+        step2: "Registrando na planilha Google Sheets",
+        step3: "Atualizando mural institucional",
+        icon: "📋"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "CREATE_PANEL_CONTRACT",
+        contract: newObj
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+      app.ui.toast("Contrato cadastrado com sucesso!", "success", "Painel de Contratos");
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   openEditModal(id) {
@@ -129,13 +152,36 @@ app.contratos = {
     item.prazoVencimento = document.getElementById('panel-edit-prazo-txt').value.trim();
     item.objeto = document.getElementById('panel-edit-objeto').value.trim();
 
+    if (app.data && app.data.saveLocalPanelContracts) {
+      app.data.saveLocalPanelContracts(app.state.panelContracts);
+    }
     this.closeEditModal();
     app.render.contratosHub(document.getElementById('app-viewport'));
 
-    await app.data.sendToCloud({
-      action: "UPDATE_PANEL_CONTRACT",
-      contract: item
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Atualizando Contrato",
+        subtitle: "Sincronizando alterações na planilha",
+        step1: "Processando alterações",
+        step2: "Atualizando linha no Google Sheets",
+        step3: "Finalizando sincronização",
+        icon: "✏️"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_PANEL_CONTRACT",
+        contract: item
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+      app.ui.toast("Contrato atualizado com sucesso!", "success", "Painel de Contratos");
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // ARQUIVAR / DESARQUIVAR (PRESERVAÇÃO DO HISTÓRICO LDO)
@@ -146,13 +192,37 @@ app.contratos = {
 
     const novoStatus = item.status === "Arquivado" ? "Ativo" : "Arquivado";
     item.status = novoStatus;
+
+    if (app.data && app.data.saveLocalPanelContracts) {
+      app.data.saveLocalPanelContracts(app.state.panelContracts);
+    }
     app.render.contratosHub(document.getElementById('app-viewport'));
 
-    await app.data.sendToCloud({
-      action: "ARCHIVE_PANEL_CONTRACT",
-      id: id,
-      status: novoStatus
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: novoStatus === "Arquivado" ? "Arquivando Contrato" : "Desarquivando Contrato",
+        subtitle: "Atualizando status na planilha",
+        step1: "Identificando registro institucional",
+        step2: "Registrando novo status no Google Sheets",
+        step3: "Atualizando painel de visualização",
+        icon: "📁"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "ARCHIVE_PANEL_CONTRACT",
+        id: id,
+        status: novoStatus
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+      app.ui.toast(`Contrato ${novoStatus.toLowerCase()} com sucesso!`, "info", "Painel de Contratos");
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // EXCLUSÃO BLINDADA (DIGITAÇÃO OBRIGATÓRIA SEM COLAR - SÓ ADMIN "DEUS")
@@ -202,15 +272,36 @@ app.contratos = {
     }
 
     app.state.panelContracts = app.state.panelContracts.filter(c => c.id !== target.id);
+    if (app.data && app.data.saveLocalPanelContracts) {
+      app.data.saveLocalPanelContracts(app.state.panelContracts);
+    }
     this.closeDeleteModal();
     app.render.contratosHub(document.getElementById('app-viewport'));
 
-    await app.data.sendToCloud({
-      action: "DELETE_PANEL_CONTRACT",
-      id: target.id
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Excluindo Contrato",
+        subtitle: "Removendo registro da planilha",
+        step1: "Verificando autorização administrativa",
+        step2: "Excluindo linha no Google Sheets",
+        step3: "Finalizando exclusão",
+        icon: "🗑️"
+      });
+    }
 
-    app.ui.toast(`Contrato ${target.numeroCtt} (${target.empresa}) excluído definitivamente.`, "info", "Contrato Excluído");
+    try {
+      await app.data.sendToCloud({
+        action: "DELETE_PANEL_CONTRACT",
+        id: target.id
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+      app.ui.toast(`Contrato ${target.numeroCtt} (${target.empresa}) excluído definitivamente.`, "info", "Contrato Excluído");
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao excluir na planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
   },
 
   // FILTROS & BUSCA EM TEMPO REAL (SEM PERDER FOCO DO INPUT)
@@ -438,6 +529,15 @@ app.contratos = {
     const isCardsMode = (app.state.panelViewMode || 'CARDS') === 'CARDS';
 
     if (filteredList.length === 0) {
+      if (app.data && app.data.isSyncing) {
+        return `
+          <div class="col-span-full p-12 text-center text-slate-500 font-medium text-xs bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col items-center justify-center">
+            <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+            <span class="text-sm font-black text-slate-800">Carregando Contratos da Planilha...</span>
+            <span class="text-slate-400 text-xs mt-1">Sincronizando dados em tempo real com o Google Sheets</span>
+          </div>
+        `;
+      }
       return `
         <div class="col-span-full p-12 text-center text-slate-400 font-medium text-xs bg-white rounded-2xl border border-slate-200">
           <span class="block text-2xl mb-2">🔍</span>

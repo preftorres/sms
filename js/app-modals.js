@@ -1135,6 +1135,42 @@ Exemplo do formato:
           </div>
         </div>
       </div>
+
+      <!-- ================================================================= -->
+      <!-- 18. MODAL DE ESPERA VISUAL & SINCRONIZAÇÃO DA PLANILHA            -->
+      <!-- ================================================================= -->
+      <div id="modal-espera-visual" class="hidden fixed inset-0 z-[80] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 fade-in text-center relative overflow-hidden">
+          <div class="space-y-4">
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+              <div class="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
+              <span id="global-wait-icon" class="absolute text-xl">📊</span>
+            </div>
+            <div>
+              <h3 id="global-wait-title" class="text-base sm:text-lg font-black text-slate-900">Carregando Dados da Planilha...</h3>
+              <p id="global-wait-subtitle" class="text-xs text-slate-500 mt-1">Sincronizando registros em tempo real com o servidor</p>
+            </div>
+
+            <!-- Passos Visuais de Progresso -->
+            <div class="p-3.5 bg-slate-50 rounded-2xl border text-left text-xs space-y-2.5">
+              <div class="flex items-center gap-2 text-emerald-700 font-bold">
+                <span class="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">✓</span>
+                <span id="global-wait-step1">Conexão segura com a nuvem estabelecida</span>
+              </div>
+              <div class="flex items-center gap-2 text-blue-700 font-bold animate-pulse">
+                <span class="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">⏳</span>
+                <span id="global-wait-step2">Consultando registros na planilha do Google...</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-400">
+                <span class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">○</span>
+                <span id="global-wait-step3">Preparando exibição e atualizando painel</span>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400 italic">Por favor, aguarde alguns instantes enquanto os dados da planilha são processados.</p>
+          </div>
+        </div>
+      </div>
     `;
   }
 };

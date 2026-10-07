@@ -327,8 +327,22 @@ app.audit = {
       return matchesSearch && matchesCat && matchesZero;
     });
 
-    if (filtered.length === 0) empty.classList.remove('hidden');
-    else empty.classList.add('hidden');
+    if (filtered.length === 0) {
+      if (app.data && app.data.isSyncing) {
+        empty.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-6">
+            <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+            <span class="text-sm font-black text-slate-800">Carregando Exames do Contrato...</span>
+            <span class="text-slate-400 text-xs mt-1">Sincronizando dados em tempo real com o Google Sheets</span>
+          </div>
+        `;
+      } else {
+        empty.innerHTML = `Nenhum exame cadastrado para este contrato.`;
+      }
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+    }
 
     const canEditValues = app.permissions.can('audit_edit_values');
 
@@ -1871,16 +1885,34 @@ app.audit = {
 
     app.data.saveLocalExams();
 
-    await app.data.sendToCloud({
-      action: "UPDATE_VALUES",
-      contract: app.state.activeContractTab,
-      exams: app.state.exams
-    });
+    if (app.ui && app.ui.showLoading) {
+      app.ui.showLoading({
+        title: "Rebalanceando Cotas de Exames",
+        subtitle: `Aplicando 76 cotas ao Contrato nº ${currentContract.num}`,
+        step1: "Atualizando quantitativos e saldos dos 76 itens",
+        step2: "Gravando novos tetos na planilha Google Sheets",
+        step3: "Recalculando balanço orçamentário do contrato",
+        icon: "⚖️"
+      });
+    }
+
+    try {
+      await app.data.sendToCloud({
+        action: "UPDATE_VALUES",
+        contract: app.state.activeContractTab,
+        exams: app.state.exams
+      });
+      if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
+      app.ui.toast(`As 76 cotas rebalanceadas foram aplicadas ao Contrato nº ${currentContract.num} e sincronizadas com a nuvem!`, "success", "✓ Cotas Aplicadas");
+    } catch(err) {
+      console.error(err);
+      app.ui.toast("Erro ao sincronizar cotas com a planilha.", "danger", "Erro");
+    } finally {
+      if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
+    }
 
     this.closeBalanceadorModal();
     this.renderTable();
-
-    app.ui.toast(`As 76 cotas rebalanceadas foram aplicadas ao Contrato nº ${currentContract.num} e sincronizadas com a nuvem!`, "success", "✓ Cotas Aplicadas");
   }
 };
 

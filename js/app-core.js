@@ -193,6 +193,15 @@ Object.assign(window.app, {
         btn.textContent = "Verificando...";
         err.classList.add('hidden');
 
+        app.ui.showLoading({
+          icon: "🔐",
+          title: "Autenticando Acesso...",
+          subtitle: "Validando credenciais com a planilha de usuários",
+          step1: "Credenciais enviadas com segurança",
+          step2: "Consultando planilha do Google Sheets...",
+          step3: "Liberando perfil e permissões de acesso"
+        });
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 12000);
 
@@ -234,6 +243,7 @@ Object.assign(window.app, {
           err.classList.remove('hidden');
         }
       } finally {
+        app.ui.hideLoading();
         btn.disabled = false;
         btn.textContent = "Entrar";
       }
@@ -303,6 +313,9 @@ Object.assign(window.app, {
         app.state.dotacoes = parsedDot;
       }
 
+      const rawPanel = localStorage.getItem(CONFIG.keys.panelContracts);
+      try { app.state.panelContracts = rawPanel ? JSON.parse(rawPanel) : []; } catch(e){ app.state.panelContracts = []; }
+
       const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
       app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
     },
@@ -314,6 +327,10 @@ Object.assign(window.app, {
     saveLocalContracts() {
       localStorage.setItem(CONFIG.keys.contractsList, JSON.stringify(app.state.contracts));
       localStorage.setItem(CONFIG.keys.activeContractTab, app.state.activeContractTab);
+    },
+
+    saveLocalPanelContracts() {
+      localStorage.setItem(CONFIG.keys.panelContracts, JSON.stringify(app.state.panelContracts || []));
     },
 
     saveLocalDotacoes() {
@@ -328,94 +345,119 @@ Object.assign(window.app, {
       localStorage.setItem(CONFIG.keys.links, JSON.stringify(app.state.links));
     },
 
-    async syncFromCloud(showFeedback = false) {
+    isSyncing: false,
+    syncPromise: null,
+
+    async syncFromCloud(showFeedback = false, options = {}) {
       if (!GOOGLE_API_URL) return;
-      try {
-        app.ui.setSyncStatus(true, "Sincronizando com o servidor...");
-        const url = `${GOOGLE_API_URL}?contract=${encodeURIComponent(app.state.activeContractTab)}`;
-        const response = await fetch(url, { redirect: 'follow' });
-        const res = await response.json();
 
-        if (res.status === "success") {
-          if (res.permissions && typeof res.permissions === 'object') {
-            app.state.permissions = res.permissions;
-            this.saveLocalPermissions();
-          }
+      if (showFeedback || options.showModal) {
+        app.ui.showLoading({
+          icon: options.icon || "📊",
+          title: options.title || "Sincronizando com a Planilha...",
+          subtitle: options.subtitle || "Carregando informações mais recentes do Google Sheets",
+          step1: options.step1 || "Conexão com o servidor estabelecida",
+          step2: options.step2 || "Consultando dados na planilha do Google...",
+          step3: options.step3 || "Atualizando painéis e tabelas"
+        });
+      }
 
-          if (Array.isArray(res.shortcuts) && res.shortcuts.length > 0) {
-            app.state.links = res.shortcuts;
-            this.saveLinksLocally();
-            if (app.state.view === 'saude_links') app.render.saudeLinks(document.getElementById('app-viewport'));
-          }
+      this.isSyncing = true;
+      app.ui.setSyncStatus(true, "Sincronizando com o servidor...");
 
-          if (Array.isArray(res.contracts) && res.contracts.length > 0) {
-            let list = res.contracts.map(c => {
-              const local = app.state.contracts.find(l => l.tabName === c.tabName);
-              return { ...c, createdAt: c.createdAt || (local ? local.createdAt : "25/09/2026 às 15:00") };
-            });
-            const i73 = list.findIndex(c => c.tabName === "Contrato_73_2026");
-            if (i73 > 0) {
-              const c73 = list.splice(i73, 1)[0];
-              list.unshift(c73);
-            } else if (i73 === -1) {
-              list.unshift(DEFAULT_CONTRACTS[0]);
+      const fetchPromise = (async () => {
+        try {
+          const url = `${GOOGLE_API_URL}?contract=${encodeURIComponent(app.state.activeContractTab)}`;
+          const response = await fetch(url, { redirect: 'follow' });
+          const res = await response.json();
+
+          if (res.status === "success") {
+            if (res.permissions && typeof res.permissions === 'object') {
+              app.state.permissions = res.permissions;
+              this.saveLocalPermissions();
             }
-            app.state.contracts = list;
-            this.saveLocalContracts();
-          }
 
-          if (Array.isArray(res.exams) && res.exams.length > 0) {
-            // Proteção contra sobrescrita com dados legados incompletos (< 70 exames) ou zerados
-            if (app.state.activeContractTab === "Contrato_73_2026" && (res.exams.length < 70 || !res.exams[0].vlUnit)) {
-              console.warn("Nuvem retornou exames legados/incompletos para o Contrato 73. Mantendo os 76 procedimentos oficiais.");
-              if (!app.state.exams || app.state.exams.length < 70 || !app.state.exams[0].vlUnit) {
-                app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
+            if (Array.isArray(res.shortcuts) && res.shortcuts.length > 0) {
+              app.state.links = res.shortcuts;
+              this.saveLinksLocally();
+              if (app.state.view === 'saude_links') app.render.saudeLinks(document.getElementById('app-viewport'));
+            }
+
+            if (Array.isArray(res.contracts) && res.contracts.length > 0) {
+              let list = res.contracts.map(c => {
+                const local = app.state.contracts.find(l => l.tabName === c.tabName);
+                return { ...c, createdAt: c.createdAt || (local ? local.createdAt : "25/09/2026 às 15:00") };
+              });
+              const i73 = list.findIndex(c => c.tabName === "Contrato_73_2026");
+              if (i73 > 0) {
+                const c73 = list.splice(i73, 1)[0];
+                list.unshift(c73);
+              } else if (i73 === -1) {
+                list.unshift(DEFAULT_CONTRACTS[0]);
+              }
+              app.state.contracts = list;
+              this.saveLocalContracts();
+            }
+
+            if (Array.isArray(res.exams) && res.exams.length > 0) {
+              // Proteção contra sobrescrita com dados legados incompletos (< 70 exames) ou zerados
+              if (app.state.activeContractTab === "Contrato_73_2026" && (res.exams.length < 70 || !res.exams[0].vlUnit)) {
+                console.warn("Nuvem retornou exames legados/incompletos para o Contrato 73. Mantendo os 76 procedimentos oficiais.");
+                if (!app.state.exams || app.state.exams.length < 70 || !app.state.exams[0].vlUnit) {
+                  app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
+                  this.saveLocalExams();
+                }
+                // Dispara auto-reparo na nuvem em segundo plano
+                fetch(`${GOOGLE_API_URL}?action=POPULAR_73`, { redirect: 'follow' }).catch(() => {});
+              } else {
+                if (app.state.activeContractTab === "Contrato_73_2026") {
+                  res.exams.forEach((item, idx) => {
+                    if (!item.vlUnit && CONTRATO_73_EXAMS[idx] && CONTRATO_73_EXAMS[idx].vlUnit) {
+                      item.vlUnit = CONTRATO_73_EXAMS[idx].vlUnit;
+                    }
+                  });
+                }
+                app.state.exams = res.exams;
                 this.saveLocalExams();
               }
-              // Dispara auto-reparo na nuvem em segundo plano
-              fetch(`${GOOGLE_API_URL}?action=POPULAR_73`, { redirect: 'follow' }).catch(() => {});
-            } else {
-              if (app.state.activeContractTab === "Contrato_73_2026") {
-                res.exams.forEach((item, idx) => {
-                  if (!item.vlUnit && CONTRATO_73_EXAMS[idx] && CONTRATO_73_EXAMS[idx].vlUnit) {
-                    item.vlUnit = CONTRATO_73_EXAMS[idx].vlUnit;
-                  }
-                });
-              }
-              app.state.exams = res.exams;
+            } else if (app.state.activeContractTab === "Contrato_73_2026" && (!app.state.exams || app.state.exams.length < 70 || !app.state.exams[0].vlUnit)) {
+              app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
               this.saveLocalExams();
             }
-          } else if (app.state.activeContractTab === "Contrato_73_2026" && (!app.state.exams || app.state.exams.length < 70 || !app.state.exams[0].vlUnit)) {
-            app.state.exams = JSON.parse(JSON.stringify(CONTRATO_73_EXAMS));
-            this.saveLocalExams();
-          }
 
-          if (Array.isArray(res.dotacoes) && res.dotacoes.length >= 50) {
-            app.state.dotacoes = res.dotacoes;
-            this.saveLocalDotacoes();
-            if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
-          }
-
-          if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-            app.state.panelContracts = res.panelContracts;
-            if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
-              app.render.contratosHub(document.getElementById('app-viewport'));
+            if (Array.isArray(res.dotacoes) && res.dotacoes.length >= 50) {
+              app.state.dotacoes = res.dotacoes;
+              this.saveLocalDotacoes();
+              if (app.state.view === 'dotacoes_hub') app.render.dotacoesHub(document.getElementById('app-viewport'));
             }
+
+            if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
+              app.state.panelContracts = res.panelContracts;
+              this.saveLocalPanelContracts();
+              if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
+                app.render.contratosHub(document.getElementById('app-viewport'));
+              }
+            }
+
+            if (app.state.view === 'auditoria_detalhe') app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
+            else if (app.state.view === 'auditoria_hub') app.render.auditoriaHub(document.getElementById('app-viewport'));
+            else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(document.getElementById('app-viewport'));
+            else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(document.getElementById('app-viewport'));
+
+            if (showFeedback) app.ui.toast("Dados sincronizados com sucesso!", "success", "✓ Sincronizado");
           }
-
-          if (app.state.view === 'auditoria_detalhe') app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
-          else if (app.state.view === 'auditoria_hub') app.render.auditoriaHub(document.getElementById('app-viewport'));
-          else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(document.getElementById('app-viewport'));
-          else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(document.getElementById('app-viewport'));
-
-          if (showFeedback) app.ui.toast("Dados sincronizados com sucesso!", "success", "✓ Sincronizado");
+        } catch (err) {
+          console.warn("Modo Offline ativado.", err);
+          if (showFeedback) app.ui.toast("Modo offline: exibindo dados salvos em cache.", "info", "Modo Offline");
+        } finally {
+          this.isSyncing = false;
+          app.ui.setSyncStatus(false);
+          if (showFeedback || options.showModal) app.ui.hideLoading();
         }
-      } catch (err) {
-        console.warn("Modo Offline ativado.", err);
-        if (showFeedback) app.ui.toast("Modo offline: exibindo dados salvos em cache.", "info", "Modo Offline");
-      } finally {
-        app.ui.setSyncStatus(false);
-      }
+      })();
+
+      this.syncPromise = fetchPromise;
+      return fetchPromise;
     },
 
     async sendToCloud(payload) {
@@ -468,7 +510,7 @@ Object.assign(window.app, {
       this.go(targetView);
     },
 
-    go(view) {
+    async go(view) {
       const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub');
       if (isRestricted && !app.state.auth.isLogged) {
         app.auditAuth.promptLogin(view);
@@ -496,6 +538,62 @@ Object.assign(window.app, {
       if (!isRestricted) {
         app.auditAuth.closeLoginModal();
         app.state.previousView = view;
+      }
+
+      // Espera visual para surgimento de dados quando necessário
+      if (isRestricted) {
+        const needsWait = (app.data && app.data.isSyncing) || (view === 'contratos_hub' && (!app.state.panelContracts || app.state.panelContracts.length === 0));
+        if (needsWait) {
+          let loadingOpts = {
+            icon: "📊",
+            title: "Carregando Dados da Planilha...",
+            subtitle: "Sincronizando registros em tempo real com o servidor",
+            step1: "Conexão com a nuvem estabelecida",
+            step2: "Consultando registros na planilha do Google...",
+            step3: "Preparando exibição e atualizando painel"
+          };
+          if (view === 'contratos_hub') {
+            loadingOpts = {
+              icon: "📑",
+              title: "Carregando Painel de Contratos...",
+              subtitle: "Sincronizando os 42 contratos contínuos com a planilha",
+              step1: "Conexão com a governança LDO estabelecida",
+              step2: "Consultando vigências e semáforos no Google Sheets...",
+              step3: "Atualizando mural de monitoramento"
+            };
+          } else if (view === 'dotacoes_hub') {
+            loadingOpts = {
+              icon: "📋",
+              title: "Carregando Livro de Dotações...",
+              subtitle: "Sincronizando pedidos e baixas contábeis com a planilha",
+              step1: "Conexão com o livro contábil estabelecida",
+              step2: "Consultando solicitações no Google Sheets...",
+              step3: "Atualizando tabela do Livro Digital"
+            };
+          } else if (view === 'auditoria_hub' || view === 'auditoria_detalhe') {
+            loadingOpts = {
+              icon: "🧪",
+              title: "Carregando Auditoria de Exames...",
+              subtitle: "Sincronizando contratos e procedimentos com a planilha",
+              step1: "Conexão com a base de exames estabelecida",
+              step2: "Consultando cotas e faturamentos no Google Sheets...",
+              step3: "Atualizando painel de auditoria"
+            };
+          }
+
+          app.ui.showLoading(loadingOpts);
+          try {
+            if (app.data.syncPromise) {
+              await app.data.syncPromise;
+            } else if (view === 'contratos_hub' && (!app.state.panelContracts || app.state.panelContracts.length === 0)) {
+              await app.data.syncFromCloud(false);
+            }
+          } catch(e) {
+            console.warn("Erro ao aguardar dados:", e);
+          } finally {
+            app.ui.hideLoading();
+          }
+        }
       }
 
       app.state.view = view;
@@ -612,6 +710,36 @@ Object.assign(window.app, {
       }, duration);
 
       toast.addEventListener('mouseenter', () => clearTimeout(timer));
+    },
+
+    showLoading(options = {}) {
+      const modal = document.getElementById('modal-espera-visual');
+      if (!modal) return;
+
+      const iconEl = document.getElementById('global-wait-icon');
+      const titleEl = document.getElementById('global-wait-title');
+      const subEl = document.getElementById('global-wait-subtitle');
+      const step1El = document.getElementById('global-wait-step1');
+      const step2El = document.getElementById('global-wait-step2');
+      const step3El = document.getElementById('global-wait-step3');
+
+      if (iconEl) iconEl.textContent = options.icon || "📊";
+      if (titleEl) titleEl.textContent = options.title || "Carregando Dados da Planilha...";
+      if (subEl) subEl.textContent = options.subtitle || "Sincronizando registros em tempo real com o servidor";
+      if (step1El) step1El.textContent = options.step1 || "Conexão segura com a nuvem estabelecida";
+      if (step2El) step2El.textContent = options.step2 || "Consultando registros na planilha do Google...";
+      if (step3El) step3El.textContent = options.step3 || "Preparando exibição e atualizando painel";
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    },
+
+    hideLoading() {
+      const modal = document.getElementById('modal-espera-visual');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
     },
 
     navigate(view) {
