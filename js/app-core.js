@@ -81,8 +81,35 @@ Object.assign(window.app, {
       if (app.state.auth.user.perfil === 'Administrador') return true;
 
       const role = app.state.auth.user.perfil || 'Comprador';
-      const roleMap = (app.state.permissions && app.state.permissions[role]) || DEFAULT_PERMISSIONS[role];
-      return !!(roleMap && roleMap[actionKey]);
+      const roleMap = (app.state.permissions && app.state.permissions[role]) || DEFAULT_PERMISSIONS[role] || {};
+
+      const getVal = (key) => {
+        if (roleMap[key] !== undefined) return !!roleMap[key];
+        return !!(DEFAULT_PERMISSIONS[role] && DEFAULT_PERMISSIONS[role][key]);
+      };
+
+      // Se a verificação for de auditoria e audit_access for falso, bloqueia tudo do módulo
+      if (actionKey.startsWith('audit_')) {
+        const canAccess = getVal('audit_access');
+        if (!canAccess) return false;
+        if (actionKey === 'audit_access') return true;
+      }
+
+      // Se for de dotações e dotacoes_access for falso, bloqueia tudo do módulo
+      if (actionKey.startsWith('dotacoes_')) {
+        const canAccess = getVal('dotacoes_access');
+        if (!canAccess) return false;
+        if (actionKey === 'dotacoes_access') return true;
+      }
+
+      // Se for de contratos e panel_access for falso, bloqueia tudo do módulo
+      if (actionKey.startsWith('panel_')) {
+        const canAccess = getVal('panel_access');
+        if (!canAccess) return false;
+        if (actionKey === 'panel_access') return true;
+      }
+
+      return getVal(actionKey);
     }
   },
 
@@ -448,6 +475,24 @@ Object.assign(window.app, {
         return;
       }
 
+      if (app.state.auth.isLogged) {
+        if ((view === 'auditoria_hub' || view === 'auditoria_detalhe') && !app.permissions.can('audit_access')) {
+          app.ui.toast("Seu perfil não tem permissão para acessar a área de Auditoria.", "warning", "Acesso Restrito");
+          if (app.state.view !== 'saude_links') this.go('saude_links');
+          return;
+        }
+        if (view === 'dotacoes_hub' && !app.permissions.can('dotacoes_access')) {
+          app.ui.toast("Seu perfil não tem permissão para acessar o Livro Digital de Dotações.", "warning", "Acesso Restrito");
+          if (app.state.view !== 'saude_links') this.go('saude_links');
+          return;
+        }
+        if (view === 'contratos_hub' && !app.permissions.can('panel_access')) {
+          app.ui.toast("Seu perfil não tem permissão para acessar o Painel de Contratos LDO.", "warning", "Acesso Restrito");
+          if (app.state.view !== 'saude_links') this.go('saude_links');
+          return;
+        }
+      }
+
       if (!isRestricted) {
         app.auditAuth.closeLoginModal();
         app.state.previousView = view;
@@ -593,6 +638,31 @@ Object.assign(window.app, {
       const isDotacoes = app.state.view === 'dotacoes_hub';
       const isContratos = app.state.view === 'contratos_hub';
 
+      const canAudit = !app.state.auth.isLogged || app.permissions.can('audit_access');
+      const canDot = !app.state.auth.isLogged || app.permissions.can('dotacoes_access');
+      const canPanel = !app.state.auth.isLogged || app.permissions.can('panel_access');
+
+      const auditBtnClass = canAudit
+        ? (isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
+        : 'text-white/30 cursor-not-allowed hover:bg-transparent';
+      const auditClick = canAudit
+        ? `app.ui.navigate('auditoria_exames')`
+        : `app.ui.toast('Seu perfil não tem permissão para acessar a área de Auditoria.', 'warning', 'Acesso Restrito')`;
+
+      const dotBtnClass = canDot
+        ? (isDotacoes ? 'bg-emerald-100 text-emerald-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
+        : 'text-white/30 cursor-not-allowed hover:bg-transparent';
+      const dotClick = canDot
+        ? `app.ui.navigate('dotacoes')`
+        : `app.ui.toast('Seu perfil não tem permissão para acessar a área de Dotações.', 'warning', 'Acesso Restrito')`;
+
+      const panelBtnClass = canPanel
+        ? (isContratos ? 'bg-indigo-100 text-indigo-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
+        : 'text-white/30 cursor-not-allowed hover:bg-transparent';
+      const panelClick = canPanel
+        ? `app.ui.navigate('contratos')`
+        : `app.ui.toast('Seu perfil não tem permissão para acessar o Painel de Contratos LDO.', 'warning', 'Acesso Restrito')`;
+
       nav.innerHTML = `
         <button onclick="app.ui.navigate('landing')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
           Início
@@ -600,14 +670,14 @@ Object.assign(window.app, {
         <button onclick="app.ui.navigate('saude_links')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isPortal ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
           Saúde
         </button>
-        <button onclick="app.ui.navigate('auditoria_exames')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
-          Auditoria
+        <button onclick="${auditClick}" title="${canAudit ? 'Auditoria de Exames' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${auditBtnClass} text-[11px] sm:text-xs">
+          ${!canAudit ? '🔒 ' : ''}Auditoria
         </button>
-        <button onclick="app.ui.navigate('dotacoes')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isDotacoes ? 'bg-emerald-100 text-emerald-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
-          Dotações
+        <button onclick="${dotClick}" title="${canDot ? 'Livro de Dotações' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${dotBtnClass} text-[11px] sm:text-xs">
+          ${!canDot ? '🔒 ' : ''}Dotações
         </button>
-        <button onclick="app.ui.navigate('contratos')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${isContratos ? 'bg-indigo-100 text-indigo-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold'} text-[11px] sm:text-xs">
-          Contratos LDO
+        <button onclick="${panelClick}" title="${canPanel ? 'Painel de Contratos LDO' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${panelBtnClass} text-[11px] sm:text-xs">
+          ${!canPanel ? '🔒 ' : ''}Contratos LDO
         </button>
       `;
     },
@@ -720,17 +790,55 @@ Object.assign(window.app, {
     renderPermissionsMatrix() {
       const perms = app.state.permissions || DEFAULT_PERMISSIONS;
       const keys = [
-        'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
-        'dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete',
-        'panel_create', 'panel_edit', 'panel_archive'
+        'audit_access', 'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
+        'dotacoes_access', 'dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete',
+        'panel_access', 'panel_create', 'panel_edit', 'panel_archive'
       ];
+
+      const getVal = (role, k) => {
+        if (perms[role] && perms[role][k] !== undefined) return !!perms[role][k];
+        return !!(DEFAULT_PERMISSIONS[role] && DEFAULT_PERMISSIONS[role][k]);
+      };
 
       keys.forEach(k => {
         const compEl = document.getElementById(`perm-comprador-${k}`);
         const gestEl = document.getElementById(`perm-gestor-${k}`);
 
-        if (compEl) compEl.checked = !!(perms['Comprador'] && perms['Comprador'][k]);
-        if (gestEl) gestEl.checked = !!(perms['Gestor Financeiro'] && perms['Gestor Financeiro'][k]);
+        if (compEl) compEl.checked = getVal('Comprador', k);
+        if (gestEl) gestEl.checked = getVal('Gestor Financeiro', k);
+      });
+
+      this.updatePermMatrixState();
+    },
+
+    updatePermMatrixState() {
+      const profiles = ['comprador', 'gestor'];
+      const modules = [
+        { master: 'audit_access', subs: ['audit_edit_values', 'audit_create_contract', 'audit_manage_procedures'] },
+        { master: 'dotacoes_access', subs: ['dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete'] },
+        { master: 'panel_access', subs: ['panel_create', 'panel_edit', 'panel_archive'] }
+      ];
+
+      profiles.forEach(prof => {
+        modules.forEach(mod => {
+          const masterEl = document.getElementById(`perm-${prof}-${mod.master}`);
+          const isAllowed = masterEl ? masterEl.checked : false;
+
+          mod.subs.forEach(subKey => {
+            const subEl = document.getElementById(`perm-${prof}-${subKey}`);
+            if (subEl) {
+              subEl.disabled = !isAllowed;
+              const parentTd = subEl.closest('td');
+              if (parentTd) {
+                if (!isAllowed) {
+                  parentTd.classList.add('opacity-30', 'cursor-not-allowed');
+                } else {
+                  parentTd.classList.remove('opacity-30', 'cursor-not-allowed');
+                }
+              }
+            }
+          });
+        });
       });
     },
 
@@ -740,9 +848,9 @@ Object.assign(window.app, {
       }
 
       const keys = [
-        'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
-        'dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete',
-        'panel_create', 'panel_edit', 'panel_archive'
+        'audit_access', 'audit_edit_values', 'audit_create_contract', 'audit_manage_procedures',
+        'dotacoes_access', 'dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete',
+        'panel_access', 'panel_create', 'panel_edit', 'panel_archive'
       ];
 
       const newPerms = { 'Comprador': {}, 'Gestor Financeiro': {} };
@@ -765,6 +873,10 @@ Object.assign(window.app, {
       });
 
       app.ui.toast("Matriz de Permissões salva com sucesso!", "success", "✓ Permissões Atualizadas");
+
+      // Atualiza visualização imediatamente se o usuário estiver na tela de Saúde ou no menu
+      if (app.state.view === 'saude_links') app.render.all();
+      app.ui.updateActiveMenu();
     },
 
     renderUsersRows() {
@@ -1350,6 +1462,10 @@ Object.assign(window.app, {
     },
 
     saudeLinks(el) {
+      const canAudit = !app.state.auth.isLogged || app.permissions.can('audit_access');
+      const canDotacoes = !app.state.auth.isLogged || app.permissions.can('dotacoes_access');
+      const canContratos = !app.state.auth.isLogged || app.permissions.can('panel_access');
+
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
             <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -1372,6 +1488,7 @@ Object.assign(window.app, {
         <div class="container mx-auto px-6 py-10 fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- CARD 1: AUDITORIA -->
+                ${canAudit ? `
                 <button onclick="app.ui.navigate('auditoria_exames')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-blue-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-blue-50/60">
                     <div class="absolute top-4 right-5">
@@ -1389,8 +1506,28 @@ Object.assign(window.app, {
                         <span class="group-hover:translate-x-1 transition">→</span>
                     </div>
                 </button>
+                ` : `
+                <button onclick="app.ui.toast('Seu perfil não possui permissão para acessar a área de Auditoria.', 'warning', 'Acesso Restrito')" 
+                   class="text-left bg-slate-100/90 p-8 rounded-[2.5rem] border-2 border-dashed border-slate-300 shadow-none cursor-not-allowed opacity-45 grayscale transition-all flex flex-col justify-between relative overflow-hidden" title="Área Inacessível para o seu perfil">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300 flex items-center gap-1">🔒 Inacessível</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h3 class="font-black text-slate-500 text-lg mb-1">Auditoria de Cotas de Exames</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Módulo desabilitado pelo Administrador para o seu perfil de usuário.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-400">
+                        <span>🔒 Acesso Bloqueado</span>
+                        <span>✕</span>
+                    </div>
+                </button>
+                `}
 
                 <!-- CARD 2: DOTAÇÕES -->
+                ${canDotacoes ? `
                 <button onclick="app.ui.navigate('dotacoes')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-emerald-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-emerald-50/60">
                     <div class="absolute top-4 right-5">
@@ -1408,8 +1545,28 @@ Object.assign(window.app, {
                         <span class="group-hover:translate-x-1 transition">→</span>
                     </div>
                 </button>
+                ` : `
+                <button onclick="app.ui.toast('Seu perfil não possui permissão para acessar a área de Dotações.', 'warning', 'Acesso Restrito')" 
+                   class="text-left bg-slate-100/90 p-8 rounded-[2.5rem] border-2 border-dashed border-slate-300 shadow-none cursor-not-allowed opacity-45 grayscale transition-all flex flex-col justify-between relative overflow-hidden" title="Área Inacessível para o seu perfil">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300 flex items-center gap-1">🔒 Inacessível</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h3 class="font-black text-slate-500 text-lg mb-1">Controle de Dotações (Pedidos)</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Módulo desabilitado pelo Administrador para o seu perfil de usuário.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-400">
+                        <span>🔒 Acesso Bloqueado</span>
+                        <span>✕</span>
+                    </div>
+                </button>
+                `}
 
                 <!-- CARD 3: CONTRATOS GERAIS LDO -->
+                ${canContratos ? `
                 <button onclick="app.ui.navigate('contratos')" 
                    class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-indigo-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-indigo-50/60">
                     <div class="absolute top-4 right-5">
@@ -1427,6 +1584,25 @@ Object.assign(window.app, {
                         <span class="group-hover:translate-x-1 transition">→</span>
                     </div>
                 </button>
+                ` : `
+                <button onclick="app.ui.toast('Seu perfil não possui permissão para acessar a área de Contratos.', 'warning', 'Acesso Restrito')" 
+                   class="text-left bg-slate-100/90 p-8 rounded-[2.5rem] border-2 border-dashed border-slate-300 shadow-none cursor-not-allowed opacity-45 grayscale transition-all flex flex-col justify-between relative overflow-hidden" title="Área Inacessível para o seu perfil">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300 flex items-center gap-1">🔒 Inacessível</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h3 class="font-black text-slate-500 text-lg mb-1">Painel de Contratos (LDO)</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Módulo desabilitado pelo Administrador para o seu perfil de usuário.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-400">
+                        <span>🔒 Acesso Bloqueado</span>
+                        <span>✕</span>
+                    </div>
+                </button>
+                `}
 
                 <!-- LINKS SALVOS -->
                 ${app.state.links.map(l => `

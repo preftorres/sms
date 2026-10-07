@@ -38,9 +38,8 @@ app.contratos = {
     }
   },
 
-  // MODAIS DE CADASTRO E EDIÇÃO
   openNewModal() {
-    if (!app.admin.isGestorFinanceiro()) return app.ui.toast("Apenas Administrador e Gestor Financeiro podem cadastrar contratos no painel.", "warning", "Acesso Restrito");
+    if (!app.permissions.can('panel_create')) return app.ui.toast("Sem permissão para cadastrar contratos no painel.", "warning", "Acesso Restrito");
     const m = document.getElementById('modal-novo-painel-contrato');
     if (m) {
       m.classList.remove('hidden'); m.classList.add('flex');
@@ -93,6 +92,7 @@ app.contratos = {
   },
 
   openEditModal(id) {
+    if (!app.permissions.can('panel_edit')) return app.ui.toast("Sem permissão para editar contratos no painel.", "warning", "Acesso Restrito");
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
 
@@ -116,6 +116,7 @@ app.contratos = {
 
   async confirmEdit(e) {
     e.preventDefault();
+    if (!app.permissions.can('panel_edit')) return app.ui.toast("Sem permissão para editar contratos no painel.", "warning", "Acesso Restrito");
     const id = Number(document.getElementById('panel-edit-id').value);
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
@@ -139,6 +140,7 @@ app.contratos = {
 
   // ARQUIVAR / DESARQUIVAR (PRESERVAÇÃO DO HISTÓRICO LDO)
   async toggleArchive(id) {
+    if (!app.permissions.can('panel_archive')) return app.ui.toast("Sem permissão para arquivar contratos.", "warning", "Acesso Restrito");
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
 
@@ -387,14 +389,18 @@ app.contratos = {
 
           <!-- AÇÕES NO RODAPÉ -->
           <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-slate-400 hover:text-slate-700">
-                  ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
-              </button>
+              ${app.permissions.can('panel_archive') ? `
+                <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-slate-400 hover:text-slate-700">
+                    ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
+                </button>
+              ` : `<span></span>`}
 
               <div class="flex items-center gap-1.5">
-                  <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
-                      ✏️
-                  </button>
+                  ${app.permissions.can('panel_edit') ? `
+                    <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
+                        ✏️
+                    </button>
+                  ` : ''}
                   ${app.admin.isAdminUser() ? `
                     <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Só Admin)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
                         🗑️
@@ -419,8 +425,8 @@ app.contratos = {
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${sem.badgeClass}">${sem.label}</span>
           </td>
           <td class="p-3.5 text-center whitespace-nowrap print:hidden">
-              <button onclick="app.contratos.openEditModal(${c.id})" class="text-slate-600 hover:text-amber-700 font-bold mr-1.5">✏️</button>
-              <button onclick="app.contratos.toggleArchive(${c.id})" class="text-slate-400 hover:text-slate-700 font-bold mr-1.5" title="Arquivar">📁</button>
+              ${app.permissions.can('panel_edit') ? `<button onclick="app.contratos.openEditModal(${c.id})" class="text-slate-600 hover:text-amber-700 font-bold mr-1.5" title="Editar">✏️</button>` : ''}
+              ${app.permissions.can('panel_archive') ? `<button onclick="app.contratos.toggleArchive(${c.id})" class="text-slate-400 hover:text-slate-700 font-bold mr-1.5" title="Arquivar">📁</button>` : ''}
               ${app.admin.isAdminUser() ? `<button onclick="app.contratos.openDeleteModal(${c.id})" class="text-rose-500 hover:text-rose-700 font-bold" title="Excluir">🗑️</button>` : ''}
           </td>
       </tr>
@@ -541,7 +547,7 @@ app.render.contratosHub = function(el) {
                 <button onclick="window.print()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
                     🖨️ Imprimir
                 </button>
-                ${app.admin.isGestorFinanceiro() ? `
+                ${app.permissions.can('panel_create') ? `
                   <button onclick="app.contratos.openNewModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
                       <span class="text-sm">+</span> Novo Contrato no Mural
                   </button>

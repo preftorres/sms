@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * PREFEITURA MUNICIPAL DE TORRES - SECRETARIA DA SAÚDE
  * MÓDULO DE DADOS & CONFIGURAÇÕES: Constantes, Matrizes e Bases Iniciais
@@ -569,25 +569,31 @@ const INITIAL_DOTACOES = [
 
 const DEFAULT_PERMISSIONS = {
   'Comprador': {
+    'audit_access': false,
     'audit_edit_values': false,
     'audit_create_contract': false,
     'audit_manage_procedures': false,
+    'dotacoes_access': true,
     'dotacoes_create': true,
     'dotacoes_check': false,
     'dotacoes_edit': true,
     'dotacoes_delete': true,
+    'panel_access': false,
     'panel_create': false,
     'panel_edit': false,
     'panel_archive': false
   },
   'Gestor Financeiro': {
+    'audit_access': true,
     'audit_edit_values': true,
     'audit_create_contract': false,
     'audit_manage_procedures': false,
+    'dotacoes_access': true,
     'dotacoes_create': true,
     'dotacoes_check': true,
     'dotacoes_edit': true,
     'dotacoes_delete': true,
+    'panel_access': true,
     'panel_create': true,
     'panel_edit': true,
     'panel_archive': true
