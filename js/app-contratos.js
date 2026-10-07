@@ -10,37 +10,156 @@ window.app = window.app || {};
 window.app.render = window.app.render || {};
 
 app.contratos = {
-  // CALCULA O SEMÁFORO DE VENCIMENTOS COM BASE NA DATA ATUAL
-  calculateStatus(dataVencimentoIso, statusRegistro) {
-    if (statusRegistro === "Disponível") {
-      return { label: "Espaço Vazio", badgeClass: "bg-slate-100 text-slate-500 border border-slate-300", isUrgente: false, isDisponivel: true };
+  // PARSER UNIVERSAL DE DATAS (SUPORTA ISO, BR DD/MM/YYYY, DATA JS E DATAS EM TEXTO)
+  parseAnyDate(val) {
+    if (!val && val !== 0) return null;
+    if (val instanceof Date) {
+      if (!isNaN(val.getTime())) return new Date(val.getFullYear(), val.getMonth(), val.getDate());
+      return null;
     }
-    if (statusRegistro === "Previsto") {
-      return { label: "Em Elaboração", badgeClass: "bg-purple-100 text-purple-700 font-bold", isUrgente: false, isPrevisto: true };
-    }
-    if (statusRegistro === "Arquivado") {
-      return { label: "Arquivado", badgeClass: "semaforo-arquivado", isUrgente: false };
+    const s = String(val).trim();
+    if (!s || s === 'S/N' || s === 'Em Aberto') return null;
+
+    // 1. Padrão ISO YYYY-MM-DD
+    const matchIso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (matchIso) {
+      const y = parseInt(matchIso[1], 10);
+      const m = parseInt(matchIso[2], 10) - 1;
+      const d = parseInt(matchIso[3], 10);
+      const dt = new Date(y, m, d);
+      if (!isNaN(dt.getTime())) return dt;
     }
 
-    if (!dataVencimentoIso) {
-      return { label: "Sem Data", badgeClass: "semaforo-atencao", isUrgente: false };
+    // 2. Padrão BR DD/MM/YYYY no início
+    const matchBr = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (matchBr) {
+      const d = parseInt(matchBr[1], 10);
+      const m = parseInt(matchBr[2], 10) - 1;
+      const y = parseInt(matchBr[3], 10);
+      const dt = new Date(y, m, d);
+      if (!isNaN(dt.getTime())) return dt;
     }
 
-    const hoje = new Date(2026, 8, 21); // Data de referência do exercício (21/09/2026)
-    const [ano, mes, dia] = dataVencimentoIso.split('-').map(Number);
-    const venc = new Date(ano, mes - 1, dia);
+    // 3. Qualquer DD/MM/YYYY inserido em texto (ex: "Prorrogado até 26/09/2027" ou "12 Meses até 04/10/2026")
+    const matchAnyBr = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (matchAnyBr) {
+      const d = parseInt(matchAnyBr[1], 10);
+      const m = parseInt(matchAnyBr[2], 10) - 1;
+      const y = parseInt(matchAnyBr[3], 10);
+      const dt = new Date(y, m, d);
+      if (!isNaN(dt.getTime())) return dt;
+    }
+
+    // 4. Fallback Date.parse
+    const parsed = new Date(s);
+    if (!isNaN(parsed.getTime())) {
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
+    return null;
+  },
+
+  formatDateBr(dt) {
+    if (!dt) return "";
+    const d = this.parseAnyDate(dt);
+    if (!d) return "";
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const ano = d.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  },
+
+  formatDateIso(dt) {
+    if (!dt) return "";
+    const d = this.parseAnyDate(dt);
+    if (!d) return "";
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const ano = d.getFullYear();
+    return `${ano}-${mes}-${dia}`;
+  },
+
+  // DETERMINA A DATA EFETIVA PARA NOTIFICAÇÕES E BANDEIRA DE COR
+  // Regra do Usuário: Se 'Prazo / Informação de Vencimento' estiver preenchido,
+  // deve ser considerado para a notificação e bandeira com a cor; caso contrário,
+  // utiliza o campo 'Vencimento do Contrato'.
+  getEffectiveDate(contract) {
+    if (!contract) return null;
+
+    const prazo = String(contract.prazoVencimento || '').trim();
+    const ignores = ["espaço vago no mural físico", "em fase de contratação", "s/n", "em aberto", "nenhum", "não informado"];
+    const isIgnored = ignores.some(ig => prazo.toLowerCase().includes(ig));
+
+    // Se "Prazo / Informação de Vencimento" estiver preenchido:
+    if (prazo && !isIgnored) {
+      // 1. Tenta extrair data explícita contida no prazo (ex: "26/09/2027", "Até 30/09/2027", etc.)
+      const dtPrazo = this.parseAnyDate(prazo);
+      if (dtPrazo) return dtPrazo;
+
+      // 2. Se for um período em meses (ex: "12 Meses", "6 meses", "24 Meses"):
+      const matchMeses = prazo.match(/(\d+)\s*m[eê]s/i);
+      if (matchMeses) {
+        const qtdMeses = parseInt(matchMeses[1], 10);
+        // Calcula a partir do Vencimento do Contrato (se houver) ou a partir de hoje
+        const base = this.parseAnyDate(contract.dataVencimentoIso) || new Date();
+        return new Date(base.getFullYear(), base.getMonth() + qtdMeses, base.getDate());
+      }
+    }
+
+    // Caso contrário (se não estiver preenchido ou não gerar data), utiliza "Vencimento do Contrato"
+    return this.parseAnyDate(contract.dataVencimentoIso);
+  },
+
+  // CALCULA O SEMÁFORO DE VENCIMENTOS COM BASE NA DATA ATUAL E NA REGRA DE PRIORIDADE
+  calculateStatus(contractOrDate, statusRegistro, prazoVencimento) {
+    let status = statusRegistro;
+    let targetDate = null;
+
+    if (typeof contractOrDate === 'object' && contractOrDate !== null && !(contractOrDate instanceof Date)) {
+      status = contractOrDate.status;
+      targetDate = this.getEffectiveDate(contractOrDate);
+    } else {
+      if (prazoVencimento) {
+        targetDate = this.getEffectiveDate({ dataVencimentoIso: contractOrDate, prazoVencimento: prazoVencimento });
+      } else {
+        targetDate = this.parseAnyDate(contractOrDate);
+      }
+    }
+
+    if (status === "Disponível") {
+      return { label: "Espaço Vazio", badgeClass: "bg-slate-100 text-slate-500 border border-slate-300", isUrgente: false, isDisponivel: true, dias: null };
+    }
+    if (status === "Previsto") {
+      return { label: "Em Elaboração", badgeClass: "bg-purple-100 text-purple-700 font-bold", isUrgente: false, isPrevisto: true, dias: null };
+    }
+    if (status === "Arquivado") {
+      return { label: "Arquivado", badgeClass: "semaforo-arquivado", isUrgente: false, dias: null };
+    }
+
+    if (!targetDate || isNaN(targetDate.getTime())) {
+      return { label: "Sem Data", badgeClass: "semaforo-atencao", isUrgente: false, dias: null };
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const venc = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    venc.setHours(0, 0, 0, 0);
 
     const diffTempo = venc.getTime() - hoje.getTime();
-    const diasRestantes = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+    const diasRestantes = Math.round(diffTempo / (1000 * 60 * 60 * 24));
+
+    if (isNaN(diasRestantes)) {
+      return { label: "Sem Data", badgeClass: "semaforo-atencao", isUrgente: false, dias: null };
+    }
 
     if (diasRestantes < 0) {
-      return { label: `Vencido há ${Math.abs(diasRestantes)} dias`, badgeClass: "semaforo-critico", isUrgente: true, dias: diasRestantes };
+      return { label: `Vencido há ${Math.abs(diasRestantes)} dias`, badgeClass: "semaforo-critico", isUrgente: true, dias: diasRestantes, dataEfetiva: venc };
     } else if (diasRestantes <= 30) {
-      return { label: `Vence em ${diasRestantes} dias!`, badgeClass: "semaforo-critico", isUrgente: true, dias: diasRestantes };
+      return { label: `Vence em ${diasRestantes} dias!`, badgeClass: "semaforo-critico", isUrgente: true, dias: diasRestantes, dataEfetiva: venc };
     } else if (diasRestantes <= 90) {
-      return { label: `Atenção: ${diasRestantes} dias`, badgeClass: "semaforo-atencao", isUrgente: false, dias: diasRestantes };
+      return { label: `Atenção: ${diasRestantes} dias`, badgeClass: "semaforo-atencao", isUrgente: false, dias: diasRestantes, dataEfetiva: venc };
     } else {
-      return { label: `Vigente (${diasRestantes} dias)`, badgeClass: "semaforo-vigente", isUrgente: false, dias: diasRestantes };
+      return { label: `Vigente (${diasRestantes} dias)`, badgeClass: "semaforo-vigente", isUrgente: false, dias: diasRestantes, dataEfetiva: venc };
     }
   },
 
@@ -151,7 +270,12 @@ app.contratos = {
   ensureMuralSync() {
     const list = app.state.panelContracts || [];
     const c1 = list.find(c => c.id === 1);
-    const precisaSync = list.length !== 34 || !c1 || c1.numeroCtt !== '344/2025';
+    const hasNan = list.some(c => {
+      const s = this.calculateStatus(c);
+      return s.label && s.label.includes('NaN');
+    });
+
+    const precisaSync = list.length !== 34 || !c1 || c1.numeroCtt !== '344/2025' || hasNan;
 
     if (precisaSync) {
       this.syncFromMuralData(false);
@@ -301,6 +425,180 @@ app.contratos = {
     return `${novo} | [${usuario} em ${dataHora}]`;
   },
 
+  // CONTROLES DE PRAZO / INFORMAÇÃO DE VENCIMENTO (PERÍODO EM MESES OU DATA ESPECÍFICA - SEM CAMPO LIVRE)
+  setupPrazoControls(prefix, initialPrazoVal, baseDateVal) {
+    const prazo = String(initialPrazoVal || '').trim();
+    const dateInput = document.getElementById(`panel-${prefix}-prazo-data-input`);
+    const mesesSelect = document.getElementById(`panel-${prefix}-prazo-meses-select`);
+    const mesesCustom = document.getElementById(`panel-${prefix}-prazo-meses-custom`);
+    const customWrap = document.getElementById(`panel-${prefix}-prazo-meses-custom-wrap`);
+    const hiddenTxt = document.getElementById(`panel-${prefix}-prazo-txt`);
+
+    if (customWrap) customWrap.classList.add('hidden');
+    if (mesesCustom) mesesCustom.value = '';
+
+    const ignores = ["espaço vago no mural físico", "em fase de contratação", "s/n", "em aberto", "nenhum", "não informado"];
+    const isIgnored = !prazo || ignores.some(ig => prazo.toLowerCase().includes(ig));
+
+    if (isIgnored) {
+      this.onPrazoTypeChange(prefix, 'NONE');
+      if (dateInput) dateInput.value = '';
+      if (hiddenTxt) hiddenTxt.value = '';
+      return;
+    }
+
+    // 1. Tentar detectar se é data explícita (sem palavra meses)
+    const dt = this.parseAnyDate(prazo);
+    const hasMesesWord = /m[eê]s/i.test(prazo);
+
+    if (dt && !hasMesesWord) {
+      this.onPrazoTypeChange(prefix, 'DATA');
+      if (dateInput) {
+        dateInput.value = this.formatDateIso(dt);
+      }
+      this.onPrazoDateInputChange(prefix);
+      return;
+    }
+
+    // 2. Tentar detectar se é período em meses
+    const matchMeses = prazo.match(/(\d+)\s*m[eê]s/i);
+    if (matchMeses) {
+      this.onPrazoTypeChange(prefix, 'MESES');
+      const qtd = matchMeses[1];
+      const standardOpts = ["6", "12", "24", "36", "48", "60"];
+      if (standardOpts.includes(qtd)) {
+        if (mesesSelect) mesesSelect.value = qtd;
+        if (customWrap) customWrap.classList.add('hidden');
+      } else {
+        if (mesesSelect) mesesSelect.value = 'OUTRO';
+        if (customWrap) customWrap.classList.remove('hidden');
+        if (mesesCustom) mesesCustom.value = qtd;
+      }
+      this.onPrazoMesesSelectChange(prefix);
+      return;
+    }
+
+    // Fallback: se houver data em string mista
+    if (dt) {
+      this.onPrazoTypeChange(prefix, 'DATA');
+      if (dateInput) dateInput.value = this.formatDateIso(dt);
+      this.onPrazoDateInputChange(prefix);
+    } else {
+      this.onPrazoTypeChange(prefix, 'NONE');
+    }
+  },
+
+  onPrazoTypeChange(prefix, type) {
+    const lblNone = document.getElementById(`lbl-${prefix}-prazo-none`);
+    const lblMeses = document.getElementById(`lbl-${prefix}-prazo-meses`);
+    const lblData = document.getElementById(`lbl-${prefix}-prazo-data`);
+
+    const noneInfo = document.getElementById(`panel-${prefix}-prazo-none-info`);
+    const mesesWrap = document.getElementById(`panel-${prefix}-prazo-meses-wrap`);
+    const dataWrap = document.getElementById(`panel-${prefix}-prazo-data-wrap`);
+
+    const radioNone = document.querySelector(`input[name="panel-${prefix}-prazo-type"][value="NONE"]`);
+    const radioMeses = document.querySelector(`input[name="panel-${prefix}-prazo-type"][value="MESES"]`);
+    const radioData = document.querySelector(`input[name="panel-${prefix}-prazo-type"][value="DATA"]`);
+
+    const activeClass = prefix === 'edit'
+      ? "cursor-pointer py-1.5 rounded-lg transition bg-white text-amber-800 shadow-xs"
+      : "cursor-pointer py-1.5 rounded-lg transition bg-white text-blue-700 shadow-xs";
+    const inactiveClass = "cursor-pointer py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900";
+
+    if (lblNone) lblNone.className = (type === 'NONE') ? activeClass : inactiveClass;
+    if (lblMeses) lblMeses.className = (type === 'MESES') ? activeClass : inactiveClass;
+    if (lblData) lblData.className = (type === 'DATA') ? activeClass : inactiveClass;
+
+    if (radioNone) radioNone.checked = (type === 'NONE');
+    if (radioMeses) radioMeses.checked = (type === 'MESES');
+    if (radioData) radioData.checked = (type === 'DATA');
+
+    if (noneInfo) noneInfo.classList.toggle('hidden', type !== 'NONE');
+    if (mesesWrap) mesesWrap.classList.toggle('hidden', type !== 'MESES');
+    if (dataWrap) dataWrap.classList.toggle('hidden', type !== 'DATA');
+
+    if (type === 'NONE') {
+      const hiddenTxt = document.getElementById(`panel-${prefix}-prazo-txt`);
+      if (hiddenTxt) hiddenTxt.value = '';
+    } else if (type === 'MESES') {
+      this.onPrazoMesesSelectChange(prefix);
+    } else if (type === 'DATA') {
+      this.onPrazoDateInputChange(prefix);
+    }
+  },
+
+  onPrazoMesesSelectChange(prefix) {
+    const select = document.getElementById(`panel-${prefix}-prazo-meses-select`);
+    const customWrap = document.getElementById(`panel-${prefix}-prazo-meses-custom-wrap`);
+    const customInput = document.getElementById(`panel-${prefix}-prazo-meses-custom`);
+    const preview = document.getElementById(`panel-${prefix}-prazo-meses-preview`);
+    const hiddenTxt = document.getElementById(`panel-${prefix}-prazo-txt`);
+
+    if (!select) return;
+
+    let qtd = select.value;
+    if (qtd === 'OUTRO') {
+      if (customWrap) customWrap.classList.remove('hidden');
+      qtd = customInput ? (parseInt(customInput.value, 10) || 12) : 12;
+    } else {
+      if (customWrap) customWrap.classList.add('hidden');
+      qtd = parseInt(qtd, 10) || 12;
+    }
+
+    const baseInput = document.getElementById(`panel-${prefix}-venc-iso`);
+    const baseDate = (baseInput && this.parseAnyDate(baseInput.value)) || new Date();
+    const resultDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + qtd, baseDate.getDate());
+    const formattedDate = this.formatDateBr(resultDate);
+
+    const txtValue = `${qtd} Meses até ${formattedDate}`;
+    if (hiddenTxt) hiddenTxt.value = txtValue;
+
+    if (preview) {
+      preview.innerHTML = `📅 Vigência de <strong>${qtd} meses</strong>: vence em <strong>${formattedDate}</strong> (considerado no semáforo)`;
+    }
+  },
+
+  onPrazoCustomMonthsInput(prefix) {
+    this.onPrazoMesesSelectChange(prefix);
+  },
+
+  onPrazoDateInputChange(prefix) {
+    const dateInput = document.getElementById(`panel-${prefix}-prazo-data-input`);
+    const preview = document.getElementById(`panel-${prefix}-prazo-data-preview`);
+    const hiddenTxt = document.getElementById(`panel-${prefix}-prazo-txt`);
+
+    if (!dateInput) return;
+    const val = dateInput.value;
+    if (!val) {
+      if (hiddenTxt) hiddenTxt.value = '';
+      if (preview) preview.innerHTML = 'Selecione uma data para o término do prazo/prorrogação.';
+      return;
+    }
+
+    const dt = this.parseAnyDate(val);
+    if (!dt) {
+      if (hiddenTxt) hiddenTxt.value = '';
+      if (preview) preview.innerHTML = 'Data inválida.';
+      return;
+    }
+
+    const formatted = this.formatDateBr(dt);
+    const txtValue = `Até ${formatted}`;
+    if (hiddenTxt) hiddenTxt.value = txtValue;
+    if (preview) {
+      preview.innerHTML = `📅 Prazo com vencimento em: <strong>${formatted}</strong> (considerado no semáforo)`;
+    }
+  },
+
+  onDateChange(prefix) {
+    // Quando a data de vencimento do contrato muda, se o prazo for MESES, atualiza a projeção
+    const radioMeses = document.querySelector(`input[name="panel-${prefix}-prazo-type"][value="MESES"]`);
+    if (radioMeses && radioMeses.checked) {
+      this.onPrazoMesesSelectChange(prefix);
+    }
+  },
+
   openNewModal() {
     if (!app.permissions.can('panel_create')) return app.ui.toast("Sem permissão para cadastrar contratos no painel.", "warning", "Acesso Restrito");
     const m = document.getElementById('modal-novo-painel-contrato');
@@ -312,7 +610,7 @@ app.contratos = {
       this.populateFiscalSelect(document.getElementById('panel-new-fiscal'));
       document.getElementById('panel-new-valor').value = '';
       document.getElementById('panel-new-venc-iso').value = '';
-      document.getElementById('panel-new-prazo-txt').value = '';
+      this.setupPrazoControls('new', '', '');
       document.getElementById('panel-new-objeto').value = '';
       document.getElementById('panel-new-observacao').value = '';
       setTimeout(() => document.getElementById('panel-new-empresa').focus(), 80);
@@ -330,7 +628,8 @@ app.contratos = {
     let numCtt = document.getElementById('panel-new-ctt-num').value.replace(/[^0-9]/g, '').slice(0, 5);
     const anoCtt = document.getElementById('panel-new-ctt-ano').value;
     const valor = parseFloat(document.getElementById('panel-new-valor').value) || 0;
-    const dataIso = document.getElementById('panel-new-venc-iso').value;
+    const rawDataIso = document.getElementById('panel-new-venc-iso').value;
+    const dataIso = this.formatDateIso(rawDataIso);
     const fiscal = document.getElementById('panel-new-fiscal').value.toUpperCase();
     const prazoTxt = document.getElementById('panel-new-prazo-txt').value.trim();
     const objeto = document.getElementById('panel-new-objeto').value.trim();
@@ -406,8 +705,8 @@ app.contratos = {
     this.populateFiscalSelect(document.getElementById('panel-edit-fiscal'), item.fiscal);
 
     document.getElementById('panel-edit-valor').value = item.valorContrato;
-    document.getElementById('panel-edit-venc-iso').value = item.dataVencimentoIso;
-    document.getElementById('panel-edit-prazo-txt').value = item.prazoVencimento;
+    document.getElementById('panel-edit-venc-iso').value = this.formatDateIso(item.dataVencimentoIso);
+    this.setupPrazoControls('edit', item.prazoVencimento, item.dataVencimentoIso);
     document.getElementById('panel-edit-objeto').value = item.objeto || '';
     
     const obsEl = document.getElementById('panel-edit-observacao');
@@ -448,7 +747,7 @@ app.contratos = {
     item.empresa = document.getElementById('panel-edit-empresa').value.trim();
     item.numeroCtt = `${numCtt}/${anoCtt}`;
     item.valorContrato = parseFloat(document.getElementById('panel-edit-valor').value) || 0;
-    item.dataVencimentoIso = document.getElementById('panel-edit-venc-iso').value;
+    item.dataVencimentoIso = this.formatDateIso(document.getElementById('panel-edit-venc-iso').value);
     item.fiscal = document.getElementById('panel-edit-fiscal').value.toUpperCase();
     item.prazoVencimento = document.getElementById('panel-edit-prazo-txt').value.trim();
     item.objeto = document.getElementById('panel-edit-objeto').value.trim();
@@ -714,7 +1013,7 @@ app.contratos = {
       .toLowerCase();
 
     return list.filter(c => {
-      const semaforo = this.calculateStatus(c.dataVencimentoIso, c.status);
+      const semaforo = this.calculateStatus(c);
 
       // Filtro Status / Semáforo
       let matchStatus = true;
@@ -752,7 +1051,7 @@ app.contratos = {
   },
 
   renderCard(c) {
-    const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
+    const sem = this.calculateStatus(c);
     const isArch = c.status === 'Arquivado';
 
     // RENDERIZAÇÃO DE ESPAÇO VAGO NO MURAL FÍSICO
@@ -848,15 +1147,21 @@ app.contratos = {
               <span class="block text-xs font-mono font-bold text-blue-600 mt-1">CTT: ${c.numeroCtt}</span>
 
               <!-- DADOS FINANCEIROS E PRAZO -->
-              <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+              <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
                   <div class="flex justify-between">
                       <span class="text-slate-400 font-bold text-[10px] uppercase">Valor Anual:</span>
                       <span class="font-black text-slate-900 text-xs">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div class="flex justify-between">
-                      <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento:</span>
-                      <span class="font-bold text-slate-700 text-[11px]">${c.prazoVencimento}</span>
+                      <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento CTT:</span>
+                      <span class="font-bold text-slate-800 text-xs">${this.formatDateBr(c.dataVencimentoIso) || 'Não informado'}</span>
                   </div>
+                  ${c.prazoVencimento && c.prazoVencimento !== 'Espaço vago no mural físico' && c.prazoVencimento !== 'Em fase de contratação' ? `
+                    <div class="flex justify-between items-center text-blue-800 bg-blue-50/90 px-2 py-1 rounded-lg border border-blue-100">
+                        <span class="font-black text-[9px] uppercase tracking-wider text-blue-600">Prazo / Alerta:</span>
+                        <span class="font-bold text-[11px] text-right truncate max-w-[140px]" title="${c.prazoVencimento}">${c.prazoVencimento}</span>
+                    </div>
+                  ` : ''}
               </div>
 
               ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
@@ -898,7 +1203,7 @@ app.contratos = {
   },
 
   renderTableRow(c) {
-    const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
+    const sem = this.calculateStatus(c);
 
     if (c.status === 'Disponível') {
       return `
@@ -953,7 +1258,12 @@ app.contratos = {
           <td class="p-3.5 font-mono text-blue-700 font-bold">${c.numeroCtt}</td>
           <td class="p-3.5 text-right font-black text-slate-900">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
           <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold text-[10px]">${c.fiscal}</span></td>
-          <td class="p-3.5 text-slate-600 text-xs">${c.prazoVencimento}</td>
+          <td class="p-3.5 text-slate-800 text-xs">
+              <div class="font-bold">${this.formatDateBr(c.dataVencimentoIso) || '-'}</div>
+              ${c.prazoVencimento && c.prazoVencimento !== 'Espaço vago no mural físico' && c.prazoVencimento !== 'Em fase de contratação' ? `
+                <div class="text-[10px] text-blue-700 font-semibold" title="Prazo considerado para alertas">🕒 ${c.prazoVencimento}</div>
+              ` : ''}
+          </td>
           <td class="p-3.5 text-center">
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${sem.badgeClass}">${sem.label}</span>
           </td>
@@ -1024,7 +1334,7 @@ app.contratos = {
     const list = this.getFilteredList();
     const headers = ["ID", "Empresa", "Numero_CTT", "Objeto", "Observacao", "Fiscal", "Prazo_Vencimento", "Vencimento_ISO", "Valor_Contrato", "Situacao"];
     const rows = list.map(c => {
-      const sem = this.calculateStatus(c.dataVencimentoIso, c.status);
+      const sem = this.calculateStatus(c);
       return [
         c.id, `"${c.empresa.replace(/"/g, '""')}"`, `"${c.numeroCtt}"`, `"${(c.objeto || '').replace(/"/g, '""')}"`,
         `"${(c.observacao || '').replace(/"/g, '""')}"`, `"${c.fiscal}"`, `"${c.prazoVencimento}"`, `"${c.dataVencimentoIso}"`, c.valorContrato, `"${sem.label}"`
@@ -1061,11 +1371,11 @@ app.render.contratosHub = function(el) {
   const activeContracts = allContracts.filter(c => c.status === 'Ativo');
   const previstosList = allContracts.filter(c => c.status === 'Previsto' || c.status === 'Disponível');
   const criticosList = activeContracts.filter(c => {
-    const s = app.contratos.calculateStatus(c.dataVencimentoIso, c.status);
+    const s = app.contratos.calculateStatus(c);
     return s.isUrgente;
   });
   const atencaoList = activeContracts.filter(c => {
-    const s = app.contratos.calculateStatus(c.dataVencimentoIso, c.status);
+    const s = app.contratos.calculateStatus(c);
     return s.label.includes('Atenção');
   });
   

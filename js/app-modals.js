@@ -494,12 +494,61 @@ Exemplo do formato:
                 </div>
               </div>
             </div>
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block font-bold text-slate-600">Prazo / Informação de Vencimento</label>
-                <span class="text-[10px] text-slate-400">Texto ou Período para alertas</span>
+            <div class="p-3 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="block font-black text-slate-700 text-xs">Prazo / Informação de Vencimento</label>
+                <span class="text-[10px] text-blue-600 font-bold">Sobrescreve a bandeira/cor se preenchido</span>
               </div>
-              <input type="text" id="panel-new-prazo-txt" placeholder="Ex: 12 Meses até 11/02/2027 (Renovável)" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500">
+              
+              <!-- Seletor exclusivo: Não informado | Período em Meses | Data Específica -->
+              <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-200/70 rounded-xl text-center font-bold text-[11px]">
+                <label id="lbl-new-prazo-none" onclick="app.contratos.onPrazoTypeChange('new', 'NONE')" class="cursor-pointer py-1.5 rounded-lg transition bg-white text-blue-700 shadow-xs">
+                  <input type="radio" name="panel-new-prazo-type" value="NONE" class="sr-only" checked>
+                  <span>Não Informado</span>
+                </label>
+                <label id="lbl-new-prazo-meses" onclick="app.contratos.onPrazoTypeChange('new', 'MESES')" class="cursor-pointer py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                  <input type="radio" name="panel-new-prazo-type" value="MESES" class="sr-only">
+                  <span>Período (Meses)</span>
+                </label>
+                <label id="lbl-new-prazo-data" onclick="app.contratos.onPrazoTypeChange('new', 'DATA')" class="cursor-pointer py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                  <input type="radio" name="panel-new-prazo-type" value="DATA" class="sr-only">
+                  <span>Data Específica</span>
+                </label>
+              </div>
+
+              <!-- Opção 1: Período em Meses (Sem campo livre) -->
+              <div id="panel-new-prazo-meses-wrap" class="hidden pt-1">
+                <div class="flex items-center gap-2">
+                  <select id="panel-new-prazo-meses-select" onchange="app.contratos.onPrazoMesesSelectChange('new')" class="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs outline-none focus:border-blue-500">
+                    <option value="6">6 Meses</option>
+                    <option value="12" selected>12 Meses</option>
+                    <option value="24">24 Meses</option>
+                    <option value="36">36 Meses</option>
+                    <option value="48">48 Meses</option>
+                    <option value="60">60 Meses</option>
+                    <option value="OUTRO">Outro número de meses...</option>
+                  </select>
+                  <div id="panel-new-prazo-meses-custom-wrap" class="hidden flex items-center gap-1">
+                    <input type="number" id="panel-new-prazo-meses-custom" min="1" max="120" placeholder="Qtd" class="w-16 px-2 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs text-center outline-none focus:border-blue-500" oninput="app.contratos.onPrazoCustomMonthsInput('new')">
+                    <span class="text-xs font-bold text-slate-500">meses</span>
+                  </div>
+                </div>
+                <div id="panel-new-prazo-meses-preview" class="text-[10px] text-blue-700 font-semibold mt-1"></div>
+              </div>
+
+              <!-- Opção 2: Data Específica (Campo date restrito) -->
+              <div id="panel-new-prazo-data-wrap" class="hidden pt-1">
+                <input type="date" id="panel-new-prazo-data-input" onchange="app.contratos.onPrazoDateInputChange('new')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-xs outline-none focus:border-blue-500">
+                <div id="panel-new-prazo-data-preview" class="text-[10px] text-blue-700 font-semibold mt-1"></div>
+              </div>
+
+              <!-- Info quando não informado -->
+              <div id="panel-new-prazo-none-info" class="text-[10px] text-slate-500 italic">
+                ℹ️ A notificação e a cor da bandeira utilizarão o campo <strong>Vencimento do Contrato</strong> acima.
+              </div>
+
+              <!-- Campo oculto com o valor final estruturado -->
+              <input type="hidden" id="panel-new-prazo-txt" value="">
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Objeto do Contrato</label>
@@ -571,12 +620,61 @@ Exemplo do formato:
                 </div>
               </div>
             </div>
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block font-bold text-slate-600">Prazo / Informação de Vencimento</label>
-                <span class="text-[10px] text-slate-400">Texto ou Período para alertas</span>
+            <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="block font-black text-slate-800 text-xs">Prazo / Informação de Vencimento</label>
+                <span class="text-[10px] text-amber-800 font-bold">Sobrescreve a bandeira/cor se preenchido</span>
               </div>
-              <input type="text" id="panel-edit-prazo-txt" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500">
+              
+              <!-- Seletor exclusivo: Não informado | Período em Meses | Data Específica -->
+              <div class="grid grid-cols-3 gap-1.5 p-1 bg-amber-100/70 rounded-xl text-center font-bold text-[11px]">
+                <label id="lbl-edit-prazo-none" onclick="app.contratos.onPrazoTypeChange('edit', 'NONE')" class="cursor-pointer py-1.5 rounded-lg transition bg-white text-amber-800 shadow-xs">
+                  <input type="radio" name="panel-edit-prazo-type" value="NONE" class="sr-only" checked>
+                  <span>Não Informado</span>
+                </label>
+                <label id="lbl-edit-prazo-meses" onclick="app.contratos.onPrazoTypeChange('edit', 'MESES')" class="cursor-pointer py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                  <input type="radio" name="panel-edit-prazo-type" value="MESES" class="sr-only">
+                  <span>Período (Meses)</span>
+                </label>
+                <label id="lbl-edit-prazo-data" onclick="app.contratos.onPrazoTypeChange('edit', 'DATA')" class="cursor-pointer py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                  <input type="radio" name="panel-edit-prazo-type" value="DATA" class="sr-only">
+                  <span>Data Específica</span>
+                </label>
+              </div>
+
+              <!-- Opção 1: Período em Meses (Sem campo livre) -->
+              <div id="panel-edit-prazo-meses-wrap" class="hidden pt-1">
+                <div class="flex items-center gap-2">
+                  <select id="panel-edit-prazo-meses-select" onchange="app.contratos.onPrazoMesesSelectChange('edit')" class="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs outline-none focus:border-amber-500">
+                    <option value="6">6 Meses</option>
+                    <option value="12" selected>12 Meses</option>
+                    <option value="24">24 Meses</option>
+                    <option value="36">36 Meses</option>
+                    <option value="48">48 Meses</option>
+                    <option value="60">60 Meses</option>
+                    <option value="OUTRO">Outro número de meses...</option>
+                  </select>
+                  <div id="panel-edit-prazo-meses-custom-wrap" class="hidden flex items-center gap-1">
+                    <input type="number" id="panel-edit-prazo-meses-custom" min="1" max="120" placeholder="Qtd" class="w-16 px-2 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs text-center outline-none focus:border-amber-500" oninput="app.contratos.onPrazoCustomMonthsInput('edit')">
+                    <span class="text-xs font-bold text-slate-500">meses</span>
+                  </div>
+                </div>
+                <div id="panel-edit-prazo-meses-preview" class="text-[10px] text-amber-900 font-semibold mt-1"></div>
+              </div>
+
+              <!-- Opção 2: Data Específica (Campo date restrito) -->
+              <div id="panel-edit-prazo-data-wrap" class="hidden pt-1">
+                <input type="date" id="panel-edit-prazo-data-input" onchange="app.contratos.onPrazoDateInputChange('edit')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-xs outline-none focus:border-amber-500">
+                <div id="panel-edit-prazo-data-preview" class="text-[10px] text-amber-900 font-semibold mt-1"></div>
+              </div>
+
+              <!-- Info quando não informado -->
+              <div id="panel-edit-prazo-none-info" class="text-[10px] text-slate-500 italic">
+                ℹ️ A notificação e a cor da bandeira utilizarão o campo <strong>Vencimento do Contrato</strong> acima.
+              </div>
+
+              <!-- Campo oculto com o valor final estruturado -->
+              <input type="hidden" id="panel-edit-prazo-txt" value="">
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Objeto do Contrato</label>

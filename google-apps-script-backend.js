@@ -371,6 +371,35 @@ function getPermissionsMatrix(ss) {
   return null;
 }
 
+function formatCellToIsoDate(val) {
+  if (!val && val !== 0) return "";
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return "";
+    var y = val.getFullYear();
+    var m = ("0" + (val.getMonth() + 1)).slice(-2);
+    var d = ("0" + val.getDate()).slice(-2);
+    return y + "-" + m + "-" + d;
+  }
+  var s = String(val).trim();
+  if (!s || s === 'S/N' || s === 'Em Aberto') return "";
+  var matchBr = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (matchBr) {
+    return matchBr[3] + "-" + ("0" + matchBr[2]).slice(-2) + "-" + ("0" + matchBr[1]).slice(-2);
+  }
+  var matchIso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (matchIso) {
+    return matchIso[1] + "-" + ("0" + matchIso[2]).slice(-2) + "-" + ("0" + matchIso[3]).slice(-2);
+  }
+  var parsed = new Date(s);
+  if (!isNaN(parsed.getTime())) {
+    var py = parsed.getFullYear();
+    var pm = ("0" + (parsed.getMonth() + 1)).slice(-2);
+    var pd = ("0" + parsed.getDate()).slice(-2);
+    return py + "-" + pm + "-" + pd;
+  }
+  return s;
+}
+
 function getPanelContractsList(ss) {
   ss = ss || SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ensurePanelContractsStructure(ss);
@@ -383,7 +412,7 @@ function getPanelContractsList(ss) {
       empresa: String(rows[i][1]),
       numeroCtt: String(rows[i][2]),
       prazoVencimento: String(rows[i][3]),
-      dataVencimentoIso: String(rows[i][4]),
+      dataVencimentoIso: formatCellToIsoDate(rows[i][4]),
       valorContrato: Number(rows[i][5]) || 0,
       fiscal: String(rows[i][6]),
       status: String(rows[i][7] || "Ativo"),
