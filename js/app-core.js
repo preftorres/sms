@@ -964,16 +964,18 @@ Object.assign(window.app, {
       keys.forEach(k => {
         const compEl = document.getElementById(`perm-comprador-${k}`);
         const gestEl = document.getElementById(`perm-gestor-${k}`);
+        const visEl = document.getElementById(`perm-visualizador-${k}`);
 
         if (compEl) compEl.checked = getVal('Comprador', k);
         if (gestEl) gestEl.checked = getVal('Gestor Financeiro', k);
+        if (visEl) visEl.checked = getVal('Visualizador', k);
       });
 
       this.updatePermMatrixState();
     },
 
     updatePermMatrixState() {
-      const profiles = ['comprador', 'gestor'];
+      const profiles = ['comprador', 'gestor', 'visualizador'];
       const modules = [
         { master: 'audit_access', subs: ['audit_edit_values', 'audit_create_contract', 'audit_manage_procedures'] },
         { master: 'dotacoes_access', subs: ['dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete'] },
@@ -1014,14 +1016,16 @@ Object.assign(window.app, {
         'panel_access', 'panel_create', 'panel_edit', 'panel_archive'
       ];
 
-      const newPerms = { 'Comprador': {}, 'Gestor Financeiro': {} };
+      const newPerms = { 'Comprador': {}, 'Gestor Financeiro': {}, 'Visualizador': {} };
 
       keys.forEach(k => {
         const compEl = document.getElementById(`perm-comprador-${k}`);
         const gestEl = document.getElementById(`perm-gestor-${k}`);
+        const visEl = document.getElementById(`perm-visualizador-${k}`);
 
         newPerms['Comprador'][k] = compEl ? compEl.checked : false;
         newPerms['Gestor Financeiro'][k] = gestEl ? gestEl.checked : false;
+        newPerms['Visualizador'][k] = visEl ? visEl.checked : false;
       });
 
       app.state.permissions = newPerms;
@@ -1057,7 +1061,7 @@ Object.assign(window.app, {
             <span>${u.nome || u.usuario}</span>
           </td>
           <td class="p-3.5 font-mono text-blue-700 font-bold">${u.usuario}</td>
-          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700')}">${u.perfil}</span></td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : (u.perfil === 'Visualizador' ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-slate-100 text-slate-700'))}">${u.perfil}</span></td>
           <td class="p-3.5 text-slate-400">${u.createdAt || "—"}</td>
           <td class="p-3.5 text-center whitespace-nowrap" onclick="event.stopPropagation()">
             <button onclick="app.admin.editUser(${u.id})" class="text-amber-600 hover:text-amber-800 font-bold mr-2 text-xs">Editar</button>

@@ -1019,6 +1019,25 @@ app.contratos = {
     this.updateContent();
   },
 
+  setSort(mode) {
+    app.state.panelSort = mode || 'ALFABETICA_ASC';
+    this.updateContent();
+  },
+
+  getSortLabel(mode) {
+    const labels = {
+      'ALFABETICA_ASC': 'Alfabética (A-Z)',
+      'ALFABETICA_DESC': 'Alfabética (Z-A)',
+      'VENCIMENTO_ASC': 'Vencimento (Mais próximos)',
+      'VENCIMENTO_DESC': 'Vencimento (Mais distantes)',
+      'VALOR_DESC': 'Maior Valor (R$)',
+      'VALOR_ASC': 'Menor Valor (R$)',
+      'NUMERO_CTT': 'Nº do Contrato',
+      'POSICAO_MURAL': 'Posição no Mural (#1 a #34)'
+    };
+    return labels[mode] || 'Alfabética (A-Z)';
+  },
+
   setSearch(val) {
     app.state.panelSearch = (val || '').toLowerCase();
     const clearBtn = document.getElementById('panel-contratos-search-clear');
@@ -1068,7 +1087,8 @@ app.contratos = {
     if (countEl) {
       const list = this.getFilteredList();
       const total = (app.state.panelContracts || []).length;
-      countEl.textContent = `Exibindo ${list.length} de ${total} posições do mural`;
+      const currSort = app.state.panelSort || 'ALFABETICA_ASC';
+      countEl.textContent = `Exibindo ${list.length} de ${total} posições do mural • Ordenado por: ${this.getSortLabel(currSort)}`;
     }
   },
 
@@ -1080,7 +1100,7 @@ app.contratos = {
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
 
-    return list.filter(c => {
+    const filtered = list.filter(c => {
       const semaforo = this.calculateStatus(c);
 
       // Filtro Status / Semáforo
@@ -1116,6 +1136,77 @@ app.contratos = {
 
       return matchStatus && matchFiscal && matchSearch;
     });
+
+    // ORDENAMENTO MULTI-CRITÉRIO (PADRÃO INSTITUCIONAL: ALFABÉTICA A-Z)
+    const sortMode = app.state.panelSort || 'ALFABETICA_ASC';
+
+    filtered.sort((a, b) => {
+      // 1. Alfabética (A-Z)
+      if (sortMode === 'ALFABETICA_ASC') {
+        const empA = (a.empresa || '').replace(/^\[.*?\]\s*/, '');
+        const empB = (b.empresa || '').replace(/^\[.*?\]\s*/, '');
+        return empA.localeCompare(empB, 'pt-BR', { sensitivity: 'base' });
+      }
+
+      // 2. Alfabética (Z-A)
+      if (sortMode === 'ALFABETICA_DESC') {
+        const empA = (a.empresa || '').replace(/^\[.*?\]\s*/, '');
+        const empB = (b.empresa || '').replace(/^\[.*?\]\s*/, '');
+        return empB.localeCompare(empA, 'pt-BR', { sensitivity: 'base' });
+      }
+
+      // 3. Data de Vencimento (mais próximos / urgentes primeiro)
+      if (sortMode === 'VENCIMENTO_ASC') {
+        const dtA = this.getEffectiveDate(a) || this.parseAnyDate(a.dataVencimentoIso);
+        const dtB = this.getEffectiveDate(b) || this.parseAnyDate(b.dataVencimentoIso);
+        const tA = dtA ? dtA.getTime() : 9999999999999;
+        const tB = dtB ? dtB.getTime() : 9999999999999;
+        if (tA !== tB) return tA - tB;
+        return (a.id || 0) - (b.id || 0);
+      }
+
+      // 4. Data de Vencimento (mais distantes primeiro)
+      if (sortMode === 'VENCIMENTO_DESC') {
+        const dtA = this.getEffectiveDate(a) || this.parseAnyDate(a.dataVencimentoIso);
+        const dtB = this.getEffectiveDate(b) || this.parseAnyDate(b.dataVencimentoIso);
+        const tA = dtA ? dtA.getTime() : -1;
+        const tB = dtB ? dtB.getTime() : -1;
+        if (tA !== tB) return tB - tA;
+        return (a.id || 0) - (b.id || 0);
+      }
+
+      // 5. Maior Valor (R$)
+      if (sortMode === 'VALOR_DESC') {
+        const vA = Number(a.valorContrato) || 0;
+        const vB = Number(b.valorContrato) || 0;
+        if (vB !== vA) return vB - vA;
+        return (a.id || 0) - (b.id || 0);
+      }
+
+      // 6. Menor Valor (R$)
+      if (sortMode === 'VALOR_ASC') {
+        const vA = Number(a.valorContrato) || 0;
+        const vB = Number(b.valorContrato) || 0;
+        if (vA !== vB) return vA - vB;
+        return (a.id || 0) - (b.id || 0);
+      }
+
+      // 7. Nº do Contrato
+      if (sortMode === 'NUMERO_CTT') {
+        const cttA = String(a.numeroCtt || '');
+        const cttB = String(b.numeroCtt || '');
+        return cttA.localeCompare(cttB, 'pt-BR', { numeric: true });
+      }
+
+      // 8. Posição no Mural (#1 a #34)
+      if (sortMode === 'POSICAO_MURAL') {
+        return (a.id || 0) - (b.id || 0);
+      }
+
+      return 0;
+    });
+
+    return filtered;
   },
 
   renderCard(c) {
@@ -1499,6 +1590,7 @@ app.render.contratosHub = function(el) {
   const filteredList = app.contratos.getFilteredList();
   const isCardsMode = (app.state.panelViewMode || 'CARDS') === 'CARDS';
   const currFilter = app.state.panelContractsFilter || 'MURAL';
+  const currSort = app.state.panelSort || 'ALFABETICA_ASC';
 
   el.innerHTML = `
     <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
@@ -1566,7 +1658,7 @@ app.render.contratosHub = function(el) {
             </div>
         </div>
 
-        <!-- BARRA DE FILTROS & FISCAIS -->
+        <!-- BARRA DE FILTROS & ORDENAÇÃO -->
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
             
             <!-- BUSCA EM TEMPO REAL -->
@@ -1582,6 +1674,21 @@ app.render.contratosHub = function(el) {
                 <select onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 uppercase">
                     <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
                     ${app.contratos.getFiscais().map(f => `<option value="${f}" ${app.state.panelFiscalFilter === f ? 'selected' : ''}>${f}</option>`).join('')}
+                </select>
+            </div>
+
+            <!-- ORDENAÇÃO MULTI-CRITÉRIO (PADRÃO: ALFABÉTICA A-Z) -->
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Ordenar:</span>
+                <select id="panel-contratos-sort-select" onchange="app.contratos.setSort(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
+                    <option value="ALFABETICA_ASC" ${currSort === 'ALFABETICA_ASC' ? 'selected' : ''}>🔤 Alfabética (A-Z) • Padrão</option>
+                    <option value="ALFABETICA_DESC" ${currSort === 'ALFABETICA_DESC' ? 'selected' : ''}>🔤 Alfabética (Z-A)</option>
+                    <option value="VENCIMENTO_ASC" ${currSort === 'VENCIMENTO_ASC' ? 'selected' : ''}>⏰ Vencimento (Mais próximos)</option>
+                    <option value="VENCIMENTO_DESC" ${currSort === 'VENCIMENTO_DESC' ? 'selected' : ''}>📅 Vencimento (Mais distantes)</option>
+                    <option value="VALOR_DESC" ${currSort === 'VALOR_DESC' ? 'selected' : ''}>💰 Maior Valor (R$)</option>
+                    <option value="VALOR_ASC" ${currSort === 'VALOR_ASC' ? 'selected' : ''}>💵 Menor Valor (R$)</option>
+                    <option value="NUMERO_CTT" ${currSort === 'NUMERO_CTT' ? 'selected' : ''}>📄 Nº do Contrato</option>
+                    <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição no Mural (#1 a #34)</option>
                 </select>
             </div>
 
@@ -1619,9 +1726,9 @@ app.render.contratosHub = function(el) {
 
         </div>
 
-        <!-- CONTADOR DE CONTRATOS -->
+        <!-- CONTADOR DE CONTRATOS & CRITÉRIO DE ORDENAÇÃO -->
         <div class="flex items-center justify-between text-[11px] text-slate-500 mb-3 px-1">
-            <span id="panel-filtered-count">Exibindo ${filteredList.length} de ${allContracts.length} posições do mural</span>
+            <span id="panel-filtered-count">Exibindo ${filteredList.length} de ${allContracts.length} posições do mural • Ordenado por: ${app.contratos.getSortLabel(currSort)}</span>
         </div>
 
         <!-- CONTEÚDO DINÂMICO (MURAL DE CARDS OU TABELA ANALÍTICA) -->

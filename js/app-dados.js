@@ -598,5 +598,20 @@ const DEFAULT_PERMISSIONS = {
     'panel_create': true,
     'panel_edit': true,
     'panel_archive': true
+  },
+  'Visualizador': {
+    'audit_access': true,
+    'audit_edit_values': false,
+    'audit_create_contract': false,
+    'audit_manage_procedures': false,
+    'dotacoes_access': true,
+    'dotacoes_create': false,
+    'dotacoes_check': false,
+    'dotacoes_edit': false,
+    'dotacoes_delete': false,
+    'panel_access': true,
+    'panel_create': false,
+    'panel_edit': false,
+    'panel_archive': false
   }
 };
