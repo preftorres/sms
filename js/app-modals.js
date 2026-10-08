@@ -462,7 +462,7 @@ Exemplo do formato:
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Nº do Contrato (Nº / Ano)</label>
                 <div class="flex items-center gap-1.5">
-                  <input type="text" id="panel-new-ctt-num" required maxlength="5" pattern="\d*" placeholder="Ex: 014" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)" class="w-24 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-mono font-bold text-center">
+                  <input type="text" id="panel-new-ctt-num" required maxlength="5" inputmode="numeric" placeholder="Ex: 014" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)" class="w-24 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-mono font-bold text-center">
                   <span class="text-slate-400 font-black text-sm">/</span>
                   <select id="panel-new-ctt-ano" class="flex-1 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-mono font-bold">
                     <!-- Preenchido via script até o ano atual -->
@@ -601,7 +601,7 @@ Exemplo do formato:
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Nº do Contrato (Nº / Ano)</label>
                 <div class="flex items-center gap-1.5">
-                  <input type="text" id="panel-edit-ctt-num" required maxlength="5" pattern="\d*" placeholder="Ex: 014" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)" class="w-24 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold text-center">
+                  <input type="text" id="panel-edit-ctt-num" required maxlength="5" inputmode="numeric" placeholder="Ex: 014" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)" class="w-24 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold text-center">
                   <span class="text-slate-400 font-black text-sm">/</span>
                   <select id="panel-edit-ctt-ano" class="flex-1 px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-mono font-bold">
                     <!-- Preenchido via script até o ano atual -->
