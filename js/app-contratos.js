@@ -1627,68 +1627,61 @@ app.render.contratosHub = function(el) {
             </div>
         </div>
 
-        <!-- BARRA DE PESQUISA, FILTROS & ORDENAÇÃO -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4 space-y-3">
+        <!-- BARRA ÚNICA INTEGRADA: PESQUISA, FILTROS & ORDENAÇÃO (EM UMA LINHA SÓ) -->
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl shadow-sm border border-slate-100 mb-4 flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
             
-            <!-- LINHA 1: BARRA DE PESQUISA AMPLA (LARGURA TOTAL E CONFORTÁVEL) -->
-            <div class="relative w-full">
-                <input type="text" id="panel-contratos-search-input" oninput="app.contratos.setSearch(this.value)" value="${app.state.panelSearch || ''}" placeholder="Buscar em tempo real por empresa, número CTT, fiscal, objeto ou serviço..." class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:border-blue-500 focus:bg-white transition font-medium shadow-2xs">
-                <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔍</span>
-                <button id="panel-contratos-search-clear" onclick="app.contratos.clearSearch()" class="${(app.state.panelSearch || '').trim() ? '' : 'hidden'} absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
+            <!-- BUSCA EM TEMPO REAL (AMPLA E FLEXÍVEL) -->
+            <div class="relative flex-1 min-w-[200px]">
+                <input type="text" id="panel-contratos-search-input" oninput="app.contratos.setSearch(this.value)" value="${app.state.panelSearch || ''}" placeholder="Buscar por empresa, CTT, fiscal ou serviço..." class="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 focus:bg-white transition font-medium">
+                <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+                <button id="panel-contratos-search-clear" onclick="app.contratos.clearSearch()" class="${(app.state.panelSearch || '').trim() ? '' : 'hidden'} absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
             </div>
 
-            <!-- LINHA 2: MENUS DROPDOWN VERTICAIS (SELETORES) + ALTERNAR VISUALIZAÇÃO -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-100">
-                
-                <div class="flex flex-wrap items-center gap-3">
-                    <!-- 1. MENU: SITUAÇÃO / SEMÁFORO (DROPDOWN VERTICAL) -->
-                    <div class="flex items-center gap-1.5">
-                        <label for="panel-contratos-filter-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Situação:</label>
-                        <select id="panel-contratos-filter-select" onchange="app.contratos.setFilter(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
-                            <option value="MURAL" ${currFilter === 'MURAL' ? 'selected' : ''}>🖼️ Mural Completo (${totalPosicoesMural})</option>
-                            <option value="ATIVOS" ${currFilter === 'ATIVOS' ? 'selected' : ''}>🟢 Ativos Vigentes (${totalAtivos})</option>
-                            <option value="CRITICOS" ${currFilter === 'CRITICOS' ? 'selected' : ''}>🔴 Críticos / Urgentes (${criticosList.length})</option>
-                            <option value="ATENCAO" ${currFilter === 'ATENCAO' ? 'selected' : ''}>🟡 Em Atenção (${atencaoList.length})</option>
-                            <option value="PREVISTOS" ${currFilter === 'PREVISTOS' ? 'selected' : ''}>📝 Previstos / Vagos (${previstosList.length})</option>
-                            <option value="ARQUIVADOS" ${currFilter === 'ARQUIVADOS' ? 'selected' : ''}>📁 Arquivados</option>
-                        </select>
-                    </div>
+            <!-- 1. MENU: SITUAÇÃO / SEMÁFORO (DROPDOWN VERTICAL) -->
+            <div class="flex items-center gap-1 shrink-0">
+                <label for="panel-contratos-filter-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap hidden lg:inline">Situação:</label>
+                <select id="panel-contratos-filter-select" onchange="app.contratos.setFilter(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
+                    <option value="MURAL" ${currFilter === 'MURAL' ? 'selected' : ''}>🖼️ Mural (${totalPosicoesMural})</option>
+                    <option value="ATIVOS" ${currFilter === 'ATIVOS' ? 'selected' : ''}>🟢 Ativos (${totalAtivos})</option>
+                    <option value="CRITICOS" ${currFilter === 'CRITICOS' ? 'selected' : ''}>🔴 Críticos (${criticosList.length})</option>
+                    <option value="ATENCAO" ${currFilter === 'ATENCAO' ? 'selected' : ''}>🟡 Atenção (${atencaoList.length})</option>
+                    <option value="PREVISTOS" ${currFilter === 'PREVISTOS' ? 'selected' : ''}>📝 Previstos (${previstosList.length})</option>
+                    <option value="ARQUIVADOS" ${currFilter === 'ARQUIVADOS' ? 'selected' : ''}>📁 Arquivados</option>
+                </select>
+            </div>
 
-                    <!-- 2. MENU: FISCAL RESPONSÁVEL (DROPDOWN VERTICAL) -->
-                    <div class="flex items-center gap-1.5">
-                        <label for="panel-contratos-fiscal-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Fiscal:</label>
-                        <select id="panel-contratos-fiscal-select" onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 uppercase cursor-pointer transition">
-                            <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
-                            ${app.contratos.getFiscais().map(f => `<option value="${f}" ${app.state.panelFiscalFilter === f ? 'selected' : ''}>${f}</option>`).join('')}
-                        </select>
-                    </div>
+            <!-- 2. MENU: FISCAL RESPONSÁVEL (DROPDOWN VERTICAL) -->
+            <div class="flex items-center gap-1 shrink-0">
+                <label for="panel-contratos-fiscal-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap hidden lg:inline">Fiscal:</label>
+                <select id="panel-contratos-fiscal-select" onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 uppercase cursor-pointer transition">
+                    <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
+                    ${app.contratos.getFiscais().map(f => `<option value="${f}" ${app.state.panelFiscalFilter === f ? 'selected' : ''}>${f}</option>`).join('')}
+                </select>
+            </div>
 
-                    <!-- 3. MENU: ORDENAÇÃO (DROPDOWN VERTICAL) -->
-                    <div class="flex items-center gap-1.5">
-                        <label for="panel-contratos-sort-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Ordenar:</label>
-                        <select id="panel-contratos-sort-select" onchange="app.contratos.setSort(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
-                            <option value="ALFABETICA_ASC" ${currSort === 'ALFABETICA_ASC' ? 'selected' : ''}>🔤 Alfabética (A-Z) • Padrão</option>
-                            <option value="ALFABETICA_DESC" ${currSort === 'ALFABETICA_DESC' ? 'selected' : ''}>🔤 Alfabética (Z-A)</option>
-                            <option value="VENCIMENTO_ASC" ${currSort === 'VENCIMENTO_ASC' ? 'selected' : ''}>⏰ Vencimento (Mais próximos)</option>
-                            <option value="VENCIMENTO_DESC" ${currSort === 'VENCIMENTO_DESC' ? 'selected' : ''}>📅 Vencimento (Mais distantes)</option>
-                            <option value="VALOR_DESC" ${currSort === 'VALOR_DESC' ? 'selected' : ''}>💰 Maior Valor (R$)</option>
-                            <option value="VALOR_ASC" ${currSort === 'VALOR_ASC' ? 'selected' : ''}>💵 Menor Valor (R$)</option>
-                            <option value="NUMERO_CTT" ${currSort === 'NUMERO_CTT' ? 'selected' : ''}>📄 Nº do Contrato</option>
-                            <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição no Mural (#1 a #34)</option>
-                        </select>
-                    </div>
-                </div>
+            <!-- 3. MENU: ORDENAÇÃO (DROPDOWN VERTICAL) -->
+            <div class="flex items-center gap-1 shrink-0">
+                <label for="panel-contratos-sort-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap hidden lg:inline">Ordenar:</label>
+                <select id="panel-contratos-sort-select" onchange="app.contratos.setSort(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
+                    <option value="ALFABETICA_ASC" ${currSort === 'ALFABETICA_ASC' ? 'selected' : ''}>🔤 Alfabética (A-Z)</option>
+                    <option value="ALFABETICA_DESC" ${currSort === 'ALFABETICA_DESC' ? 'selected' : ''}>🔤 Alfabética (Z-A)</option>
+                    <option value="VENCIMENTO_ASC" ${currSort === 'VENCIMENTO_ASC' ? 'selected' : ''}>⏰ Vencimento (Próximos)</option>
+                    <option value="VENCIMENTO_DESC" ${currSort === 'VENCIMENTO_DESC' ? 'selected' : ''}>📅 Vencimento (Distantes)</option>
+                    <option value="VALOR_DESC" ${currSort === 'VALOR_DESC' ? 'selected' : ''}>💰 Maior Valor</option>
+                    <option value="VALOR_ASC" ${currSort === 'VALOR_ASC' ? 'selected' : ''}>💵 Menor Valor</option>
+                    <option value="NUMERO_CTT" ${currSort === 'NUMERO_CTT' ? 'selected' : ''}>📄 Nº Contrato</option>
+                    <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição (#1-#34)</option>
+                </select>
+            </div>
 
-                <!-- 4. ALTERNAR MURAL / TABELA -->
-                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
-                    <button id="panel-btn-cards" onclick="app.contratos.switchViewMode('CARDS')" title="Mural de Cards (Estilo Parede)" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'}">
-                        <span>🗂️</span> <span>Mural</span>
-                    </button>
-                    <button id="panel-btn-tabela" onclick="app.contratos.switchViewMode('TABELA')" title="Tabela Analítica Financeira" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${!isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'}">
-                        <span>📊</span> <span>Tabela</span>
-                    </button>
-                </div>
-
+            <!-- 4. ALTERNAR MURAL / TABELA -->
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+                <button id="panel-btn-cards" onclick="app.contratos.switchViewMode('CARDS')" title="Mural de Cards (Estilo Parede)" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'}">
+                    <span>🗂️</span> <span class="hidden sm:inline">Mural</span>
+                </button>
+                <button id="panel-btn-tabela" onclick="app.contratos.switchViewMode('TABELA')" title="Tabela Analítica Financeira" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${!isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'}">
+                    <span>📊</span> <span class="hidden sm:inline">Tabela</span>
+                </button>
             </div>
 
         </div>
