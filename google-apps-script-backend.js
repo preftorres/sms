@@ -72,17 +72,17 @@ function popularPainelContratosMural() {
   sheet.clearContents();
   sheet.appendRow(HEADERS_PANEL);
   sheet.getRange("C:C").setNumberFormat("@");
-  if (INITIAL_34_CONTRATOS.length > 0) {
-    sheet.getRange(2, 1, INITIAL_34_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_34_CONTRATOS);
+  if (INITIAL_31_CONTRATOS.length > 0) {
+    sheet.getRange(2, 1, INITIAL_31_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_31_CONTRATOS);
   }
   logAudit(ss, {
     usuario: "admin",
     modulo: "Contratos LDO",
     acao: "Reconciliação Mural Físico",
-    detalhes: "Aba _Painel_Contratos atualizada com os 34 contratos, links e espaços do mural físico da Secretaria",
+    detalhes: "Aba _Painel_Contratos atualizada com os 31 contratos do mural da Secretaria (27 vigentes + 4 em elaboração)",
     registroId: "MURAL_FISICO"
   });
-  Logger.log("✓ Painel de Contratos atualizado com sucesso com os 34 contratos e espaços do mural!");
+  Logger.log("✓ Painel de Contratos atualizado com sucesso com os 31 contratos do mural!");
 }
 
 // IDs REAIS DAS PASTAS DE BACKUP DO GOOGLE DRIVE
@@ -113,10 +113,9 @@ const HEADERS_AUDIT_LOGS = [
   "id", "dataHora", "usuario", "modulo", "acao", "detalhes", "registroId"
 ];
 
-// OS 34 CONTRATOS E ESPAÇOS FÍSICOS DO MURAL DA SECRETARIA MUNICIPAL DE SAÚDE DE TORRES
-// Mapeamento idêntico às fotos das paredes e quadros da Secretaria
-const INITIAL_34_CONTRATOS = [
-  // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 21) ---
+// OS 31 CONTRATOS DO MURAL DA SECRETARIA MUNICIPAL DE SAÚDE DE TORRES (27 VIGENTES + 4 EM ELABORAÇÃO)
+const INITIAL_31_CONTRATOS = [
+  // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 19) ---
   [1, "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", "344/2025", "Prorrogado até 26/09/2027", "2027-09-26", 257664.00, "FRAN", "Ativo", "Enfermagem e Procedimentos Clínicos (MED ENF)", "07/10/2026", "admin", "Prorrogação anotada à caneta no mural: 26/09/2027", ""],
   [2, "PRECISÃO TRATAMENTO DE ÁGUA LTDA", "297/2025", "Prorrogado até 30/09/2027", "2027-09-30", 7734.00, "LASIER", "Ativo", "Tratamento de Água nas Unidades (PRESCISÃO)", "07/10/2026", "admin", "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural", ""],
   [3, "ELO SERVIÇOS DE SAÚDE LTDA", "377/2024", "12 Meses até 04/10/2026", "2026-10-04", 3747715.20, "FRAN", "Ativo", "Gestão Médica Hospitalar (ELO SERVIÇOS)", "07/10/2026", "admin", "Vencimento 04/10/2026 destacado no mural", ""],
@@ -136,10 +135,8 @@ const INITIAL_34_CONTRATOS = [
   [17, "AMBIENTUUS TECNOLOGIA AMBIENTAL", "264/2023", "12 Meses até 30/08/2027", "2027-08-30", 36720.00, "ADRI", "Ativo", "Tratamento de Resíduos Hospitalares (AMBIENTUSS)", "07/10/2026", "admin", "Vigência confirmada no mural físico até 30/08/2027", ""],
   [18, "HENGER COMÉRCIO E SERVIÇOS LTDA", "166/2026", "36 Meses até 05/05/2029", "2029-05-05", 90000.00, "ADRI", "Ativo", "Manutenção Predial Continuada (HENGER)", "07/10/2026", "admin", "Vencimento 05/05/2029 confirmado no mural", ""],
   [19, "LABORATÓRIO DE ANÁLISES CLÍNICAS", "43/2024", "Chamamento 210/26 até 03/09/2027", "2027-09-03", 129163.00, "PREFEITURA", "Ativo", "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", "07/10/2026", "admin", "Termo de Credenciamento 43/2024 afixado no mural", ""],
-  [20, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico", ""],
-  [21, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico", ""],
 
-  // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 34) ---
+  // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 33) ---
   [22, "SIMSAUDE SERVIÇOS SA", "342/2025", "12 Meses até 16/11/2026", "2026-11-16", 828960.00, "ADRI", "Ativo", "Consultas e Atendimentos Médicos (SIM SAÚDE)", "07/10/2026", "admin", "Vencimento 16/11/2026 destacado no mural", ""],
   [23, "SILVANO TUPINAMBA DELFIM", "345/2023", "12 Meses até 21/11/2026", "2026-11-21", 48000.00, "NAIARA", "Ativo", "Locação Imóvel Especialidades (SILVANO)", "07/10/2026", "admin", "Aluguel Especialidades confirmado no mural: Venc 21/11/2026", ""],
   [24, "LUMIAR HEALTH BUILDERS EQUIP HOSP LTDA", "303/2025", "12 Meses até 26/11/2026", "2026-11-26", 135700.00, "FRAN", "Ativo", "Oxigenoterapia Domiciliar (LUMIAR OXIGENOTERAPIA)", "07/10/2026", "admin", "Nº CTT atribuído: 303/2025 conforme mural", ""],
@@ -151,8 +148,7 @@ const INITIAL_34_CONTRATOS = [
   [30, "SOSSEG (EDUCAÇÃO)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Serviços de Educação / Apoio à Saúde", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
   [31, "CRISTO REI (CLÍNICA)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Serviços e Consultas Clínicas", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
   [32, "IB SAÚDE (HOSPITAL)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Gestão e Atendimento Hospitalar", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
-  [33, "APAE", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Assistência e Atendimento Especializado", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
-  [34, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico", ""]
+  [33, "APAE", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Assistência e Atendimento Especializado", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""]
 ];
 
 // ============================================================================
@@ -176,8 +172,8 @@ function ensurePanelContractsStructure(ss) {
     sheet = ss.insertSheet(PANEL_SHEET);
     sheet.appendRow(HEADERS_PANEL);
     sheet.getRange("C:C").setNumberFormat("@");
-    if (INITIAL_34_CONTRATOS.length > 0) {
-      sheet.getRange(2, 1, INITIAL_34_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_34_CONTRATOS);
+    if (INITIAL_31_CONTRATOS.length > 0) {
+      sheet.getRange(2, 1, INITIAL_31_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_31_CONTRATOS);
     }
   } else {
     sheet.getRange("C:C").setNumberFormat("@");
@@ -915,7 +911,7 @@ function doPost(e) {
       const updatedList = getPanelContractsList(ss);
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
-        message: "Painel de contratos sincronizado com os 43 contratos auditados do mural físico!",
+        message: "Painel de contratos sincronizado com os 31 contratos auditados do mural físico!",
         panelContracts: updatedList
       })).setMimeType(ContentService.MimeType.JSON);
     }

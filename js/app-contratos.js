@@ -184,9 +184,9 @@ app.contratos = {
     }
   },
 
-  // BASE OFICIAL DOS 34 CONTRATOS E ESPAÇOS FÍSICOS DO MURAL DA SECRETARIA DA SAÚDE
+  // BASE OFICIAL DOS 31 CONTRATOS DO MURAL DA SECRETARIA DA SAÚDE (27 VIGENTES + 4 EM ELABORAÇÃO)
   MURAL_AUDIT_DATA: [
-    // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 21) ---
+    // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 19) ---
     { id: 1, empresa: "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", numeroCtt: "344/2025", prazoVencimento: "Prorrogado até 26/09/2027", dataVencimentoIso: "2027-09-26", valorContrato: 257664.00, fiscal: "FRAN", status: "Ativo", objeto: "Enfermagem e Procedimentos Clínicos (MED ENF)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação anotada à caneta no mural: 26/09/2027", linkContrato: "" },
     { id: 2, empresa: "PRECISÃO TRATAMENTO DE ÁGUA LTDA", numeroCtt: "297/2025", prazoVencimento: "Prorrogado até 30/09/2027", dataVencimentoIso: "2027-09-30", valorContrato: 7734.00, fiscal: "LASIER", status: "Ativo", objeto: "Tratamento de Água nas Unidades (PRESCISÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural", linkContrato: "" },
     { id: 3, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "377/2024", prazoVencimento: "12 Meses até 04/10/2026", dataVencimentoIso: "2026-10-04", valorContrato: 3747715.20, fiscal: "FRAN", status: "Ativo", objeto: "Gestão Médica Hospitalar (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/10/2026 destacado no mural", linkContrato: "" },
@@ -206,10 +206,8 @@ app.contratos = {
     { id: 17, empresa: "AMBIENTUUS TECNOLOGIA AMBIENTAL", numeroCtt: "264/2023", prazoVencimento: "12 Meses até 30/08/2027", dataVencimentoIso: "2027-08-30", valorContrato: 36720.00, fiscal: "ADRI", status: "Ativo", objeto: "Tratamento de Resíduos Hospitalares (AMBIENTUSS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vigência confirmada no mural físico até 30/08/2027", linkContrato: "" },
     { id: 18, empresa: "HENGER COMÉRCIO E SERVIÇOS LTDA", numeroCtt: "166/2026", prazoVencimento: "36 Meses até 05/05/2029", dataVencimentoIso: "2029-05-05", valorContrato: 90000.00, fiscal: "ADRI", status: "Ativo", objeto: "Manutenção Predial Continuada (HENGER)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 05/05/2029 confirmado no mural", linkContrato: "" },
     { id: 19, empresa: "LABORATÓRIO DE ANÁLISES CLÍNICAS", numeroCtt: "43/2024", prazoVencimento: "Chamamento 210/26 até 03/09/2027", dataVencimentoIso: "2027-09-03", valorContrato: 129163.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Termo de Credenciamento 43/2024 afixado no mural", linkContrato: "" },
-    { id: 20, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico", linkContrato: "" },
-    { id: 21, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico", linkContrato: "" },
 
-    // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 34) ---
+    // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 33) ---
     { id: 22, empresa: "SIMSAUDE SERVIÇOS SA", numeroCtt: "342/2025", prazoVencimento: "12 Meses até 16/11/2026", dataVencimentoIso: "2026-11-16", valorContrato: 828960.00, fiscal: "ADRI", status: "Ativo", objeto: "Consultas e Atendimentos Médicos (SIM SAÚDE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 16/11/2026 destacado no mural", linkContrato: "" },
     { id: 23, empresa: "SILVANO TUPINAMBA DELFIM", numeroCtt: "345/2023", prazoVencimento: "12 Meses até 21/11/2026", dataVencimentoIso: "2026-11-21", valorContrato: 48000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel Especialidades (SILVANO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel Especialidades confirmado no mural: Venc 21/11/2026", linkContrato: "" },
     { id: 24, empresa: "LUMIAR HEALTH BUILDERS EQUIP HOSP LTDA", numeroCtt: "303/2025", prazoVencimento: "12 Meses até 26/11/2026", dataVencimentoIso: "2026-11-26", valorContrato: 135700.00, fiscal: "FRAN", status: "Ativo", objeto: "Oxigenoterapia Domiciliar (LUMIAR OXIGENOTERAPIA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT atribuído: 303/2025 conforme mural", linkContrato: "" },
@@ -221,8 +219,7 @@ app.contratos = {
     { id: 30, empresa: "SOSSEG (EDUCAÇÃO)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços de Educação / Apoio à Saúde", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
     { id: 31, empresa: "CRISTO REI (CLÍNICA)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços e Consultas Clínicas", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
     { id: 32, empresa: "IB SAÚDE (HOSPITAL)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Gestão e Atendimento Hospitalar", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
-    { id: 33, empresa: "APAE", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Assistência e Atendimento Especializado", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
-    { id: 34, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico", linkContrato: "" }
+    { id: 33, empresa: "APAE", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Assistência e Atendimento Especializado", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" }
   ],
 
   occupySlot(id) {
@@ -231,16 +228,16 @@ app.contratos = {
 
   async syncFromMuralData(forcePrompt = true) {
     if (forcePrompt) {
-      const ok = confirm("Deseja sincronizar o painel com os 34 contratos e espaços físicos das fotos do mural da Secretaria de Saúde?\n\nIsso alinhará perfeitamente os 27 contratos vigentes, os 4 em elaboração e os 3 espaços disponíveis do mural.");
+      const ok = confirm("Deseja sincronizar o painel com os 31 contratos do mural da Secretaria de Saúde?\n\nIsso alinhará os 27 contratos vigentes e os 4 em elaboração.");
       if (!ok) return;
     }
 
     if (app.ui && app.ui.showLoading) {
       app.ui.showLoading({
         title: "Sincronizando com Mural",
-        subtitle: "Auditando os 34 contratos e espaços das fotos da Secretaria",
-        step1: "Organizando os 34 slots físicos do mural",
-        step2: "Atualizando base no Google Sheets",
+        subtitle: "Auditando os contratos das fotos da Secretaria",
+        step1: "Organizando os 31 contratos oficiais do mural",
+        step2: "Atualizando base de dados",
         step3: "Atualizando semáforo e mural visual",
         icon: "📋"
       });
@@ -269,16 +266,18 @@ app.contratos = {
         currentUser: (app.state.auth && app.state.auth.user && app.state.auth.user.usuario) || 'admin'
       });
       if (res && Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-        app.state.panelContracts = res.panelContracts;
+        // Garantir que nenhum contrato com status Disponível persista
+        const limpo = res.panelContracts.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+        app.state.panelContracts = limpo;
         if (app.data && app.data.saveLocalPanelContracts) {
-          app.data.saveLocalPanelContracts(res.panelContracts);
+          app.data.saveLocalPanelContracts(limpo);
         }
       }
       if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
-      app.ui.toast("Painel de contratos 100% alinhado com as fotos do mural (34 posições)!", "success", "Mural Físico");
+      app.ui.toast("Painel de contratos 100% alinhado com o mural (31 contratos)!", "success", "Mural Físico");
     } catch(err) {
       console.warn("Sincronização em nuvem pendente, atualizado no cache local:", err);
-      app.ui.toast("Painel atualizado no navegador com os 34 contratos do mural!", "info", "Mural Físico");
+      app.ui.toast("Painel atualizado no navegador com os 31 contratos do mural!", "info", "Mural Físico");
     } finally {
       if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
       const viewport = document.getElementById('app-viewport');
@@ -291,8 +290,13 @@ app.contratos = {
   ensureMuralSync() {
     let list = app.state.panelContracts || [];
 
+    // Limpeza de contratos com status "Disponível" ou "ESPAÇO VAZIO"
+    const antesCount = list.length;
+    list = list.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+    let modificado = list.length !== antesCount;
+    app.state.panelContracts = list;
+
     // Higienização automática contra coerção de número de contrato em data
-    let modificado = false;
     list.forEach(c => {
       const formatado = this.formatCttNumber(c.numeroCtt);
       if (formatado !== c.numeroCtt) {
@@ -316,8 +320,7 @@ app.contratos = {
       return s.label && s.label.includes('NaN');
     });
     const hasCarlosDateBug = c8 && (String(c8.numeroCtt).includes('GMT') || !c8.linkContrato);
-
-    const precisaSync = list.length !== 34 || !c1 || c1.numeroCtt !== '344/2025' || hasNan || hasCarlosDateBug;
+    const precisaSync = list.length === 0 || !c1 || c1.numeroCtt !== '344/2025' || hasNan || hasCarlosDateBug;
 
     if (precisaSync) {
       this.syncFromMuralData(false);
@@ -859,7 +862,13 @@ app.contratos = {
     const item = (app.state.panelContracts || []).find(c => c.id === id);
     if (!item) return;
 
-    const novoStatus = item.status === "Arquivado" ? "Ativo" : "Arquivado";
+    let novoStatus;
+    if (item.status === "Arquivado") {
+      novoStatus = item._statusOriginal || (item.dataVencimentoIso ? "Ativo" : (item.numeroCtt === "Em Aberto" ? "Previsto" : "Ativo"));
+    } else {
+      item._statusOriginal = item.status;
+      novoStatus = "Arquivado";
+    }
     item.status = novoStatus;
 
     if (app.data && app.data.saveLocalPanelContracts) {
@@ -870,7 +879,7 @@ app.contratos = {
     if (app.ui && app.ui.showLoading) {
       app.ui.showLoading({
         title: novoStatus === "Arquivado" ? "Arquivando Contrato" : "Desarquivando Contrato",
-        subtitle: "Atualizando status na planilha",
+        subtitle: "Atualizando status na base",
         step1: "Identificando registro institucional",
         step2: "Registrando novo status no Google Sheets",
         step3: "Atualizando painel de visualização",
@@ -901,17 +910,29 @@ app.contratos = {
     if (!item) return;
 
     app.state.deletePanelTarget = item;
+    const isPrevisto = item.status === 'Previsto' || String(item.numeroCtt).toLowerCase().includes('aberto');
+    const inputEl = document.getElementById('panel-delete-typed-ctt');
+
     document.getElementById('panel-delete-target-id').value = item.id;
-    document.getElementById('panel-delete-expected-ctt').textContent = item.numeroCtt;
-    document.getElementById('panel-delete-typed-ctt').value = '';
+    document.getElementById('panel-delete-expected-ctt').textContent = item.numeroCtt || `ID #${item.id}`;
+    if (inputEl) {
+      inputEl.value = '';
+      inputEl.placeholder = isPrevisto ? 'Digite "Em Aberto" para confirmar...' : 'Digite exatamente o número CTT...';
+    }
     document.getElementById('panel-delete-error-msg').classList.add('hidden');
 
     document.getElementById('panel-delete-preview-empresa').textContent = item.empresa;
-    document.getElementById('panel-delete-preview-valor').textContent = `R$ ${item.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    document.getElementById('panel-delete-preview-fiscal').textContent = item.fiscal;
+    document.getElementById('panel-delete-preview-valor').textContent = item.valorContrato > 0
+      ? `R$ ${item.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      : (isPrevisto ? 'Em Fase de Elaboração / A Definir' : 'R$ 0,00');
+    document.getElementById('panel-delete-preview-fiscal').textContent = item.fiscal || 'PREFEITURA';
 
     const m = document.getElementById('modal-excluir-painel-contrato');
-    if (m) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(() => document.getElementById('panel-delete-typed-ctt').focus(), 80); }
+    if (m) {
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      setTimeout(() => inputEl && inputEl.focus(), 80);
+    }
   },
 
   closeDeleteModal() {
@@ -934,8 +955,17 @@ app.contratos = {
     const typed = document.getElementById('panel-delete-typed-ctt').value.trim();
     const errEl = document.getElementById('panel-delete-error-msg');
 
-    if (typed.toLowerCase() !== String(target.numeroCtt).trim().toLowerCase()) {
-      errEl.textContent = `Número incorreto! Você digitou "${typed}", mas o contrato é "${target.numeroCtt}".`;
+    const normalize = (s) => String(s || '').trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const typedNorm = normalize(typed);
+    const expectedNorm = normalize(target.numeroCtt);
+    const isIdMatch = typedNorm === String(target.id) || typedNorm === `#${target.id}`;
+    const isOpenContract = expectedNorm.includes('aberto') || expectedNorm === 's/n' || !expectedNorm || target.status === 'Previsto';
+    const isOpenContractTyped = typedNorm === 'em aberto' || typedNorm === 'emaberto' || typedNorm === 'aberto';
+
+    const isValid = typedNorm === expectedNorm || isIdMatch || (isOpenContract && isOpenContractTyped);
+
+    if (!isValid) {
+      errEl.textContent = `Confirmação incorreta! Você digitou "${typed}", mas o esperado é "${target.numeroCtt}".`;
       errEl.classList.remove('hidden');
       return;
     }
@@ -1002,7 +1032,7 @@ app.contratos = {
       'VALOR_DESC': 'Maior Valor (R$)',
       'VALOR_ASC': 'Menor Valor (R$)',
       'NUMERO_CTT': 'Nº do Contrato',
-      'POSICAO_MURAL': 'Posição no Mural (#1 a #34)'
+      'POSICAO_MURAL': 'Posição no Mural'
     };
     return labels[mode] || 'Alfabética (A-Z)';
   },
@@ -1057,7 +1087,7 @@ app.contratos = {
       const list = this.getFilteredList();
       const total = (app.state.panelContracts || []).length;
       const currSort = app.state.panelSort || 'ALFABETICA_ASC';
-      countEl.textContent = `Exibindo ${list.length} de ${total} posições do mural • Ordenado por: ${this.getSortLabel(currSort)}`;
+      countEl.textContent = `Exibindo ${list.length} de ${total} contratos do mural • Ordenado por: ${this.getSortLabel(currSort)}`;
     }
   },
 
@@ -1251,11 +1281,24 @@ app.contratos = {
                 ` : ''}
             </div>
             <div class="mt-4 pt-3 border-t border-purple-200/60 flex items-center justify-between text-xs">
-                ${app.permissions.can('panel_edit') ? `
-                  <button onclick="app.contratos.openEditModal(${c.id})" class="text-[11px] font-black text-purple-700 hover:text-purple-900 flex items-center gap-1">
-                      ✏️ Preencher Dados Formais
+                ${app.permissions.can('panel_archive') ? `
+                  <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-purple-700/80 hover:text-purple-950">
+                      ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
                   </button>
                 ` : '<span></span>'}
+
+                <div class="flex items-center gap-1.5">
+                    ${app.permissions.can('panel_edit') ? `
+                      <button onclick="app.contratos.openEditModal(${c.id})" title="Preencher / Formalizar Dados Formais" class="p-1.5 hover:bg-purple-100 text-purple-800 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                          ✏️ Preencher Dados Formais
+                      </button>
+                    ` : ''}
+                    ${app.admin.isAdminUser() ? `
+                      <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Administrador)" class="p-1.5 hover:bg-rose-50 text-rose-500 hover:text-rose-700 rounded-lg font-bold">
+                          🗑️
+                      </button>
+                    ` : ''}
+                </div>
             </div>
         </div>
       `;
@@ -1396,7 +1439,9 @@ app.contratos = {
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-100 text-purple-700">Em Elaboração</span>
             </td>
             <td class="p-3.5 text-center whitespace-nowrap print:hidden">
-                ${app.permissions.can('panel_edit') ? `<button onclick="app.contratos.openEditModal(${c.id})" class="text-purple-700 hover:text-purple-900 font-bold text-xs" title="Editar">✏️ Formalizar</button>` : ''}
+                ${app.permissions.can('panel_edit') ? `<button onclick="app.contratos.openEditModal(${c.id})" class="text-purple-700 hover:text-purple-900 font-bold text-xs mr-1.5" title="Preencher / Formalizar">✏️</button>` : ''}
+                ${app.permissions.can('panel_archive') ? `<button onclick="app.contratos.toggleArchive(${c.id})" class="text-purple-600 hover:text-purple-900 font-bold mr-1.5" title="Arquivar">📁</button>` : ''}
+                ${app.admin.isAdminUser() ? `<button onclick="app.contratos.openDeleteModal(${c.id})" class="text-rose-500 hover:text-rose-700 font-bold" title="Excluir Definitivo (Administrador)">🗑️</button>` : ''}
             </td>
         </tr>
       `;
@@ -1534,7 +1579,7 @@ app.render.contratosHub = function(el) {
 
   const allContracts = app.state.panelContracts || [];
   const activeContracts = allContracts.filter(c => c.status === 'Ativo');
-  const previstosList = allContracts.filter(c => c.status === 'Previsto' || c.status === 'Disponível');
+  const previstosList = allContracts.filter(c => c.status === 'Previsto');
   const criticosList = activeContracts.filter(c => {
     const s = app.contratos.calculateStatus(c);
     return s.isUrgente;
@@ -1576,11 +1621,11 @@ app.render.contratosHub = function(el) {
             <div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Governança Fiscal • Lei nº 5.627 (LDO Torres)</span>
                 <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Painel & Gestão Geral de Contratos</h2>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Mural visual de monitoramento de vigências (34 posições físicas), semáforo de alerta e previsão orçamentária.</p>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Mural visual de monitoramento de vigências, semáforo de alerta e previsão orçamentária.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <button onclick="app.contratos.syncFromMuralData(true)" title="Reconciliar com as fotos do mural físico da Secretaria de Saúde" class="px-3.5 py-2 rounded-xl text-xs font-black text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 shadow-sm transition flex items-center gap-1.5">
-                    🔄 Sincronizar com Mural (34)
+                    🔄 Sincronizar com Mural (31)
                 </button>
                 <button onclick="app.contratos.exportCSV()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
                     📥 Exportar Relatório LDO (.CSV)
@@ -1590,7 +1635,7 @@ app.render.contratosHub = function(el) {
                 </button>
                 ${app.permissions.can('panel_create') ? `
                   <button onclick="app.contratos.openNewModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
-                      <span class="text-sm">+</span> Novo Contrato no Mural
+                       <span class="text-sm">+</span> Novo Contrato no Mural
                   </button>
                 ` : ''}
             </div>
@@ -1600,9 +1645,9 @@ app.render.contratosHub = function(el) {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <!-- 1. TOTAL DE POSIÇÕES NO MURAL -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mural Físico de Contratos</span>
-                <p class="text-2xl font-black text-slate-900 mt-1">${totalPosicoesMural} Posições</p>
-                <span class="text-[10px] text-slate-500 font-semibold">${totalAtivos} ativos vigentes • ${previstosList.length} previstos/vagos</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mural de Contratos</span>
+                <p class="text-2xl font-black text-slate-900 mt-1">${totalPosicoesMural} Contratos</p>
+                <span class="text-[10px] text-slate-500 font-semibold">${totalAtivos} ativos vigentes • ${previstosList.length} em elaboração</span>
             </div>
 
             <!-- 2. VALOR MÉDIO -->
@@ -1670,7 +1715,7 @@ app.render.contratosHub = function(el) {
                     <option value="VALOR_DESC" ${currSort === 'VALOR_DESC' ? 'selected' : ''}>💰 Maior Valor</option>
                     <option value="VALOR_ASC" ${currSort === 'VALOR_ASC' ? 'selected' : ''}>💵 Menor Valor</option>
                     <option value="NUMERO_CTT" ${currSort === 'NUMERO_CTT' ? 'selected' : ''}>📄 Nº Contrato</option>
-                    <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição (#1-#34)</option>
+                    <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição no Mural</option>
                 </select>
             </div>
 
@@ -1688,7 +1733,7 @@ app.render.contratosHub = function(el) {
 
         <!-- CONTADOR DE CONTRATOS & CRITÉRIO DE ORDENAÇÃO -->
         <div class="flex items-center justify-between text-[11px] text-slate-500 mb-3 px-1">
-            <span id="panel-filtered-count">Exibindo ${filteredList.length} de ${allContracts.length} posições do mural • Ordenado por: ${app.contratos.getSortLabel(currSort)}</span>
+            <span id="panel-filtered-count">Exibindo ${filteredList.length} de ${allContracts.length} contratos do mural • Ordenado por: ${app.contratos.getSortLabel(currSort)}</span>
         </div>
 
         <!-- CONTEÚDO DINÂMICO (MURAL DE CARDS OU TABELA ANALÍTICA) -->

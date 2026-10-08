@@ -316,7 +316,15 @@ Object.assign(window.app, {
       }
 
       const rawPanel = localStorage.getItem(CONFIG.keys.panelContracts);
-      try { app.state.panelContracts = rawPanel ? JSON.parse(rawPanel) : []; } catch(e){ app.state.panelContracts = []; }
+      try {
+        let listP = rawPanel ? JSON.parse(rawPanel) : [];
+        if (Array.isArray(listP)) {
+          listP = listP.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+        }
+        app.state.panelContracts = listP;
+      } catch(e) {
+        app.state.panelContracts = [];
+      }
 
       const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
       app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
@@ -434,7 +442,7 @@ Object.assign(window.app, {
             }
 
             if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-              app.state.panelContracts = res.panelContracts;
+              app.state.panelContracts = res.panelContracts.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
               this.saveLocalPanelContracts();
               if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
                 app.render.contratosHub(document.getElementById('app-viewport'));
