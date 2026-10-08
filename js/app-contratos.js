@@ -976,42 +976,11 @@ app.contratos = {
   // FILTROS & BUSCA EM TEMPO REAL (SEM PERDER FOCO DO INPUT)
   setFilter(f) {
     app.state.panelContractsFilter = f;
-    const container = document.getElementById('painel-contratos-content');
-    if (container) {
-      document.querySelectorAll('[data-panel-filter]').forEach(btn => {
-        const filterType = btn.getAttribute('data-panel-filter');
-        if (filterType === f) {
-          if (filterType === 'CRITICOS') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap bg-rose-600 text-white shadow-xs";
-          } else if (filterType === 'ATENCAO') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-amber-500 text-slate-950 shadow-xs";
-          } else if (filterType === 'PREVISTOS') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap bg-purple-600 text-white shadow-xs";
-          } else if (filterType === 'ARQUIVADOS') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-600 text-white shadow-xs";
-          } else if (filterType === 'MURAL') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap bg-blue-600 text-white shadow-xs";
-          } else {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-900 text-white shadow-xs";
-          }
-        } else {
-          if (filterType === 'CRITICOS') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap bg-rose-100 text-rose-800 hover:bg-rose-200";
-          } else if (filterType === 'ATENCAO') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-amber-100 text-amber-800 hover:bg-amber-200";
-          } else if (filterType === 'PREVISTOS') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-purple-100 text-purple-800 hover:bg-purple-200";
-          } else if (filterType === 'ARQUIVADOS') {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-100 text-slate-500 hover:bg-slate-200";
-          } else {
-            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200";
-          }
-        }
-      });
-      this.updateContent();
-    } else {
-      app.render.contratosHub(document.getElementById('app-viewport'));
+    const selectFilter = document.getElementById('panel-contratos-filter-select');
+    if (selectFilter) {
+      selectFilter.value = f;
     }
+    this.updateContent();
   },
 
   setFiscal(fiscal) {
@@ -1658,70 +1627,68 @@ app.render.contratosHub = function(el) {
             </div>
         </div>
 
-        <!-- BARRA DE FILTROS & ORDENAÇÃO -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+        <!-- BARRA DE PESQUISA, FILTROS & ORDENAÇÃO -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4 space-y-3">
             
-            <!-- BUSCA EM TEMPO REAL -->
-            <div class="relative flex-1">
-                <input type="text" id="panel-contratos-search-input" oninput="app.contratos.setSearch(this.value)" value="${app.state.panelSearch || ''}" placeholder="Buscar em tempo real por empresa, número CTT, fiscal ou serviço..." class="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 transition font-medium">
-                <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
-                <button id="panel-contratos-search-clear" onclick="app.contratos.clearSearch()" class="${(app.state.panelSearch || '').trim() ? '' : 'hidden'} absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
+            <!-- LINHA 1: BARRA DE PESQUISA AMPLA (LARGURA TOTAL E CONFORTÁVEL) -->
+            <div class="relative w-full">
+                <input type="text" id="panel-contratos-search-input" oninput="app.contratos.setSearch(this.value)" value="${app.state.panelSearch || ''}" placeholder="Buscar em tempo real por empresa, número CTT, fiscal, objeto ou serviço..." class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:border-blue-500 focus:bg-white transition font-medium shadow-2xs">
+                <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔍</span>
+                <button id="panel-contratos-search-clear" onclick="app.contratos.clearSearch()" class="${(app.state.panelSearch || '').trim() ? '' : 'hidden'} absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
             </div>
 
-            <!-- FILTRO POR FISCAL -->
-            <div class="flex items-center gap-2">
-                <span class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Fiscal:</span>
-                <select onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 uppercase">
-                    <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
-                    ${app.contratos.getFiscais().map(f => `<option value="${f}" ${app.state.panelFiscalFilter === f ? 'selected' : ''}>${f}</option>`).join('')}
-                </select>
-            </div>
+            <!-- LINHA 2: MENUS DROPDOWN VERTICAIS (SELETORES) + ALTERNAR VISUALIZAÇÃO -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-100">
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- 1. MENU: SITUAÇÃO / SEMÁFORO (DROPDOWN VERTICAL) -->
+                    <div class="flex items-center gap-1.5">
+                        <label for="panel-contratos-filter-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Situação:</label>
+                        <select id="panel-contratos-filter-select" onchange="app.contratos.setFilter(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
+                            <option value="MURAL" ${currFilter === 'MURAL' ? 'selected' : ''}>🖼️ Mural Completo (${totalPosicoesMural})</option>
+                            <option value="ATIVOS" ${currFilter === 'ATIVOS' ? 'selected' : ''}>🟢 Ativos Vigentes (${totalAtivos})</option>
+                            <option value="CRITICOS" ${currFilter === 'CRITICOS' ? 'selected' : ''}>🔴 Críticos / Urgentes (${criticosList.length})</option>
+                            <option value="ATENCAO" ${currFilter === 'ATENCAO' ? 'selected' : ''}>🟡 Em Atenção (${atencaoList.length})</option>
+                            <option value="PREVISTOS" ${currFilter === 'PREVISTOS' ? 'selected' : ''}>📝 Previstos / Vagos (${previstosList.length})</option>
+                            <option value="ARQUIVADOS" ${currFilter === 'ARQUIVADOS' ? 'selected' : ''}>📁 Arquivados</option>
+                        </select>
+                    </div>
 
-            <!-- ORDENAÇÃO MULTI-CRITÉRIO (PADRÃO: ALFABÉTICA A-Z) -->
-            <div class="flex items-center gap-2">
-                <span class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Ordenar:</span>
-                <select id="panel-contratos-sort-select" onchange="app.contratos.setSort(this.value)" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
-                    <option value="ALFABETICA_ASC" ${currSort === 'ALFABETICA_ASC' ? 'selected' : ''}>🔤 Alfabética (A-Z) • Padrão</option>
-                    <option value="ALFABETICA_DESC" ${currSort === 'ALFABETICA_DESC' ? 'selected' : ''}>🔤 Alfabética (Z-A)</option>
-                    <option value="VENCIMENTO_ASC" ${currSort === 'VENCIMENTO_ASC' ? 'selected' : ''}>⏰ Vencimento (Mais próximos)</option>
-                    <option value="VENCIMENTO_DESC" ${currSort === 'VENCIMENTO_DESC' ? 'selected' : ''}>📅 Vencimento (Mais distantes)</option>
-                    <option value="VALOR_DESC" ${currSort === 'VALOR_DESC' ? 'selected' : ''}>💰 Maior Valor (R$)</option>
-                    <option value="VALOR_ASC" ${currSort === 'VALOR_ASC' ? 'selected' : ''}>💵 Menor Valor (R$)</option>
-                    <option value="NUMERO_CTT" ${currSort === 'NUMERO_CTT' ? 'selected' : ''}>📄 Nº do Contrato</option>
-                    <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição no Mural (#1 a #34)</option>
-                </select>
-            </div>
+                    <!-- 2. MENU: FISCAL RESPONSÁVEL (DROPDOWN VERTICAL) -->
+                    <div class="flex items-center gap-1.5">
+                        <label for="panel-contratos-fiscal-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Fiscal:</label>
+                        <select id="panel-contratos-fiscal-select" onchange="app.contratos.setFiscal(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 uppercase cursor-pointer transition">
+                            <option value="TODOS" ${app.state.panelFiscalFilter === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
+                            ${app.contratos.getFiscais().map(f => `<option value="${f}" ${app.state.panelFiscalFilter === f ? 'selected' : ''}>${f}</option>`).join('')}
+                        </select>
+                    </div>
 
-            <!-- FILTRO POR SEMÁFORO / STATUS -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-                <button data-panel-filter="MURAL" onclick="app.contratos.setFilter('MURAL')" class="px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${currFilter === 'MURAL' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                    🖼️ Mural Completo (${totalPosicoesMural})
-                </button>
-                <button data-panel-filter="ATIVOS" onclick="app.contratos.setFilter('ATIVOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currFilter === 'ATIVOS' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                    Ativos Vigentes (${totalAtivos})
-                </button>
-                <button data-panel-filter="CRITICOS" onclick="app.contratos.setFilter('CRITICOS')" class="px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${currFilter === 'CRITICOS' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}">
-                    🔴 Críticos (${criticosList.length})
-                </button>
-                <button data-panel-filter="ATENCAO" onclick="app.contratos.setFilter('ATENCAO')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currFilter === 'ATENCAO' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
-                    🟡 Atenção (${atencaoList.length})
-                </button>
-                <button data-panel-filter="PREVISTOS" onclick="app.contratos.setFilter('PREVISTOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currFilter === 'PREVISTOS' ? 'bg-purple-600 text-white shadow-xs' : 'bg-purple-100 text-purple-800 hover:bg-purple-200'}">
-                    📝 Previstos / Vagos (${previstosList.length})
-                </button>
-                <button data-panel-filter="ARQUIVADOS" onclick="app.contratos.setFilter('ARQUIVADOS')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currFilter === 'ARQUIVADOS' ? 'bg-slate-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
-                    📁 Arquivados
-                </button>
-            </div>
+                    <!-- 3. MENU: ORDENAÇÃO (DROPDOWN VERTICAL) -->
+                    <div class="flex items-center gap-1.5">
+                        <label for="panel-contratos-sort-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Ordenar:</label>
+                        <select id="panel-contratos-sort-select" onchange="app.contratos.setSort(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
+                            <option value="ALFABETICA_ASC" ${currSort === 'ALFABETICA_ASC' ? 'selected' : ''}>🔤 Alfabética (A-Z) • Padrão</option>
+                            <option value="ALFABETICA_DESC" ${currSort === 'ALFABETICA_DESC' ? 'selected' : ''}>🔤 Alfabética (Z-A)</option>
+                            <option value="VENCIMENTO_ASC" ${currSort === 'VENCIMENTO_ASC' ? 'selected' : ''}>⏰ Vencimento (Mais próximos)</option>
+                            <option value="VENCIMENTO_DESC" ${currSort === 'VENCIMENTO_DESC' ? 'selected' : ''}>📅 Vencimento (Mais distantes)</option>
+                            <option value="VALOR_DESC" ${currSort === 'VALOR_DESC' ? 'selected' : ''}>💰 Maior Valor (R$)</option>
+                            <option value="VALOR_ASC" ${currSort === 'VALOR_ASC' ? 'selected' : ''}>💵 Menor Valor (R$)</option>
+                            <option value="NUMERO_CTT" ${currSort === 'NUMERO_CTT' ? 'selected' : ''}>📄 Nº do Contrato</option>
+                            <option value="POSICAO_MURAL" ${currSort === 'POSICAO_MURAL' ? 'selected' : ''}>🖼️ Posição no Mural (#1 a #34)</option>
+                        </select>
+                    </div>
+                </div>
 
-            <!-- ALTERNAR MURAL / TABELA -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
-                <button id="panel-btn-cards" onclick="app.contratos.switchViewMode('CARDS')" title="Mural de Cards (Estilo Parede)" class="p-1.5 rounded-lg text-xs font-bold transition ${isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}">
-                    🗂️ Mural
-                </button>
-                <button id="panel-btn-tabela" onclick="app.contratos.switchViewMode('TABELA')" title="Tabela Analítica Financeira" class="p-1.5 rounded-lg text-xs font-bold transition ${!isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500'}">
-                    📊 Tabela
-                </button>
+                <!-- 4. ALTERNAR MURAL / TABELA -->
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+                    <button id="panel-btn-cards" onclick="app.contratos.switchViewMode('CARDS')" title="Mural de Cards (Estilo Parede)" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'}">
+                        <span>🗂️</span> <span>Mural</span>
+                    </button>
+                    <button id="panel-btn-tabela" onclick="app.contratos.switchViewMode('TABELA')" title="Tabela Analítica Financeira" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${!isCardsMode ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'}">
+                        <span>📊</span> <span>Tabela</span>
+                    </button>
+                </div>
+
             </div>
 
         </div>
