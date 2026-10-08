@@ -330,22 +330,23 @@ app.contratos = {
   DEFAULT_FISCAIS: ["ADRI", "FRAN", "LASIER", "NAIARA", "PREFEITURA", "SANDRO"],
 
   getFiscais() {
-    let list = [];
+    let list = null;
     try {
       const raw = localStorage.getItem('torres_fiscais_v1');
       if (raw) list = JSON.parse(raw);
     } catch(e) {}
-    if (!Array.isArray(list) || list.length === 0) {
+    if (!Array.isArray(list)) {
       list = [...this.DEFAULT_FISCAIS];
     }
-    if (app.state.panelContracts) {
+    if (app.state.panelContracts && Array.isArray(app.state.panelContracts)) {
       app.state.panelContracts.forEach(c => {
-        if (c.fiscal) {
+        if (c.fiscal && c.status !== 'Disponível') {
           const fUpper = String(c.fiscal).trim().toUpperCase();
           if (fUpper && !list.includes(fUpper)) list.push(fUpper);
         }
       });
     }
+    if (!list.includes("PREFEITURA")) list.push("PREFEITURA");
     return Array.from(new Set(list.map(f => String(f).trim().toUpperCase()))).filter(Boolean).sort();
   },
 
@@ -421,6 +422,22 @@ app.contratos = {
         selectEl.value = nome;
       }
     }
+
+    // Atualiza também o outro select se estiver na tela
+    const otherTargetId = targetId === 'panel-new-fiscal' ? 'panel-edit-fiscal' : 'panel-new-fiscal';
+    const otherEl = document.getElementById(otherTargetId);
+    if (otherEl) this.populateFiscalSelect(otherEl, otherEl.value);
+
+    // Atualiza o select do filtro no topo
+    const hubFilterSelect = document.getElementById('panel-contratos-fiscal-select');
+    if (hubFilterSelect) {
+      const currVal = app.state.panelFiscalFilter || 'TODOS';
+      hubFilterSelect.innerHTML = `
+        <option value="TODOS" ${currVal === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
+        ${list.map(f => `<option value="${f}" ${currVal === f ? 'selected' : ''}>${f}</option>`).join('')}
+      `;
+    }
+
     this.closeAddFiscalModal();
     app.ui.toast(`Fiscal "${nome}" cadastrado com sucesso!`, "success", "Fiscais");
   },
@@ -431,15 +448,104 @@ app.contratos = {
     }
     const selectEl = document.getElementById(selectId);
     if (!selectEl) return;
-    const fiscal = selectEl.value;
+    const fiscal = String(selectEl.value || '').trim().toUpperCase();
     if (!fiscal) return;
 
-    if (!confirm(`Deseja realmente remover o fiscal "${fiscal}" da lista de fiscais?`)) return;
+    if (fiscal === "PREFEITURA") {
+      return app.ui.toast("O fiscal padrão institucional 'PREFEITURA' não pode ser excluído.", "warning", "Ação Não Permitida");
+    }
+
+    // 1. CHECAGEM OBRIGATÓRIA: Verificar se o fiscal está vinculado a contratos
+    const contratos = app.state.panelContracts || [];
+    const vinculados = contratos.filter(c => {
+      if (c.status === 'Disponível') return false;
+      const fCtt = String(c.fiscal || '').trim().toUpperCase();
+      return fCtt === fiscal;
+    });
+
+    if (vinculados.length > 0) {
+      // Abre janela/modal informativa exibindo os contratos vinculados e como proceder
+      this.openFiscalVinculadoModal(fiscal, vinculados);
+      return;
+    }
+
+    // 2. Se NÃO houver contratos vinculados, confirma e remove
+    if (!confirm(`O fiscal "${fiscal}" não possui nenhum contrato vinculado.\n\nDeseja realmente removê-lo da lista de fiscais?`)) {
+      return;
+    }
 
     let list = this.getFiscais().filter(f => f !== fiscal);
     this.saveFiscais(list);
-    this.populateFiscalSelect(selectEl, list[0] || '');
+
+    // Atualiza o select atual
+    this.populateFiscalSelect(selectEl, list[0] || 'PREFEITURA');
+
+    // Atualiza o outro select se estiver aberto
+    const otherSelectId = selectId === 'panel-new-fiscal' ? 'panel-edit-fiscal' : 'panel-new-fiscal';
+    const otherEl = document.getElementById(otherSelectId);
+    if (otherEl) {
+      const otherVal = otherEl.value === fiscal ? (list[0] || 'PREFEITURA') : otherEl.value;
+      this.populateFiscalSelect(otherEl, otherVal);
+    }
+
+    // Atualiza o filtro de fiscal na barra do Hub
+    const hubFilter = document.getElementById('panel-contratos-fiscal-select');
+    if (hubFilter) {
+      const currHubVal = app.state.panelFiscalFilter || 'TODOS';
+      hubFilter.innerHTML = `
+        <option value="TODOS" ${currHubVal === 'TODOS' ? 'selected' : ''}>Todos os Fiscais</option>
+        ${list.map(f => `<option value="${f}" ${currHubVal === f ? 'selected' : ''}>${f}</option>`).join('')}
+      `;
+      if (currHubVal === fiscal) {
+        this.setFiscal('TODOS');
+      }
+    }
+
     app.ui.toast(`Fiscal "${fiscal}" removido com sucesso.`, "info", "Fiscais");
+  },
+
+  openFiscalVinculadoModal(fiscal, vinculados) {
+    const m = document.getElementById('modal-fiscal-vinculado');
+    const nomeEl = document.getElementById('modal-fiscal-vinculado-nome');
+    const qtdEl = document.getElementById('modal-fiscal-vinculado-qtd');
+    const listaEl = document.getElementById('modal-fiscal-vinculado-lista');
+
+    if (!m) {
+      const nomes = vinculados.map(c => `• CTT ${this.formatCttNumber(c.numeroCtt)} - ${c.empresa}`).join('\n');
+      alert(`O fiscal "${fiscal}" não pode ser excluído porque está vinculado a ${vinculados.length} contrato(s):\n\n${nomes}\n\nPara excluí-lo, primeiro altere o fiscal responsável desses contratos.`);
+      return;
+    }
+
+    if (nomeEl) nomeEl.textContent = fiscal;
+    if (qtdEl) qtdEl.textContent = `${vinculados.length} contrato${vinculados.length > 1 ? 's' : ''}`;
+
+    if (listaEl) {
+      listaEl.innerHTML = vinculados.map(c => `
+        <div class="py-2 first:pt-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="font-bold text-slate-900 text-xs truncate max-w-[240px]" title="${c.empresa}">${c.empresa}</span>
+            <span class="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 font-mono text-[10px] font-black text-blue-700 shrink-0">
+              CTT ${this.formatCttNumber(c.numeroCtt)}
+            </span>
+          </div>
+          <div class="text-[10px] text-slate-500 mt-1 flex items-center justify-between">
+            <span>Posição #${c.id} • ${c.objeto ? (c.objeto.length > 35 ? c.objeto.slice(0, 35) + '...' : c.objeto) : 'Serviço'}</span>
+            <span class="font-semibold text-slate-700">${c.dataVencimentoIso ? 'Venc: ' + this.formatDateBr(c.dataVencimentoIso) : (c.prazoVencimento || '-')}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+  },
+
+  closeFiscalVinculadoModal() {
+    const m = document.getElementById('modal-fiscal-vinculado');
+    if (m) {
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
   },
 
   onDateChange(mode) {

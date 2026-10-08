@@ -745,6 +745,39 @@ Exemplo do formato:
       </div>
 
       <!-- ================================================================= -->
+      <!-- MODAL DE ALERTA: FISCAL VINCULADO A CONTRATOS ATIVOS              -->
+      <!-- ================================================================= -->
+      <div id="modal-fiscal-vinculado" class="hidden fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-amber-200 fade-in">
+          <div class="text-center mb-4">
+            <span class="inline-block p-3.5 bg-amber-50 text-amber-600 rounded-2xl mb-2 text-2xl">⚠️</span>
+            <h3 class="text-base font-black text-slate-900">Não é possível excluir este fiscal</h3>
+            <p class="text-xs text-slate-500 mt-1">
+              O fiscal <strong id="modal-fiscal-vinculado-nome" class="text-slate-900 font-black"></strong> não pode ser removido pois está vinculado a contratos.
+            </p>
+          </div>
+
+          <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-xs mb-4">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/80">
+              <span class="text-[10px] font-black uppercase text-slate-400">Contratos sob responsabilidade:</span>
+              <span id="modal-fiscal-vinculado-qtd" class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black text-[10px]">0 contratos</span>
+            </div>
+            <div id="modal-fiscal-vinculado-lista" class="max-h-52 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-100">
+              <!-- Lista dinâmica de contratos vinculados -->
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-snug mb-4">
+            💡 <strong>Como proceder:</strong> Para excluir este fiscal da lista, primeiro edite o(s) contrato(s) listados acima e altere o fiscal responsável para outro servidor ou para <strong>PREFEITURA</strong>.
+          </div>
+
+          <button type="button" onclick="app.contratos.closeFiscalVinculadoModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-md text-xs transition">
+            Entendido
+          </button>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
       <!-- 11. PAINEL DE CONTRATOS LDO: EXCLUIR DEFINITIVO                   -->
       <!-- ================================================================= -->
       <div id="modal-excluir-painel-contrato" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
