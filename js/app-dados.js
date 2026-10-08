@@ -16,7 +16,7 @@ const CONFIG = {
     examsCache: 'torres_exams_cache_v1',
     dotacoesCache: 'torres_dotacoes_cache_v6',
     panelContracts: 'torres_panel_contracts_v1',
-    permissions: 'torres_permissions_matrix_v1',
+    permissions: 'torres_permissions_matrix_v2',
     auditSession: 'torres_audit_logged_user'
   }
 };
@@ -590,10 +590,10 @@ const DEFAULT_PERMISSIONS = {
     'audit_create_contract': false,
     'audit_manage_procedures': false,
     'dotacoes_access': true,
-    'dotacoes_create': true,
-    'dotacoes_check': true,
-    'dotacoes_edit': true,
-    'dotacoes_delete': true,
+    'dotacoes_create': false,
+    'dotacoes_check': false,
+    'dotacoes_edit': false,
+    'dotacoes_delete': false,
     'panel_access': true,
     'panel_create': true,
     'panel_edit': true,

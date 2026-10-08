@@ -105,6 +105,10 @@ app.dotacoes = {
   async saveNewDotacao(e) {
     if (e) e.preventDefault();
 
+    if (!app.permissions.can('dotacoes_create')) {
+      return app.ui.toast("Seu perfil de acesso não tem permissão para cadastrar pedidos de dotação.", "warning", "Acesso Restrito");
+    }
+
     const sf = (document.getElementById('dot-field-sf')?.value || '').trim();
     const doc1 = (document.getElementById('dot-field-1doc')?.value || '').trim();
     const objeto = (document.getElementById('dot-field-objeto')?.value || '').trim();
@@ -247,6 +251,10 @@ app.dotacoes = {
   async saveEditDotacao(e) {
     if (e) e.preventDefault();
 
+    if (!app.permissions.can('dotacoes_edit')) {
+      return app.ui.toast("Seu perfil de acesso não tem permissão para editar pedidos de dotação.", "warning", "Acesso Restrito");
+    }
+
     const id = Number(document.getElementById('edit-dot-id')?.value);
     const item = app.state.dotacoes.find(d => Number(d.id) === id);
     if (!item) return;
@@ -369,6 +377,10 @@ app.dotacoes = {
   // ETAPA 3: COMPLEMENTAÇÃO PÓS-DOTAÇÃO (COMPRADOR)
   // --------------------------------------------------------------------------
   openComplementarModal(id) {
+    if (!app.permissions.can('dotacoes_edit') && !app.permissions.can('dotacoes_check')) {
+      return app.ui.toast("Seu perfil de acesso não tem permissão para alterar dados de empenho.", "warning", "Acesso Restrito");
+    }
+
     const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
     if (!item) return;
 
@@ -417,6 +429,10 @@ app.dotacoes = {
 
   async saveComplementarDotacao(e) {
     if (e) e.preventDefault();
+
+    if (!app.permissions.can('dotacoes_edit') && !app.permissions.can('dotacoes_check')) {
+      return app.ui.toast("Seu perfil de acesso não tem permissão para alterar dados de empenho.", "warning", "Acesso Restrito");
+    }
 
     const id = Number(document.getElementById('comp-dot-id')?.value);
     const item = app.state.dotacoes.find(d => Number(d.id) === id);
@@ -472,6 +488,10 @@ app.dotacoes = {
   // CANCELAMENTO DE PEDIDO COM JUSTIFICATIVA
   // --------------------------------------------------------------------------
   openCancelarModal(id) {
+    if (!app.permissions.can('dotacoes_delete')) {
+      return app.ui.toast("Você não tem permissão para cancelar ou excluir pedidos de dotação.", "warning", "Acesso Restrito");
+    }
+
     const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
     if (!item) return;
 
@@ -501,6 +521,10 @@ app.dotacoes = {
 
   async confirmCancelarDotacao(e) {
     if (e) e.preventDefault();
+
+    if (!app.permissions.can('dotacoes_delete')) {
+      return app.ui.toast("Você não tem permissão para cancelar ou excluir pedidos de dotação.", "warning", "Acesso Restrito");
+    }
 
     const id = Number(document.getElementById('cancel-dot-id')?.value);
     const item = app.state.dotacoes.find(d => Number(d.id) === id);
@@ -553,6 +577,10 @@ app.dotacoes = {
   // REABERTURA DE PEDIDO
   // --------------------------------------------------------------------------
   async reabrirPedido(id) {
+    if (!app.permissions.can('dotacoes_delete') && !app.permissions.can('dotacoes_edit')) {
+      return app.ui.toast("Você não tem permissão para reabrir pedidos de dotação.", "warning", "Acesso Restrito");
+    }
+
     const item = app.state.dotacoes.find(d => Number(d.id) === Number(id));
     if (!item) return;
 
@@ -744,6 +772,7 @@ app.dotacoes = {
 
     const canCheck = app.permissions.can('dotacoes_check');
     const canEdit = app.permissions.can('dotacoes_edit');
+    const canDelete = app.permissions.can('dotacoes_delete');
 
     return list.map(d => {
       const status = (d.status || 'AGUARDANDO').toUpperCase();
@@ -843,7 +872,7 @@ app.dotacoes = {
                 </button>
               ` : ''}
 
-              ${(isDotado || isConcluido) ? `
+              ${(isDotado || isConcluido) && (canEdit || canCheck) ? `
                 <button onclick="app.dotacoes.openComplementarModal(${d.id})" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-200 transition flex items-center gap-0.5" title="Vincular Empenho, Situação e Patrimônio">
                   <span>📦</span> Emp.
                 </button>
@@ -855,15 +884,17 @@ app.dotacoes = {
                 </button>
               ` : ''}
 
-              ${!isCancelado ? `
+              ${canDelete && !isCancelado ? `
                 <button onclick="app.dotacoes.openCancelarModal(${d.id})" class="p-1 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-lg text-xs font-bold border border-slate-200 transition" title="Cancelar Pedido">
                   ✕
                 </button>
-              ` : `
+              ` : ''}
+
+              ${canDelete && isCancelado ? `
                 <button onclick="app.dotacoes.reabrirPedido(${d.id})" class="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold border transition" title="Reativar pedido">
                   ↩ Reabrir
                 </button>
-              `}
+              ` : ''}
             </div>
           </td>
         </tr>
