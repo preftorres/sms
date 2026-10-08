@@ -71,6 +71,7 @@ function popularPainelContratosMural() {
   }
   sheet.clearContents();
   sheet.appendRow(HEADERS_PANEL);
+  sheet.getRange("C:C").setNumberFormat("@");
   if (INITIAL_34_CONTRATOS.length > 0) {
     sheet.getRange(2, 1, INITIAL_34_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_34_CONTRATOS);
   }
@@ -78,7 +79,7 @@ function popularPainelContratosMural() {
     usuario: "admin",
     modulo: "Contratos LDO",
     acao: "Reconciliação Mural Físico",
-    detalhes: "Aba _Painel_Contratos atualizada com os 34 contratos e espaços do mural físico da Secretaria",
+    detalhes: "Aba _Painel_Contratos atualizada com os 34 contratos, links e espaços do mural físico da Secretaria",
     registroId: "MURAL_FISICO"
   });
   Logger.log("✓ Painel de Contratos atualizado com sucesso com os 34 contratos e espaços do mural!");
@@ -98,7 +99,7 @@ const AUDIT_LOGS_SHEET = "_Logs_Auditoria";
 
 const HEADERS_PANEL = [
   "id", "empresa", "numeroCtt", "prazoVencimento", "dataVencimentoIso",
-  "valorContrato", "fiscal", "status", "objeto", "criadoEm", "criadoPor", "observacao"
+  "valorContrato", "fiscal", "status", "objeto", "criadoEm", "criadoPor", "observacao", "linkContrato"
 ];
 const HEADERS_EXAMS = ["id", "item", "cat", "descEmpenho", "descPrestador", "vlUnit", "qtdEmpenho", "saldoAnterior", "faturado"];
 const HEADERS_SHORTCUTS = ["id", "title", "url", "desc"];
@@ -116,42 +117,42 @@ const HEADERS_AUDIT_LOGS = [
 // Mapeamento idêntico às fotos das paredes e quadros da Secretaria
 const INITIAL_34_CONTRATOS = [
   // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 21) ---
-  [1, "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", "344/2025", "Prorrogado até 26/09/2027", "2027-09-26", 257664.00, "FRAN", "Ativo", "Enfermagem e Procedimentos Clínicos (MED ENF)", "07/10/2026", "admin", "Prorrogação anotada à caneta no mural: 26/09/2027"],
-  [2, "PRECISÃO TRATAMENTO DE ÁGUA LTDA", "297/2025", "Prorrogado até 30/09/2027", "2027-09-30", 7734.00, "LASIER", "Ativo", "Tratamento de Água nas Unidades (PRESCISÃO)", "07/10/2026", "admin", "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural"],
-  [3, "ELO SERVIÇOS DE SAÚDE LTDA", "377/2024", "12 Meses até 04/10/2026", "2026-10-04", 3747715.20, "FRAN", "Ativo", "Gestão Médica Hospitalar (ELO SERVIÇOS)", "07/10/2026", "admin", "Vencimento 04/10/2026 destacado no mural"],
-  [4, "R. DIMER EMPREENDIMENTOS IMOBILIARIOS LTDA", "539/2025", "12 Meses até 23/12/2026", "2026-12-23", 93600.00, "NAIARA", "Ativo", "Locação Imóvel TEACULHE (R DIMER)", "07/10/2026", "admin", "Aluguel TEACULHE confirmado no mural: Venc 23/12/2026"],
-  [5, "SILVIO FARIAS ALVES", "203/2021", "12 Meses até 19/10/2026", "2026-10-19", 49663.20, "LASIER", "Ativo", "Locação de Imóvel Vigilância (SILVIO ALUGUEL VIGILÂNCIA)", "07/10/2026", "admin", "Aluguel Vigilância; fiscal Lasier com anotação no mural"],
-  [6, "JVS CENTRO TERAPÊUTICO LTDA", "142/2023", "12 Meses até 03/11/2026", "2026-11-03", 107016.00, "NAIARA", "Ativo", "Terapias Integradas e Multidisciplinares (JVS PLENO)", "07/10/2026", "admin", "Vencimento 03/11/2026 destacado no mural"],
-  [7, "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", "390/2025", "12 Meses até 03/11/2026", "2026-11-03", 30684.06, "SANDRO", "Ativo", "Serviços Médicos Especializados (AMPLA MAIS EXAMES)", "07/10/2026", "admin", "Vencimento 03/11/2026 destacado no mural"],
-  [8, "CARLOS DOS SANTOS TEIXEIRA", "04/2023", "12 Meses até 04/01/2027", "2027-01-04", 180000.00, "NAIARA", "Ativo", "Locação Imóvel SAMU (CARLOS ALUGUEL SAMU)", "07/10/2026", "admin", "Aluguel SAMU confirmado no mural: Venc 04/01/2027"],
-  [9, "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", "14/2024", "12 Meses até 22/01/2027", "2027-01-22", 1074209.92, "PREFEITURA", "Ativo", "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", "07/10/2026", "admin", "Vencimento 22/01/2027 confirmado no mural"],
-  [10, "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", "29/2026", "12 Meses até 10/02/2027", "2027-02-10", 73200.00, "PREFEITURA", "Ativo", "Outsourcing de Impressoras (TEC PRINTERS)", "07/10/2026", "admin", "Fiscal PREFEITURA confirmado no mural"],
-  [11, "IBG INDUSTRIA BRASILEIRA DE GASES LTDA", "77/2024", "12 Meses até 22/02/2027", "2027-02-22", 46800.00, "ADRI", "Ativo", "Fornecimento de Oxigênio Medicinal (IBG OXIGÊNIO)", "07/10/2026", "admin", "Vencimento 22/02/2027 confirmado no mural"],
-  [12, "INSTITUTO DE AMPARO AO EXCEPCIONAL - INAMEX", "125/2024", "12 Meses até 18/03/2027", "2027-03-18", 56337.48, "NAIARA", "Ativo", "Acolhimento e Assistência Especial (INAMEX)", "07/10/2026", "admin", "Vencimento 18/03/2027 confirmado no mural"],
-  [13, "ONE GESTÃO E SERVIÇOS LTDA", "149/2026", "12 Meses até 04/05/2027", "2027-05-04", 240240.00, "NAIARA", "Ativo", "Serviços Especializados de Apoio (ONE GESTÃO)", "07/10/2026", "admin", "Vencimento 04/05/2027 confirmado no mural"],
-  [14, "INTEGRALIDADE MÉDICA LTDA", "151/2026", "12 Meses até 04/05/2027", "2027-05-04", 1367024.00, "FRAN", "Ativo", "Plantões Médicos de Urgência (INTEGRALIDADE MÉDICA)", "07/10/2026", "admin", "Vencimento 04/05/2027 confirmado no mural"],
-  [15, "HIDRAMACO PEÇAS E ACESSÓRIOS LTDA", "274/2026", "12 Meses até 22/07/2027", "2027-07-22", 90240.46, "SANDRO", "Ativo", "Peças e Reposição Mecânica (HIDRAMACO SULCAR)", "07/10/2026", "admin", "Anotação à mão no mural: CTT 390/2026 - Venc: 04/09/2027"],
-  [16, "ELO SERVIÇOS DE SAÚDE LTDA", "297/2025", "12 Meses até 28/08/2027", "2027-08-28", 1026110.34, "NAIARA", "Ativo", "Serviços Médicos Ambulatoriais (ELO SERVIÇOS)", "07/10/2026", "admin", "Vencimento 28/08/2027 confirmado no mural"],
-  [17, "AMBIENTUUS TECNOLOGIA AMBIENTAL", "264/2023", "12 Meses até 30/08/2027", "2027-08-30", 36720.00, "ADRI", "Ativo", "Tratamento de Resíduos Hospitalares (AMBIENTUSS)", "07/10/2026", "admin", "Vigência confirmada no mural físico até 30/08/2027"],
-  [18, "HENGER COMÉRCIO E SERVIÇOS LTDA", "166/2026", "36 Meses até 05/05/2029", "2029-05-05", 90000.00, "ADRI", "Ativo", "Manutenção Predial Continuada (HENGER)", "07/10/2026", "admin", "Vencimento 05/05/2029 confirmado no mural"],
-  [19, "LABORATÓRIO DE ANÁLISES CLÍNICAS", "43/2024", "Chamamento 210/26 até 03/09/2027", "2027-09-03", 129163.00, "PREFEITURA", "Ativo", "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", "07/10/2026", "admin", "Termo de Credenciamento 43/2024 afixado no mural"],
-  [20, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico"],
-  [21, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico"],
+  [1, "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", "344/2025", "Prorrogado até 26/09/2027", "2027-09-26", 257664.00, "FRAN", "Ativo", "Enfermagem e Procedimentos Clínicos (MED ENF)", "07/10/2026", "admin", "Prorrogação anotada à caneta no mural: 26/09/2027", ""],
+  [2, "PRECISÃO TRATAMENTO DE ÁGUA LTDA", "297/2025", "Prorrogado até 30/09/2027", "2027-09-30", 7734.00, "LASIER", "Ativo", "Tratamento de Água nas Unidades (PRESCISÃO)", "07/10/2026", "admin", "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural", ""],
+  [3, "ELO SERVIÇOS DE SAÚDE LTDA", "377/2024", "12 Meses até 04/10/2026", "2026-10-04", 3747715.20, "FRAN", "Ativo", "Gestão Médica Hospitalar (ELO SERVIÇOS)", "07/10/2026", "admin", "Vencimento 04/10/2026 destacado no mural", ""],
+  [4, "R. DIMER EMPREENDIMENTOS IMOBILIARIOS LTDA", "539/2025", "12 Meses até 23/12/2026", "2026-12-23", 93600.00, "NAIARA", "Ativo", "Locação Imóvel TEACULHE (R DIMER)", "07/10/2026", "admin", "Aluguel TEACULHE confirmado no mural: Venc 23/12/2026", ""],
+  [5, "SILVIO FARIAS ALVES", "203/2021", "12 Meses até 19/10/2026", "2026-10-19", 49663.20, "LASIER", "Ativo", "Locação de Imóvel Vigilância (SILVIO ALUGUEL VIGILÂNCIA)", "07/10/2026", "admin", "Aluguel Vigilância; fiscal Lasier com anotação no mural", ""],
+  [6, "JVS CENTRO TERAPÊUTICO LTDA", "142/2023", "12 Meses até 03/11/2026", "2026-11-03", 107016.00, "NAIARA", "Ativo", "Terapias Integradas e Multidisciplinares (JVS PLENO)", "07/10/2026", "admin", "Vencimento 03/11/2026 destacado no mural", ""],
+  [7, "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", "390/2025", "12 Meses até 03/11/2026", "2026-11-03", 30684.06, "SANDRO", "Ativo", "Serviços Médicos Especializados (AMPLA MAIS EXAMES)", "07/10/2026", "admin", "Vencimento 03/11/2026 destacado no mural", ""],
+  [8, "CARLOS DOS SANTOS TEIXEIRA", "04/2023", "12 Meses até 04/01/2027", "2027-01-04", 180000.00, "NAIARA", "Ativo", "Locação Imóvel SAMU (CARLOS ALUGUEL SAMU)", "07/10/2026", "admin", "Aluguel SAMU confirmado no mural: Venc 04/01/2027", "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109"],
+  [9, "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", "14/2024", "12 Meses até 22/01/2027", "2027-01-22", 1074209.92, "PREFEITURA", "Ativo", "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", "07/10/2026", "admin", "Vencimento 22/01/2027 confirmado no mural", ""],
+  [10, "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", "29/2026", "12 Meses até 10/02/2027", "2027-02-10", 73200.00, "PREFEITURA", "Ativo", "Outsourcing de Impressoras (TEC PRINTERS)", "07/10/2026", "admin", "Fiscal PREFEITURA confirmado no mural", ""],
+  [11, "IBG INDUSTRIA BRASILEIRA DE GASES LTDA", "77/2024", "12 Meses até 22/02/2027", "2027-02-22", 46800.00, "ADRI", "Ativo", "Fornecimento de Oxigênio Medicinal (IBG OXIGÊNIO)", "07/10/2026", "admin", "Vencimento 22/02/2027 confirmado no mural", ""],
+  [12, "INSTITUTO DE AMPARO AO EXCEPCIONAL - INAMEX", "125/2024", "12 Meses até 18/03/2027", "2027-03-18", 56337.48, "NAIARA", "Ativo", "Acolhimento e Assistência Especial (INAMEX)", "07/10/2026", "admin", "Vencimento 18/03/2027 confirmado no mural", ""],
+  [13, "ONE GESTÃO E SERVIÇOS LTDA", "149/2026", "12 Meses até 04/05/2027", "2027-05-04", 240240.00, "NAIARA", "Ativo", "Serviços Especializados de Apoio (ONE GESTÃO)", "07/10/2026", "admin", "Vencimento 04/05/2027 confirmado no mural", ""],
+  [14, "INTEGRALIDADE MÉDICA LTDA", "151/2026", "12 Meses até 04/05/2027", "2027-05-04", 1367024.00, "FRAN", "Ativo", "Plantões Médicos de Urgência (INTEGRALIDADE MÉDICA)", "07/10/2026", "admin", "Vencimento 04/05/2027 confirmado no mural", ""],
+  [15, "HIDRAMACO PEÇAS E ACESSÓRIOS LTDA", "274/2026", "12 Meses até 22/07/2027", "2027-07-22", 90240.46, "SANDRO", "Ativo", "Peças e Reposição Mecânica (HIDRAMACO SULCAR)", "07/10/2026", "admin", "Anotação à mão no mural: CTT 390/2026 - Venc: 04/09/2027", ""],
+  [16, "ELO SERVIÇOS DE SAÚDE LTDA", "297/2025", "12 Meses até 28/08/2027", "2027-08-28", 1026110.34, "NAIARA", "Ativo", "Serviços Médicos Ambulatoriais (ELO SERVIÇOS)", "07/10/2026", "admin", "Vencimento 28/08/2027 confirmado no mural", ""],
+  [17, "AMBIENTUUS TECNOLOGIA AMBIENTAL", "264/2023", "12 Meses até 30/08/2027", "2027-08-30", 36720.00, "ADRI", "Ativo", "Tratamento de Resíduos Hospitalares (AMBIENTUSS)", "07/10/2026", "admin", "Vigência confirmada no mural físico até 30/08/2027", ""],
+  [18, "HENGER COMÉRCIO E SERVIÇOS LTDA", "166/2026", "36 Meses até 05/05/2029", "2029-05-05", 90000.00, "ADRI", "Ativo", "Manutenção Predial Continuada (HENGER)", "07/10/2026", "admin", "Vencimento 05/05/2029 confirmado no mural", ""],
+  [19, "LABORATÓRIO DE ANÁLISES CLÍNICAS", "43/2024", "Chamamento 210/26 até 03/09/2027", "2027-09-03", 129163.00, "PREFEITURA", "Ativo", "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", "07/10/2026", "admin", "Termo de Credenciamento 43/2024 afixado no mural", ""],
+  [20, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico", ""],
+  [21, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico", ""],
 
   // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 34) ---
-  [22, "SIMSAUDE SERVIÇOS SA", "342/2025", "12 Meses até 16/11/2026", "2026-11-16", 828960.00, "ADRI", "Ativo", "Consultas e Atendimentos Médicos (SIM SAÚDE)", "07/10/2026", "admin", "Vencimento 16/11/2026 destacado no mural"],
-  [23, "SILVANO TUPINAMBA DELFIM", "345/2023", "12 Meses até 21/11/2026", "2026-11-21", 48000.00, "NAIARA", "Ativo", "Locação Imóvel Especialidades (SILVANO)", "07/10/2026", "admin", "Aluguel Especialidades confirmado no mural: Venc 21/11/2026"],
-  [24, "LUMIAR HEALTH BUILDERS EQUIP HOSP LTDA", "303/2025", "12 Meses até 26/11/2026", "2026-11-26", 135700.00, "FRAN", "Ativo", "Oxigenoterapia Domiciliar (LUMIAR OXIGENOTERAPIA)", "07/10/2026", "admin", "Nº CTT atribuído: 303/2025 conforme mural"],
-  [25, "TRANSALVA EMERGÊNCIAS MÉDICAS LTDA", "442/2025", "12 Meses até 08/12/2026", "2026-12-08", 199800.05, "NAIARA", "Ativo", "Ambulâncias de Suporte Avançado (TRANSALVA)", "07/10/2026", "admin", "Vencimento 08/12/2026 destacado no mural"],
-  [26, "DANIEL CARDOSO MAGNUS", "195/2026", "12 Meses até 01/06/2027", "2027-06-01", 19800.00, "LASIER", "Ativo", "Aplicação BTI Controle de Vetores (DANIEL APLICAÇÃO BTI)", "07/10/2026", "admin", "Vencimento 01/06/2027 confirmado no mural"],
-  [27, "VIAÇÃO OURO E PRATA SA", "231/2026", "12 Meses até 30/06/2027", "2027-06-30", 1355940.00, "SANDRO", "Ativo", "Passagens TFD (OURO E PRATA)", "07/10/2026", "admin", "Nº CTT 231/2026 confirmado no mural"],
-  [28, "K & S EMPREENDIMENTOS IMOBILIARIOS LTDA", "258/2026", "12 Meses até 15/07/2027", "2027-07-15", 96000.00, "NAIARA", "Ativo", "Locação de Imóvel para Fisioterapia (KS ALUGUEL FISIO)", "07/10/2026", "admin", "Nº CTT 258/2026 confirmado no mural"],
-  [29, "ULTRA AIR COMÉRCIO DE GASES INDUSTRIAIS", "232/2025", "12 meses até 17/07/2027", "2027-07-17", 52266.50, "ADRI", "Ativo", "Gases Medicinais e Ar Comprimido (ULTRA AIR)", "07/10/2026", "admin", "Vencimento 17/07/2027 confirmado no mural"],
-  [30, "SOSSEG (EDUCAÇÃO)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Serviços de Educação / Apoio à Saúde", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato"],
-  [31, "CRISTO REI (CLÍNICA)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Serviços e Consultas Clínicas", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato"],
-  [32, "IB SAÚDE (HOSPITAL)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Gestão e Atendimento Hospitalar", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato"],
-  [33, "APAE", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Assistência e Atendimento Especializado", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato"],
-  [34, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico"]
+  [22, "SIMSAUDE SERVIÇOS SA", "342/2025", "12 Meses até 16/11/2026", "2026-11-16", 828960.00, "ADRI", "Ativo", "Consultas e Atendimentos Médicos (SIM SAÚDE)", "07/10/2026", "admin", "Vencimento 16/11/2026 destacado no mural", ""],
+  [23, "SILVANO TUPINAMBA DELFIM", "345/2023", "12 Meses até 21/11/2026", "2026-11-21", 48000.00, "NAIARA", "Ativo", "Locação Imóvel Especialidades (SILVANO)", "07/10/2026", "admin", "Aluguel Especialidades confirmado no mural: Venc 21/11/2026", ""],
+  [24, "LUMIAR HEALTH BUILDERS EQUIP HOSP LTDA", "303/2025", "12 Meses até 26/11/2026", "2026-11-26", 135700.00, "FRAN", "Ativo", "Oxigenoterapia Domiciliar (LUMIAR OXIGENOTERAPIA)", "07/10/2026", "admin", "Nº CTT atribuído: 303/2025 conforme mural", ""],
+  [25, "TRANSALVA EMERGÊNCIAS MÉDICAS LTDA", "442/2025", "12 Meses até 08/12/2026", "2026-12-08", 199800.05, "NAIARA", "Ativo", "Ambulâncias de Suporte Avançado (TRANSALVA)", "07/10/2026", "admin", "Vencimento 08/12/2026 destacado no mural", ""],
+  [26, "DANIEL CARDOSO MAGNUS", "195/2026", "12 Meses até 01/06/2027", "2027-06-01", 19800.00, "LASIER", "Ativo", "Aplicação BTI Controle de Vetores (DANIEL APLICAÇÃO BTI)", "07/10/2026", "admin", "Vencimento 01/06/2027 confirmado no mural", ""],
+  [27, "VIAÇÃO OURO E PRATA SA", "231/2026", "12 Meses até 30/06/2027", "2027-06-30", 1355940.00, "SANDRO", "Ativo", "Passagens TFD (OURO E PRATA)", "07/10/2026", "admin", "Nº CTT 231/2026 confirmado no mural", ""],
+  [28, "K & S EMPREENDIMENTOS IMOBILIARIOS LTDA", "258/2026", "12 Meses até 15/07/2027", "2027-07-15", 96000.00, "NAIARA", "Ativo", "Locação de Imóvel para Fisioterapia (KS ALUGUEL FISIO)", "07/10/2026", "admin", "Nº CTT 258/2026 confirmado no mural", ""],
+  [29, "ULTRA AIR COMÉRCIO DE GASES INDUSTRIAIS", "232/2025", "12 meses até 17/07/2027", "2027-07-17", 52266.50, "ADRI", "Ativo", "Gases Medicinais e Ar Comprimido (ULTRA AIR)", "07/10/2026", "admin", "Vencimento 17/07/2027 confirmado no mural", ""],
+  [30, "SOSSEG (EDUCAÇÃO)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Serviços de Educação / Apoio à Saúde", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
+  [31, "CRISTO REI (CLÍNICA)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Serviços e Consultas Clínicas", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
+  [32, "IB SAÚDE (HOSPITAL)", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Gestão e Atendimento Hospitalar", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
+  [33, "APAE", "Em Aberto", "Em fase de contratação", "", 0, "PREFEITURA", "Previsto", "Assistência e Atendimento Especializado", "07/10/2026", "admin", "Folha afixada no mural reservada para novo contrato", ""],
+  [34, "[ESPAÇO VAZIO - PAINEL MURAL]", "S/N", "Espaço vago no mural físico", "", 0, "PREFEITURA", "Disponível", "Nicho vago no painel da Secretaria", "07/10/2026", "admin", "Espaço reservado vago no mural físico", ""]
 ];
 
 // ============================================================================
@@ -174,13 +175,18 @@ function ensurePanelContractsStructure(ss) {
   if (!sheet) {
     sheet = ss.insertSheet(PANEL_SHEET);
     sheet.appendRow(HEADERS_PANEL);
+    sheet.getRange("C:C").setNumberFormat("@");
     if (INITIAL_34_CONTRATOS.length > 0) {
-      sheet.getRange(2, 1, INITIAL_34_CONTRATOS.length, INITIAL_34_CONTRATOS[0].length).setValues(INITIAL_34_CONTRATOS);
+      sheet.getRange(2, 1, INITIAL_34_CONTRATOS.length, HEADERS_PANEL.length).setValues(INITIAL_34_CONTRATOS);
     }
   } else {
+    sheet.getRange("C:C").setNumberFormat("@");
     const lastCol = sheet.getLastColumn();
-    if (lastCol < HEADERS_PANEL.length) {
-      sheet.getRange(1, HEADERS_PANEL.length).setValue("observacao");
+    if (lastCol < 12) {
+      sheet.getRange(1, 12).setValue("observacao");
+    }
+    if (lastCol < 13) {
+      sheet.getRange(1, 13).setValue("linkContrato");
     }
   }
   return sheet;
@@ -400,6 +406,26 @@ function formatCellToIsoDate(val) {
   return s;
 }
 
+function formatCellToCttNumber(val) {
+  if (!val && val !== 0) return "";
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return "";
+    var m = ("0" + (val.getMonth() + 1)).slice(-2);
+    var y = val.getFullYear();
+    return m + "/" + y;
+  }
+  var s = String(val).trim();
+  if (s.indexOf("GMT") !== -1 || (s.indexOf("00:00:00") !== -1 && isNaN(Number(s)))) {
+    var d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      var m2 = ("0" + (d.getMonth() + 1)).slice(-2);
+      var y2 = d.getFullYear();
+      return m2 + "/" + y2;
+    }
+  }
+  return s;
+}
+
 function getPanelContractsList(ss) {
   ss = ss || SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ensurePanelContractsStructure(ss);
@@ -410,7 +436,7 @@ function getPanelContractsList(ss) {
     list.push({
       id: Number(rows[i][0]),
       empresa: String(rows[i][1]),
-      numeroCtt: String(rows[i][2]),
+      numeroCtt: formatCellToCttNumber(rows[i][2]),
       prazoVencimento: String(rows[i][3]),
       dataVencimentoIso: formatCellToIsoDate(rows[i][4]),
       valorContrato: Number(rows[i][5]) || 0,
@@ -419,7 +445,8 @@ function getPanelContractsList(ss) {
       objeto: String(rows[i][8] || ""),
       criadoEm: String(rows[i][9] || ""),
       criadoPor: String(rows[i][10] || ""),
-      observacao: String(rows[i][11] || "")
+      observacao: String(rows[i][11] || ""),
+      linkContrato: String(rows[i][12] || "")
     });
   }
   return list;
@@ -798,9 +825,9 @@ function doPost(e) {
       const sheet = ensurePanelContractsStructure(ss);
       const c = payload.contract;
       sheet.appendRow([
-        c.id || Date.now(), c.empresa, c.numeroCtt, c.prazoVencimento, c.dataVencimentoIso,
+        c.id || Date.now(), c.empresa, String(c.numeroCtt || ""), c.prazoVencimento, c.dataVencimentoIso,
         c.valorContrato, c.fiscal, "Ativo", c.objeto || "", c.criadoEm || "", c.criadoPor || "",
-        c.observacao || ""
+        c.observacao || "", c.linkContrato || ""
       ]);
       logAudit(ss, {
         usuario: payload.currentUser || c.criadoPor || "admin",
@@ -820,13 +847,14 @@ function doPost(e) {
         if (Number(rows[i][0]) === Number(c.id)) {
           const rowNum = i + 1;
           sheet.getRange(rowNum, 2).setValue(c.empresa);
-          sheet.getRange(rowNum, 3).setValue(c.numeroCtt);
+          sheet.getRange(rowNum, 3).setNumberFormat("@").setValue(String(c.numeroCtt || ""));
           sheet.getRange(rowNum, 4).setValue(c.prazoVencimento);
           sheet.getRange(rowNum, 5).setValue(c.dataVencimentoIso);
           sheet.getRange(rowNum, 6).setValue(c.valorContrato);
           sheet.getRange(rowNum, 7).setValue(c.fiscal);
           sheet.getRange(rowNum, 9).setValue(c.objeto);
           sheet.getRange(rowNum, 12).setValue(c.observacao || "");
+          sheet.getRange(rowNum, 13).setValue(c.linkContrato || "");
           break;
         }
       }

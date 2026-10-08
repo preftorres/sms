@@ -78,6 +78,27 @@ app.contratos = {
     return `${ano}-${mes}-${dia}`;
   },
 
+  // FORMATA NÚMERO DE CONTRATO (BLINDAGEM CONTRA CONVERSÃO AUTOMÁTICA EM DATA DO SHEETS/JS)
+  formatCttNumber(val) {
+    if (!val && val !== 0) return "";
+    if (val instanceof Date) {
+      if (isNaN(val.getTime())) return "";
+      const m = String(val.getMonth() + 1).padStart(2, '0');
+      const y = val.getFullYear();
+      return `${m}/${y}`;
+    }
+    const s = String(val).trim();
+    if (s.includes("GMT") || (s.includes("00:00:00") && isNaN(Number(s)))) {
+      const dt = new Date(s);
+      if (!isNaN(dt.getTime())) {
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const y = dt.getFullYear();
+        return `${m}/${y}`;
+      }
+    }
+    return s;
+  },
+
   // DETERMINA A DATA EFETIVA PARA NOTIFICAÇÕES E BANDEIRA DE COR
   // Regra do Usuário: Se 'Prazo / Informação de Vencimento' estiver preenchido,
   // deve ser considerado para a notificação e bandeira com a cor; caso contrário,
@@ -166,42 +187,42 @@ app.contratos = {
   // BASE OFICIAL DOS 34 CONTRATOS E ESPAÇOS FÍSICOS DO MURAL DA SECRETARIA DA SAÚDE
   MURAL_AUDIT_DATA: [
     // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 21) ---
-    { id: 1, empresa: "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", numeroCtt: "344/2025", prazoVencimento: "Prorrogado até 26/09/2027", dataVencimentoIso: "2027-09-26", valorContrato: 257664.00, fiscal: "FRAN", status: "Ativo", objeto: "Enfermagem e Procedimentos Clínicos (MED ENF)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação anotada à caneta no mural: 26/09/2027" },
-    { id: 2, empresa: "PRECISÃO TRATAMENTO DE ÁGUA LTDA", numeroCtt: "297/2025", prazoVencimento: "Prorrogado até 30/09/2027", dataVencimentoIso: "2027-09-30", valorContrato: 7734.00, fiscal: "LASIER", status: "Ativo", objeto: "Tratamento de Água nas Unidades (PRESCISÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural" },
-    { id: 3, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "377/2024", prazoVencimento: "12 Meses até 04/10/2026", dataVencimentoIso: "2026-10-04", valorContrato: 3747715.20, fiscal: "FRAN", status: "Ativo", objeto: "Gestão Médica Hospitalar (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/10/2026 destacado no mural" },
-    { id: 4, empresa: "R. DIMER EMPREENDIMENTOS IMOBILIARIOS LTDA", numeroCtt: "539/2025", prazoVencimento: "12 Meses até 23/12/2026", dataVencimentoIso: "2026-12-23", valorContrato: 93600.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel TEACULHE (R DIMER)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel TEACULHE confirmado no mural: Venc 23/12/2026" },
-    { id: 5, empresa: "SILVIO FARIAS ALVES", numeroCtt: "203/2021", prazoVencimento: "12 Meses até 19/10/2026", dataVencimentoIso: "2026-10-19", valorContrato: 49663.20, fiscal: "LASIER", status: "Ativo", objeto: "Locação de Imóvel Vigilância (SILVIO ALUGUEL VIGILÂNCIA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel Vigilância; fiscal Lasier com anotação no mural" },
-    { id: 6, empresa: "JVS CENTRO TERAPÊUTICO LTDA", numeroCtt: "142/2023", prazoVencimento: "12 Meses até 03/11/2026", dataVencimentoIso: "2026-11-03", valorContrato: 107016.00, fiscal: "NAIARA", status: "Ativo", objeto: "Terapias Integradas e Multidisciplinares (JVS PLENO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 03/11/2026 destacado no mural" },
-    { id: 7, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "390/2025", prazoVencimento: "12 Meses até 03/11/2026", dataVencimentoIso: "2026-11-03", valorContrato: 30684.06, fiscal: "SANDRO", status: "Ativo", objeto: "Serviços Médicos Especializados (AMPLA MAIS EXAMES)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 03/11/2026 destacado no mural" },
-    { id: 8, empresa: "CARLOS DOS SANTOS TEIXEIRA", numeroCtt: "04/2023", prazoVencimento: "12 Meses até 04/01/2027", dataVencimentoIso: "2027-01-04", valorContrato: 180000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel SAMU (CARLOS ALUGUEL SAMU)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel SAMU confirmado no mural: Venc 04/01/2027" },
-    { id: 9, empresa: "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", numeroCtt: "14/2024", prazoVencimento: "12 Meses até 22/01/2027", dataVencimentoIso: "2027-01-22", valorContrato: 1074209.92, fiscal: "PREFEITURA", status: "Ativo", objeto: "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/01/2027 confirmado no mural" },
-    { id: 10, empresa: "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", numeroCtt: "29/2026", prazoVencimento: "12 Meses até 10/02/2027", dataVencimentoIso: "2027-02-10", valorContrato: 73200.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Outsourcing de Impressoras (TEC PRINTERS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Fiscal PREFEITURA confirmado no mural" },
-    { id: 11, empresa: "IBG INDUSTRIA BRASILEIRA DE GASES LTDA", numeroCtt: "77/2024", prazoVencimento: "12 Meses até 22/02/2027", dataVencimentoIso: "2027-02-22", valorContrato: 46800.00, fiscal: "ADRI", status: "Ativo", objeto: "Fornecimento de Oxigênio Medicinal (IBG OXIGÊNIO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/02/2027 confirmado no mural" },
-    { id: 12, empresa: "INSTITUTO DE AMPARO AO EXCEPCIONAL - INAMEX", numeroCtt: "125/2024", prazoVencimento: "12 Meses até 18/03/2027", dataVencimentoIso: "2027-03-18", valorContrato: 56337.48, fiscal: "NAIARA", status: "Ativo", objeto: "Acolhimento e Assistência Especial (INAMEX)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 18/03/2027 confirmado no mural" },
-    { id: 13, empresa: "ONE GESTÃO E SERVIÇOS LTDA", numeroCtt: "149/2026", prazoVencimento: "12 Meses até 04/05/2027", dataVencimentoIso: "2027-05-04", valorContrato: 240240.00, fiscal: "NAIARA", status: "Ativo", objeto: "Serviços Especializados de Apoio (ONE GESTÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/05/2027 confirmado no mural" },
-    { id: 14, empresa: "INTEGRALIDADE MÉDICA LTDA", numeroCtt: "151/2026", prazoVencimento: "12 Meses até 04/05/2027", dataVencimentoIso: "2027-05-04", valorContrato: 1367024.00, fiscal: "FRAN", status: "Ativo", objeto: "Plantões Médicos de Urgência (INTEGRALIDADE MÉDICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/05/2027 confirmado no mural" },
-    { id: 15, empresa: "HIDRAMACO PEÇAS E ACESSÓRIOS LTDA", numeroCtt: "274/2026", prazoVencimento: "12 Meses até 22/07/2027", dataVencimentoIso: "2027-07-22", valorContrato: 90240.46, fiscal: "SANDRO", status: "Ativo", objeto: "Peças e Reposição Mecânica (HIDRAMACO SULCAR)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Anotação à mão no mural: CTT 390/2026 - Venc: 04/09/2027" },
-    { id: 16, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "297/2025", prazoVencimento: "12 Meses até 28/08/2027", dataVencimentoIso: "2027-08-28", valorContrato: 1026110.34, fiscal: "NAIARA", status: "Ativo", objeto: "Serviços Médicos Ambulatoriais (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 28/08/2027 confirmado no mural" },
-    { id: 17, empresa: "AMBIENTUUS TECNOLOGIA AMBIENTAL", numeroCtt: "264/2023", prazoVencimento: "12 Meses até 30/08/2027", dataVencimentoIso: "2027-08-30", valorContrato: 36720.00, fiscal: "ADRI", status: "Ativo", objeto: "Tratamento de Resíduos Hospitalares (AMBIENTUSS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vigência confirmada no mural físico até 30/08/2027" },
-    { id: 18, empresa: "HENGER COMÉRCIO E SERVIÇOS LTDA", numeroCtt: "166/2026", prazoVencimento: "36 Meses até 05/05/2029", dataVencimentoIso: "2029-05-05", valorContrato: 90000.00, fiscal: "ADRI", status: "Ativo", objeto: "Manutenção Predial Continuada (HENGER)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 05/05/2029 confirmado no mural" },
-    { id: 19, empresa: "LABORATÓRIO DE ANÁLISES CLÍNICAS", numeroCtt: "43/2024", prazoVencimento: "Chamamento 210/26 até 03/09/2027", dataVencimentoIso: "2027-09-03", valorContrato: 129163.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Termo de Credenciamento 43/2024 afixado no mural" },
-    { id: 20, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico" },
-    { id: 21, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico" },
+    { id: 1, empresa: "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", numeroCtt: "344/2025", prazoVencimento: "Prorrogado até 26/09/2027", dataVencimentoIso: "2027-09-26", valorContrato: 257664.00, fiscal: "FRAN", status: "Ativo", objeto: "Enfermagem e Procedimentos Clínicos (MED ENF)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação anotada à caneta no mural: 26/09/2027", linkContrato: "" },
+    { id: 2, empresa: "PRECISÃO TRATAMENTO DE ÁGUA LTDA", numeroCtt: "297/2025", prazoVencimento: "Prorrogado até 30/09/2027", dataVencimentoIso: "2027-09-30", valorContrato: 7734.00, fiscal: "LASIER", status: "Ativo", objeto: "Tratamento de Água nas Unidades (PRESCISÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural", linkContrato: "" },
+    { id: 3, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "377/2024", prazoVencimento: "12 Meses até 04/10/2026", dataVencimentoIso: "2026-10-04", valorContrato: 3747715.20, fiscal: "FRAN", status: "Ativo", objeto: "Gestão Médica Hospitalar (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/10/2026 destacado no mural", linkContrato: "" },
+    { id: 4, empresa: "R. DIMER EMPREENDIMENTOS IMOBILIARIOS LTDA", numeroCtt: "539/2025", prazoVencimento: "12 Meses até 23/12/2026", dataVencimentoIso: "2026-12-23", valorContrato: 93600.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel TEACULHE (R DIMER)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel TEACULHE confirmado no mural: Venc 23/12/2026", linkContrato: "" },
+    { id: 5, empresa: "SILVIO FARIAS ALVES", numeroCtt: "203/2021", prazoVencimento: "12 Meses até 19/10/2026", dataVencimentoIso: "2026-10-19", valorContrato: 49663.20, fiscal: "LASIER", status: "Ativo", objeto: "Locação de Imóvel Vigilância (SILVIO ALUGUEL VIGILÂNCIA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel Vigilância; fiscal Lasier com anotação no mural", linkContrato: "" },
+    { id: 6, empresa: "JVS CENTRO TERAPÊUTICO LTDA", numeroCtt: "142/2023", prazoVencimento: "12 Meses até 03/11/2026", dataVencimentoIso: "2026-11-03", valorContrato: 107016.00, fiscal: "NAIARA", status: "Ativo", objeto: "Terapias Integradas e Multidisciplinares (JVS PLENO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 03/11/2026 destacado no mural", linkContrato: "" },
+    { id: 7, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "390/2025", prazoVencimento: "12 Meses até 03/11/2026", dataVencimentoIso: "2026-11-03", valorContrato: 30684.06, fiscal: "SANDRO", status: "Ativo", objeto: "Serviços Médicos Especializados (AMPLA MAIS EXAMES)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 03/11/2026 destacado no mural", linkContrato: "" },
+    { id: 8, empresa: "CARLOS DOS SANTOS TEIXEIRA", numeroCtt: "04/2023", prazoVencimento: "12 Meses até 04/01/2027", dataVencimentoIso: "2027-01-04", valorContrato: 180000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel SAMU (CARLOS ALUGUEL SAMU)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel SAMU confirmado no mural: Venc 04/01/2027", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109" },
+    { id: 9, empresa: "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", numeroCtt: "14/2024", prazoVencimento: "12 Meses até 22/01/2027", dataVencimentoIso: "2027-01-22", valorContrato: 1074209.92, fiscal: "PREFEITURA", status: "Ativo", objeto: "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/01/2027 confirmado no mural", linkContrato: "" },
+    { id: 10, empresa: "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", numeroCtt: "29/2026", prazoVencimento: "12 Meses até 10/02/2027", dataVencimentoIso: "2027-02-10", valorContrato: 73200.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Outsourcing de Impressoras (TEC PRINTERS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Fiscal PREFEITURA confirmado no mural", linkContrato: "" },
+    { id: 11, empresa: "IBG INDUSTRIA BRASILEIRA DE GASES LTDA", numeroCtt: "77/2024", prazoVencimento: "12 Meses até 22/02/2027", dataVencimentoIso: "2027-02-22", valorContrato: 46800.00, fiscal: "ADRI", status: "Ativo", objeto: "Fornecimento de Oxigênio Medicinal (IBG OXIGÊNIO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/02/2027 confirmado no mural", linkContrato: "" },
+    { id: 12, empresa: "INSTITUTO DE AMPARO AO EXCEPCIONAL - INAMEX", numeroCtt: "125/2024", prazoVencimento: "12 Meses até 18/03/2027", dataVencimentoIso: "2027-03-18", valorContrato: 56337.48, fiscal: "NAIARA", status: "Ativo", objeto: "Acolhimento e Assistência Especial (INAMEX)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 18/03/2027 confirmado no mural", linkContrato: "" },
+    { id: 13, empresa: "ONE GESTÃO E SERVIÇOS LTDA", numeroCtt: "149/2026", prazoVencimento: "12 Meses até 04/05/2027", dataVencimentoIso: "2027-05-04", valorContrato: 240240.00, fiscal: "NAIARA", status: "Ativo", objeto: "Serviços Especializados de Apoio (ONE GESTÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/05/2027 confirmado no mural", linkContrato: "" },
+    { id: 14, empresa: "INTEGRALIDADE MÉDICA LTDA", numeroCtt: "151/2026", prazoVencimento: "12 Meses até 04/05/2027", dataVencimentoIso: "2027-05-04", valorContrato: 1367024.00, fiscal: "FRAN", status: "Ativo", objeto: "Plantões Médicos de Urgência (INTEGRALIDADE MÉDICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/05/2027 confirmado no mural", linkContrato: "" },
+    { id: 15, empresa: "HIDRAMACO PEÇAS E ACESSÓRIOS LTDA", numeroCtt: "274/2026", prazoVencimento: "12 Meses até 22/07/2027", dataVencimentoIso: "2027-07-22", valorContrato: 90240.46, fiscal: "SANDRO", status: "Ativo", objeto: "Peças e Reposição Mecânica (HIDRAMACO SULCAR)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Anotação à mão no mural: CTT 390/2026 - Venc: 04/09/2027", linkContrato: "" },
+    { id: 16, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "297/2025", prazoVencimento: "12 Meses até 28/08/2027", dataVencimentoIso: "2027-08-28", valorContrato: 1026110.34, fiscal: "NAIARA", status: "Ativo", objeto: "Serviços Médicos Ambulatoriais (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 28/08/2027 confirmado no mural", linkContrato: "" },
+    { id: 17, empresa: "AMBIENTUUS TECNOLOGIA AMBIENTAL", numeroCtt: "264/2023", prazoVencimento: "12 Meses até 30/08/2027", dataVencimentoIso: "2027-08-30", valorContrato: 36720.00, fiscal: "ADRI", status: "Ativo", objeto: "Tratamento de Resíduos Hospitalares (AMBIENTUSS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vigência confirmada no mural físico até 30/08/2027", linkContrato: "" },
+    { id: 18, empresa: "HENGER COMÉRCIO E SERVIÇOS LTDA", numeroCtt: "166/2026", prazoVencimento: "36 Meses até 05/05/2029", dataVencimentoIso: "2029-05-05", valorContrato: 90000.00, fiscal: "ADRI", status: "Ativo", objeto: "Manutenção Predial Continuada (HENGER)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 05/05/2029 confirmado no mural", linkContrato: "" },
+    { id: 19, empresa: "LABORATÓRIO DE ANÁLISES CLÍNICAS", numeroCtt: "43/2024", prazoVencimento: "Chamamento 210/26 até 03/09/2027", dataVencimentoIso: "2027-09-03", valorContrato: 129163.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Termo de Credenciamento 43/2024 afixado no mural", linkContrato: "" },
+    { id: 20, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico", linkContrato: "" },
+    { id: 21, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico", linkContrato: "" },
 
     // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 34) ---
-    { id: 22, empresa: "SIMSAUDE SERVIÇOS SA", numeroCtt: "342/2025", prazoVencimento: "12 Meses até 16/11/2026", dataVencimentoIso: "2026-11-16", valorContrato: 828960.00, fiscal: "ADRI", status: "Ativo", objeto: "Consultas e Atendimentos Médicos (SIM SAÚDE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 16/11/2026 destacado no mural" },
-    { id: 23, empresa: "SILVANO TUPINAMBA DELFIM", numeroCtt: "345/2023", prazoVencimento: "12 Meses até 21/11/2026", dataVencimentoIso: "2026-11-21", valorContrato: 48000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel Especialidades (SILVANO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel Especialidades confirmado no mural: Venc 21/11/2026" },
-    { id: 24, empresa: "LUMIAR HEALTH BUILDERS EQUIP HOSP LTDA", numeroCtt: "303/2025", prazoVencimento: "12 Meses até 26/11/2026", dataVencimentoIso: "2026-11-26", valorContrato: 135700.00, fiscal: "FRAN", status: "Ativo", objeto: "Oxigenoterapia Domiciliar (LUMIAR OXIGENOTERAPIA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT atribuído: 303/2025 conforme mural" },
-    { id: 25, empresa: "TRANSALVA EMERGÊNCIAS MÉDICAS LTDA", numeroCtt: "442/2025", prazoVencimento: "12 Meses até 08/12/2026", dataVencimentoIso: "2026-12-08", valorContrato: 199800.05, fiscal: "NAIARA", status: "Ativo", objeto: "Ambulâncias de Suporte Avançado (TRANSALVA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 08/12/2026 destacado no mural" },
-    { id: 26, empresa: "DANIEL CARDOSO MAGNUS", numeroCtt: "195/2026", prazoVencimento: "12 Meses até 01/06/2027", dataVencimentoIso: "2027-06-01", valorContrato: 19800.00, fiscal: "LASIER", status: "Ativo", objeto: "Aplicação BTI Controle de Vetores (DANIEL APLICAÇÃO BTI)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 01/06/2027 confirmado no mural" },
-    { id: 27, empresa: "VIAÇÃO OURO E PRATA SA", numeroCtt: "231/2026", prazoVencimento: "12 Meses até 30/06/2027", dataVencimentoIso: "2027-06-30", valorContrato: 1355940.00, fiscal: "SANDRO", status: "Ativo", objeto: "Passagens TFD (OURO E PRATA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT 231/2026 confirmado no mural" },
-    { id: 28, empresa: "K & S EMPREENDIMENTOS IMOBILIARIOS LTDA", numeroCtt: "258/2026", prazoVencimento: "12 Meses até 15/07/2027", dataVencimentoIso: "2027-07-15", valorContrato: 96000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação de Imóvel para Fisioterapia (KS ALUGUEL FISIO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT 258/2026 confirmado no mural" },
-    { id: 29, empresa: "ULTRA AIR COMÉRCIO DE GASES INDUSTRIAIS", numeroCtt: "232/2025", prazoVencimento: "12 meses até 17/07/2027", dataVencimentoIso: "2027-07-17", valorContrato: 52266.50, fiscal: "ADRI", status: "Ativo", objeto: "Gases Medicinais e Ar Comprimido (ULTRA AIR)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 17/07/2027 confirmado no mural" },
-    { id: 30, empresa: "SOSSEG (EDUCAÇÃO)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços de Educação / Apoio à Saúde", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato" },
-    { id: 31, empresa: "CRISTO REI (CLÍNICA)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços e Consultas Clínicas", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato" },
-    { id: 32, empresa: "IB SAÚDE (HOSPITAL)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Gestão e Atendimento Hospitalar", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato" },
-    { id: 33, empresa: "APAE", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Assistência e Atendimento Especializado", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato" },
-    { id: 34, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico" }
+    { id: 22, empresa: "SIMSAUDE SERVIÇOS SA", numeroCtt: "342/2025", prazoVencimento: "12 Meses até 16/11/2026", dataVencimentoIso: "2026-11-16", valorContrato: 828960.00, fiscal: "ADRI", status: "Ativo", objeto: "Consultas e Atendimentos Médicos (SIM SAÚDE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 16/11/2026 destacado no mural", linkContrato: "" },
+    { id: 23, empresa: "SILVANO TUPINAMBA DELFIM", numeroCtt: "345/2023", prazoVencimento: "12 Meses até 21/11/2026", dataVencimentoIso: "2026-11-21", valorContrato: 48000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel Especialidades (SILVANO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel Especialidades confirmado no mural: Venc 21/11/2026", linkContrato: "" },
+    { id: 24, empresa: "LUMIAR HEALTH BUILDERS EQUIP HOSP LTDA", numeroCtt: "303/2025", prazoVencimento: "12 Meses até 26/11/2026", dataVencimentoIso: "2026-11-26", valorContrato: 135700.00, fiscal: "FRAN", status: "Ativo", objeto: "Oxigenoterapia Domiciliar (LUMIAR OXIGENOTERAPIA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT atribuído: 303/2025 conforme mural", linkContrato: "" },
+    { id: 25, empresa: "TRANSALVA EMERGÊNCIAS MÉDICAS LTDA", numeroCtt: "442/2025", prazoVencimento: "12 Meses até 08/12/2026", dataVencimentoIso: "2026-12-08", valorContrato: 199800.05, fiscal: "NAIARA", status: "Ativo", objeto: "Ambulâncias de Suporte Avançado (TRANSALVA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 08/12/2026 destacado no mural", linkContrato: "" },
+    { id: 26, empresa: "DANIEL CARDOSO MAGNUS", numeroCtt: "195/2026", prazoVencimento: "12 Meses até 01/06/2027", dataVencimentoIso: "2027-06-01", valorContrato: 19800.00, fiscal: "LASIER", status: "Ativo", objeto: "Aplicação BTI Controle de Vetores (DANIEL APLICAÇÃO BTI)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 01/06/2027 confirmado no mural", linkContrato: "" },
+    { id: 27, empresa: "VIAÇÃO OURO E PRATA SA", numeroCtt: "231/2026", prazoVencimento: "12 Meses até 30/06/2027", dataVencimentoIso: "2027-06-30", valorContrato: 1355940.00, fiscal: "SANDRO", status: "Ativo", objeto: "Passagens TFD (OURO E PRATA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT 231/2026 confirmado no mural", linkContrato: "" },
+    { id: 28, empresa: "K & S EMPREENDIMENTOS IMOBILIARIOS LTDA", numeroCtt: "258/2026", prazoVencimento: "12 Meses até 15/07/2027", dataVencimentoIso: "2027-07-15", valorContrato: 96000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação de Imóvel para Fisioterapia (KS ALUGUEL FISIO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT 258/2026 confirmado no mural", linkContrato: "" },
+    { id: 29, empresa: "ULTRA AIR COMÉRCIO DE GASES INDUSTRIAIS", numeroCtt: "232/2025", prazoVencimento: "12 meses até 17/07/2027", dataVencimentoIso: "2027-07-17", valorContrato: 52266.50, fiscal: "ADRI", status: "Ativo", objeto: "Gases Medicinais e Ar Comprimido (ULTRA AIR)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 17/07/2027 confirmado no mural", linkContrato: "" },
+    { id: 30, empresa: "SOSSEG (EDUCAÇÃO)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços de Educação / Apoio à Saúde", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
+    { id: 31, empresa: "CRISTO REI (CLÍNICA)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços e Consultas Clínicas", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
+    { id: 32, empresa: "IB SAÚDE (HOSPITAL)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Gestão e Atendimento Hospitalar", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
+    { id: 33, empresa: "APAE", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Assistência e Atendimento Especializado", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
+    { id: 34, empresa: "[ESPAÇO VAZIO - PAINEL MURAL]", numeroCtt: "S/N", prazoVencimento: "Espaço vago no mural físico", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Disponível", objeto: "Nicho vago no painel da Secretaria", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Espaço reservado vago no mural físico", linkContrato: "" }
   ],
 
   occupySlot(id) {
@@ -268,14 +289,35 @@ app.contratos = {
   },
 
   ensureMuralSync() {
-    const list = app.state.panelContracts || [];
+    let list = app.state.panelContracts || [];
+
+    // Higienização automática contra coerção de número de contrato em data
+    let modificado = false;
+    list.forEach(c => {
+      const formatado = this.formatCttNumber(c.numeroCtt);
+      if (formatado !== c.numeroCtt) {
+        c.numeroCtt = formatado;
+        modificado = true;
+      }
+      if (c.id === 8 && !c.linkContrato) {
+        c.linkContrato = "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109";
+        modificado = true;
+      }
+    });
+
+    if (modificado && app.data && app.data.saveLocalPanelContracts) {
+      app.data.saveLocalPanelContracts(list);
+    }
+
     const c1 = list.find(c => c.id === 1);
+    const c8 = list.find(c => c.id === 8);
     const hasNan = list.some(c => {
       const s = this.calculateStatus(c);
       return s.label && s.label.includes('NaN');
     });
+    const hasCarlosDateBug = c8 && (String(c8.numeroCtt).includes('GMT') || !c8.linkContrato);
 
-    const precisaSync = list.length !== 34 || !c1 || c1.numeroCtt !== '344/2025' || hasNan;
+    const precisaSync = list.length !== 34 || !c1 || c1.numeroCtt !== '344/2025' || hasNan || hasCarlosDateBug;
 
     if (precisaSync) {
       this.syncFromMuralData(false);
@@ -599,6 +641,20 @@ app.contratos = {
     }
   },
 
+  onLinkInput(prefix) {
+    const input = document.getElementById(`panel-${prefix}-link`);
+    const btn = document.getElementById(`panel-${prefix}-link-preview`);
+    if (!input || !btn) return;
+    const url = input.value.trim();
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+      btn.href = url;
+      btn.classList.remove('hidden');
+    } else {
+      btn.href = '#';
+      btn.classList.add('hidden');
+    }
+  },
+
   openNewModal() {
     if (!app.permissions.can('panel_create')) return app.ui.toast("Sem permissão para cadastrar contratos no painel.", "warning", "Acesso Restrito");
     const m = document.getElementById('modal-novo-painel-contrato');
@@ -613,6 +669,9 @@ app.contratos = {
       this.setupPrazoControls('new', '', '');
       document.getElementById('panel-new-objeto').value = '';
       document.getElementById('panel-new-observacao').value = '';
+      const linkInp = document.getElementById('panel-new-link');
+      if (linkInp) linkInp.value = '';
+      this.onLinkInput('new');
       setTimeout(() => document.getElementById('panel-new-empresa').focus(), 80);
     }
   },
@@ -634,6 +693,8 @@ app.contratos = {
     const prazoTxt = document.getElementById('panel-new-prazo-txt').value.trim();
     const objeto = document.getElementById('panel-new-objeto').value.trim();
     const obsTxt = document.getElementById('panel-new-observacao').value.trim();
+    const linkEl = document.getElementById('panel-new-link');
+    const linkContrato = linkEl ? linkEl.value.trim() : '';
 
     if (!empresa || !numCtt || !dataIso) return app.ui.toast("Preencha ao menos Empresa, Nº do Contrato e Vencimento.", "warning", "Campos Obrigatórios");
 
@@ -646,7 +707,7 @@ app.contratos = {
     const newObj = {
       id: Date.now(), empresa, numeroCtt, prazoVencimento: prazoTxt,
       dataVencimentoIso: dataIso, valorContrato: valor, fiscal,
-      status: "Ativo", objeto, criadoEm, criadoPor, observacao
+      status: "Ativo", objeto, criadoEm, criadoPor, observacao, linkContrato
     };
 
     if (!app.state.panelContracts) app.state.panelContracts = [];
@@ -693,12 +754,13 @@ app.contratos = {
 
     let num = '';
     let ano = '2026';
-    if (String(item.numeroCtt).includes('/')) {
-      const parts = String(item.numeroCtt).split('/');
+    const cttFormatado = this.formatCttNumber(item.numeroCtt);
+    if (String(cttFormatado).includes('/')) {
+      const parts = String(cttFormatado).split('/');
       num = parts[0].replace(/[^0-9]/g, '').slice(0, 5);
       ano = parts[1].trim() || '2026';
     } else {
-      num = String(item.numeroCtt).replace(/[^0-9]/g, '').slice(0, 5);
+      num = String(cttFormatado).replace(/[^0-9]/g, '').slice(0, 5);
     }
     document.getElementById('panel-edit-ctt-num').value = num;
     this.populateYearSelect(document.getElementById('panel-edit-ctt-ano'), ano);
@@ -719,6 +781,10 @@ app.contratos = {
       badgeEl.textContent = '';
       badgeEl.title = '';
     }
+
+    const linkEl = document.getElementById('panel-edit-link');
+    if (linkEl) linkEl.value = item.linkContrato || '';
+    this.onLinkInput('edit');
 
     const m = document.getElementById('modal-editar-painel-contrato');
     if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
@@ -743,6 +809,7 @@ app.contratos = {
     const currentUser = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
     const newObs = document.getElementById('panel-edit-observacao').value.trim();
     const obsFinal = this.applyRubrica(newObs, item.observacao || '', currentUser);
+    const linkEl = document.getElementById('panel-edit-link');
 
     item.empresa = document.getElementById('panel-edit-empresa').value.trim();
     item.numeroCtt = `${numCtt}/${anoCtt}`;
@@ -752,6 +819,7 @@ app.contratos = {
     item.prazoVencimento = document.getElementById('panel-edit-prazo-txt').value.trim();
     item.objeto = document.getElementById('panel-edit-objeto').value.trim();
     item.observacao = obsFinal;
+    item.linkContrato = linkEl ? linkEl.value.trim() : '';
 
     if (app.data && app.data.saveLocalPanelContracts) {
       app.data.saveLocalPanelContracts(app.state.panelContracts);
@@ -1099,7 +1167,7 @@ app.contratos = {
                 <h3 class="text-sm font-black text-purple-950 group-hover:text-purple-700 transition leading-snug" title="${c.empresa}">
                     ${c.empresa}
                 </h3>
-                <span class="block text-xs font-mono font-bold text-purple-600 mt-1">CTT: ${c.numeroCtt}</span>
+                <span class="block text-xs font-mono font-bold text-purple-600 mt-1">CTT: ${this.formatCttNumber(c.numeroCtt)}</span>
                 <div class="mt-3 p-3 bg-white/90 rounded-xl space-y-1 text-xs border border-purple-100">
                     <div class="flex justify-between">
                         <span class="text-slate-400 font-bold text-[10px] uppercase">Situação:</span>
@@ -1110,6 +1178,15 @@ app.contratos = {
                 ${c.observacao ? `
                   <div class="mt-2.5 p-2 bg-purple-100/60 border border-purple-200 rounded-xl text-[10px] text-purple-900 leading-snug">
                     📝 ${c.observacao}
+                  </div>
+                ` : ''}
+                ${c.linkContrato ? `
+                  <div class="mt-2.5">
+                    <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-200 transition shadow-2xs group/link" title="Abrir página oficial do contrato">
+                      <span>🔗</span>
+                      <span class="group-hover/link:underline">Ver no Portal Betha</span>
+                      <span class="text-[10px] text-purple-500">↗</span>
+                    </a>
                   </div>
                 ` : ''}
             </div>
@@ -1144,7 +1221,7 @@ app.contratos = {
               <h3 class="text-sm font-black text-slate-900 group-hover:text-blue-600 transition leading-snug line-clamp-2" title="${c.empresa}">
                   ${c.empresa}
               </h3>
-              <span class="block text-xs font-mono font-bold text-blue-600 mt-1">CTT: ${c.numeroCtt}</span>
+              <span class="block text-xs font-mono font-bold text-blue-600 mt-1">CTT: ${this.formatCttNumber(c.numeroCtt)}</span>
 
               <!-- DADOS FINANCEIROS E PRAZO -->
               <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
@@ -1163,6 +1240,17 @@ app.contratos = {
                     </div>
                   ` : ''}
               </div>
+
+              <!-- LINK OFICIAL DO CONTRATO NA PREFEITURA / BETHA CLOUD -->
+              ${c.linkContrato ? `
+                <div class="mt-2.5">
+                  <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/90 transition shadow-2xs group/link" title="Abrir página oficial do contrato na Prefeitura / Betha Transparência">
+                    <span>🔗</span>
+                    <span class="group-hover/link:underline">Contrato na Prefeitura (Betha)</span>
+                    <span class="text-[10px] text-blue-400">↗</span>
+                  </a>
+                </div>
+              ` : ''}
 
               ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
 
@@ -1230,9 +1318,17 @@ app.contratos = {
         <tr class="hover:bg-purple-50/50 bg-purple-50/20">
             <td class="p-3.5 font-bold text-purple-950">
                 <div>${c.empresa} (Posição #${c.id})</div>
+                ${c.linkContrato ? `
+                  <div class="mt-1">
+                    <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 hover:text-purple-900 hover:underline" title="Abrir página oficial do contrato">
+                      <span>🔗 Ver no Portal Betha</span>
+                      <span class="text-[9px]">↗</span>
+                    </a>
+                  </div>
+                ` : ''}
                 ${c.observacao ? `<div class="text-[10px] text-purple-700 font-semibold italic mt-0.5">📝 ${c.observacao}</div>` : ''}
             </td>
-            <td class="p-3.5 font-mono text-purple-600 font-bold">${c.numeroCtt}</td>
+            <td class="p-3.5 font-mono text-purple-600 font-bold">${this.formatCttNumber(c.numeroCtt)}</td>
             <td class="p-3.5 text-right font-bold text-slate-400">A Definir</td>
             <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-purple-100 font-bold text-[10px] text-purple-800">${c.fiscal}</span></td>
             <td class="p-3.5 text-purple-800 text-xs">${c.prazoVencimento}</td>
@@ -1253,9 +1349,17 @@ app.contratos = {
                   <span class="text-[10px] text-slate-400 font-mono">#${c.id}</span>
                   <span>${c.empresa}</span>
               </div>
+              ${c.linkContrato ? `
+                <div class="mt-1">
+                  <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline" title="Abrir página oficial do contrato na Prefeitura / Betha Cloud">
+                    <span>🔗 Ver no Portal Betha</span>
+                    <span class="text-[9px]">↗</span>
+                  </a>
+                </div>
+              ` : ''}
               ${c.observacao ? `<div class="text-[10px] text-amber-800 font-semibold italic mt-0.5 max-w-sm truncate" title="${c.observacao}">📝 ${c.observacao}</div>` : ''}
           </td>
-          <td class="p-3.5 font-mono text-blue-700 font-bold">${c.numeroCtt}</td>
+          <td class="p-3.5 font-mono text-blue-700 font-bold">${this.formatCttNumber(c.numeroCtt)}</td>
           <td class="p-3.5 text-right font-black text-slate-900">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
           <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold text-[10px]">${c.fiscal}</span></td>
           <td class="p-3.5 text-slate-800 text-xs">
@@ -1332,12 +1436,13 @@ app.contratos = {
 
   exportCSV() {
     const list = this.getFilteredList();
-    const headers = ["ID", "Empresa", "Numero_CTT", "Objeto", "Observacao", "Fiscal", "Prazo_Vencimento", "Vencimento_ISO", "Valor_Contrato", "Situacao"];
+    const headers = ["ID", "Empresa", "Numero_CTT", "Objeto", "Observacao", "Fiscal", "Prazo_Vencimento", "Vencimento_ISO", "Valor_Contrato", "Situacao", "Link_Contrato"];
     const rows = list.map(c => {
       const sem = this.calculateStatus(c);
       return [
-        c.id, `"${c.empresa.replace(/"/g, '""')}"`, `"${c.numeroCtt}"`, `"${(c.objeto || '').replace(/"/g, '""')}"`,
-        `"${(c.observacao || '').replace(/"/g, '""')}"`, `"${c.fiscal}"`, `"${c.prazoVencimento}"`, `"${c.dataVencimentoIso}"`, c.valorContrato, `"${sem.label}"`
+        c.id, `"${c.empresa.replace(/"/g, '""')}"`, `"${this.formatCttNumber(c.numeroCtt)}"`, `"${(c.objeto || '').replace(/"/g, '""')}"`,
+        `"${(c.observacao || '').replace(/"/g, '""')}"`, `"${c.fiscal}"`, `"${c.prazoVencimento}"`, `"${c.dataVencimentoIso}"`, c.valorContrato, `"${sem.label}"`,
+        `"${(c.linkContrato || '').replace(/"/g, '""')}"`
       ].join(";");
     });
 

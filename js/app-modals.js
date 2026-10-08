@@ -558,6 +558,19 @@ Exemplo do formato:
               <label class="block font-bold text-slate-600 mb-1">Observação Institucional (Opcional)</label>
               <textarea id="panel-new-observacao" rows="2" placeholder="Observações, ressalvas ou histórico administrativo (assinatura/rubrica automática ao gravar)..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
             </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-600">Link Oficial do Contrato (Portal / Betha Cloud)</label>
+                <a id="panel-new-link-preview" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[10px] font-black text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                  <span>↗ Abrir Link</span>
+                </a>
+              </div>
+              <div class="relative flex items-center">
+                <span class="absolute left-3 text-slate-400 text-xs">🔗</span>
+                <input type="url" id="panel-new-link" placeholder="Ex: https://transparencia.betha.cloud/#/... ou link do 1Doc" class="w-full pl-8 pr-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-medium text-slate-700" oninput="app.contratos.onLinkInput('new')">
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">Direciona para a página oficial do contrato na prefeitura, arquivos e anexos.</p>
+            </div>
             <div class="pt-3 flex gap-2">
               <button type="button" onclick="app.contratos.closeNewModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
               <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md">Salvar no Mural</button>
@@ -686,6 +699,19 @@ Exemplo do formato:
                 <span id="panel-edit-obs-rubrica-badge" class="text-[10px] text-amber-700 font-bold truncate max-w-[240px]"></span>
               </div>
               <textarea id="panel-edit-observacao" rows="2" placeholder="Observações, ressalvas ou histórico administrativo..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500"></textarea>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-600">Link Oficial do Contrato (Portal / Betha Cloud)</label>
+                <a id="panel-edit-link-preview" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[10px] font-black text-amber-700 hover:text-amber-900 flex items-center gap-1">
+                  <span>↗ Abrir Link</span>
+                </a>
+              </div>
+              <div class="relative flex items-center">
+                <span class="absolute left-3 text-slate-400 text-xs">🔗</span>
+                <input type="url" id="panel-edit-link" placeholder="Ex: https://transparencia.betha.cloud/#/... ou link do 1Doc" class="w-full pl-8 pr-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-medium text-slate-700" oninput="app.contratos.onLinkInput('edit')">
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">Direciona para a página oficial do contrato na prefeitura, arquivos e anexos.</p>
             </div>
             <div class="pt-3 flex gap-2">
               <button type="button" onclick="app.contratos.closeEditModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
