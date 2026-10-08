@@ -1624,9 +1624,6 @@ app.render.contratosHub = function(el) {
                 <p class="text-xs sm:text-sm text-slate-500 mt-1">Mural visual de monitoramento de vigências, semáforo de alerta e previsão orçamentária.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <button onclick="app.contratos.syncFromMuralData(true)" title="Reconciliar com as fotos do mural físico da Secretaria de Saúde" class="px-3.5 py-2 rounded-xl text-xs font-black text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 shadow-sm transition flex items-center gap-1.5">
-                    🔄 Sincronizar com Mural (31)
-                </button>
                 <button onclick="app.contratos.exportCSV()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
                     📥 Exportar Relatório LDO (.CSV)
                 </button>
