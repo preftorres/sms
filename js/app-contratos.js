@@ -1449,8 +1449,8 @@ app.contratos = {
         return `
           <div class="col-span-full p-12 text-center text-slate-500 font-medium text-xs bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col items-center justify-center">
             <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-            <span class="text-sm font-black text-slate-800">Carregando Contratos da Planilha...</span>
-            <span class="text-slate-400 text-xs mt-1">Sincronizando dados em tempo real com o Google Sheets</span>
+            <span class="text-sm font-black text-slate-800">Carregando Contratos...</span>
+            <span class="text-slate-400 text-xs mt-1">Sincronizando dados em tempo real com o servidor</span>
           </div>
         `;
       }

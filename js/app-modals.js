@@ -1435,7 +1435,7 @@ Exemplo do formato:
               <span id="global-wait-icon" class="absolute text-xl">📊</span>
             </div>
             <div>
-              <h3 id="global-wait-title" class="text-base sm:text-lg font-black text-slate-900">Carregando Dados da Planilha...</h3>
+              <h3 id="global-wait-title" class="text-base sm:text-lg font-black text-slate-900">Carregando Dados...</h3>
               <p id="global-wait-subtitle" class="text-xs text-slate-500 mt-1">Sincronizando registros em tempo real com o servidor</p>
             </div>
 
@@ -1447,7 +1447,7 @@ Exemplo do formato:
               </div>
               <div class="flex items-center gap-2 text-blue-700 font-bold animate-pulse">
                 <span class="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">⏳</span>
-                <span id="global-wait-step2">Consultando registros na planilha do Google...</span>
+                <span id="global-wait-step2">Consultando dados...</span>
               </div>
               <div class="flex items-center gap-2 text-slate-400">
                 <span class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">○</span>
@@ -1455,7 +1455,7 @@ Exemplo do formato:
               </div>
             </div>
 
-            <p class="text-[11px] text-slate-400 italic">Por favor, aguarde alguns instantes enquanto os dados da planilha são processados.</p>
+            <p class="text-[11px] text-slate-400 italic">Por favor, aguarde alguns instantes enquanto os dados são processados.</p>
           </div>
         </div>
       </div>

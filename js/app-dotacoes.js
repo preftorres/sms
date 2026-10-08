@@ -726,7 +726,7 @@ app.dotacoes = {
               <div class="flex flex-col items-center justify-center">
                 <div class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
                 <span class="text-sm font-black text-slate-800">Carregando Pedidos de Dotação...</span>
-                <span class="text-slate-400 text-xs mt-1">Sincronizando registros da planilha Google Sheets em tempo real</span>
+                <span class="text-slate-400 text-xs mt-1">Sincronizando registros em tempo real com o servidor</span>
               </div>
             </td>
           </tr>

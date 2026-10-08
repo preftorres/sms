@@ -198,9 +198,9 @@ Object.assign(window.app, {
         app.ui.showLoading({
           icon: "🔐",
           title: "Autenticando Acesso...",
-          subtitle: "Validando credenciais com a planilha de usuários",
+          subtitle: "Validando credenciais com a base de usuários",
           step1: "Credenciais enviadas com segurança",
-          step2: "Consultando planilha do Google Sheets...",
+          step2: "Consultando dados...",
           step3: "Liberando perfil e permissões de acesso"
         });
 
@@ -356,10 +356,10 @@ Object.assign(window.app, {
       if (showFeedback || options.showModal) {
         app.ui.showLoading({
           icon: options.icon || "📊",
-          title: options.title || "Sincronizando com a Planilha...",
-          subtitle: options.subtitle || "Carregando informações mais recentes do Google Sheets",
+          title: options.title || "Sincronizando Dados...",
+          subtitle: options.subtitle || "Carregando informações mais recentes do servidor",
           step1: options.step1 || "Conexão com o servidor estabelecida",
-          step2: options.step2 || "Consultando dados na planilha do Google...",
+          step2: options.step2 || "Consultando dados...",
           step3: options.step3 || "Atualizando painéis e tabelas"
         });
       }
@@ -569,37 +569,37 @@ Object.assign(window.app, {
         if (needsWait) {
           let loadingOpts = {
             icon: "📊",
-            title: "Carregando Dados da Planilha...",
+            title: "Carregando Dados...",
             subtitle: "Sincronizando registros em tempo real com o servidor",
             step1: "Conexão com a nuvem estabelecida",
-            step2: "Consultando registros na planilha do Google...",
+            step2: "Consultando dados...",
             step3: "Preparando exibição e atualizando painel"
           };
           if (view === 'contratos_hub') {
             loadingOpts = {
               icon: "📑",
               title: "Carregando Painel de Contratos...",
-              subtitle: "Sincronizando os 42 contratos contínuos com a planilha",
-              step1: "Conexão com a governança LDO estabelecida",
-              step2: "Consultando vigências e semáforos no Google Sheets...",
+              subtitle: "Sincronizando os contratos contínuos com o servidor",
+              step1: "Conexão com a governança estabelecida",
+              step2: "Consultando dados...",
               step3: "Atualizando mural de monitoramento"
             };
           } else if (view === 'dotacoes_hub') {
             loadingOpts = {
               icon: "📋",
               title: "Carregando Livro de Dotações...",
-              subtitle: "Sincronizando pedidos e baixas contábeis com a planilha",
+              subtitle: "Sincronizando pedidos e baixas contábeis com o servidor",
               step1: "Conexão com o livro contábil estabelecida",
-              step2: "Consultando solicitações no Google Sheets...",
+              step2: "Consultando dados...",
               step3: "Atualizando tabela do Livro Digital"
             };
           } else if (view === 'auditoria_hub' || view === 'auditoria_detalhe') {
             loadingOpts = {
               icon: "🧪",
               title: "Carregando Auditoria de Exames...",
-              subtitle: "Sincronizando contratos e procedimentos com a planilha",
+              subtitle: "Sincronizando contratos e procedimentos com o servidor",
               step1: "Conexão com a base de exames estabelecida",
-              step2: "Consultando cotas e faturamentos no Google Sheets...",
+              step2: "Consultando dados...",
               step3: "Atualizando painel de auditoria"
             };
           }
@@ -747,10 +747,10 @@ Object.assign(window.app, {
       const step3El = document.getElementById('global-wait-step3');
 
       if (iconEl) iconEl.textContent = options.icon || "📊";
-      if (titleEl) titleEl.textContent = options.title || "Carregando Dados da Planilha...";
+      if (titleEl) titleEl.textContent = options.title || "Carregando Dados...";
       if (subEl) subEl.textContent = options.subtitle || "Sincronizando registros em tempo real com o servidor";
       if (step1El) step1El.textContent = options.step1 || "Conexão segura com a nuvem estabelecida";
-      if (step2El) step2El.textContent = options.step2 || "Consultando registros na planilha do Google...";
+      if (step2El) step2El.textContent = options.step2 || "Consultando dados...";
       if (step3El) step3El.textContent = options.step3 || "Preparando exibição e atualizando painel";
 
       modal.classList.remove('hidden');
@@ -1520,8 +1520,8 @@ Object.assign(window.app, {
       if (app.ui && app.ui.showLoading) {
         app.ui.showLoading({
           title: "Carregando Trilha de Auditoria",
-          subtitle: "Consultando registros na planilha Google Sheets",
-          step1: "Conectando à aba de logs de auditoria",
+          subtitle: "Consultando dados do sistema",
+          step1: "Conectando à base de logs de auditoria",
           step2: "Recuperando histórico de ações e usuários",
           step3: "Formatando linha do tempo institucional",
           icon: "📜"
