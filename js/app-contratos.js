@@ -219,7 +219,10 @@ app.contratos = {
     { id: 30, empresa: "SOSSEG (EDUCAÇÃO)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços de Educação / Apoio à Saúde", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
     { id: 31, empresa: "CRISTO REI (CLÍNICA)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços e Consultas Clínicas", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
     { id: 32, empresa: "IB SAÚDE (HOSPITAL)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Gestão e Atendimento Hospitalar", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
-    { id: 33, empresa: "APAE", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Assistência e Atendimento Especializado", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" }
+    { id: 33, empresa: "APAE", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Assistência e Atendimento Especializado", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
+    { id: 34, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "400/2025", prazoVencimento: "12 Meses até 12/11/2026", dataVencimentoIso: "2026-11-12", valorContrato: 70962.20, fiscal: "SANDRO", status: "Ativo", objeto: "Serviços de Exames por Imagem e Diagnósticos (AMPLA MAIS)", criadoEm: "09/10/2026", criadoPor: "admin", observacao: "Pregão 329/2025 - Processo 18862/2025 (Biópsia, Endoscopia, EEG e Ecografia)", linkContrato: "", isCompartilhado: false, cotaSaude: 70962.20 },
+    { id: 35, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "432/2026", prazoVencimento: "12 Meses até 18/09/2027", dataVencimentoIso: "2027-09-18", valorContrato: 40080.60, fiscal: "SANDRO", status: "Ativo", objeto: "Exames de Ultrassonografia/Ecografia Mamária com extensão axilar (AMPLA MAIS)", criadoEm: "09/10/2026", criadoPor: "admin", observacao: "Pregão 329/2025 - Processo 20402/2026 - Portaria 306/2026 (Fiscal Sandro)", linkContrato: "", isCompartilhado: false, cotaSaude: 40080.60 },
+    { id: 36, empresa: "NILDIESEL RETÍTICA DE MOTORES LTDA", numeroCtt: "171/2026", prazoVencimento: "12 Meses até 08/05/2027", dataVencimentoIso: "2027-05-08", valorContrato: 331978.43, fiscal: "JANICE", status: "Ativo", objeto: "Manutenção Preventiva e Corretiva e Peças para Frota Linha Pesada (NILDIESEL)", criadoEm: "09/10/2026", criadoPor: "admin", observacao: "Pregão 50/2025 - Processo 9.225/2026. Fiscal Janice (Portaria 132/2025)", linkContrato: "", isCompartilhado: false, cotaSaude: 331978.43 }
   ],
 
   occupySlot(id) {
@@ -243,10 +246,13 @@ app.contratos = {
       });
     }
 
+    // Preserva contratos customizados criados pelo usuário
+    const customContracts = (app.state.panelContracts || []).filter(c => c && !this.MURAL_AUDIT_DATA.some(m => m.id === c.id));
     const muralList = JSON.parse(JSON.stringify(this.MURAL_AUDIT_DATA));
-    app.state.panelContracts = muralList;
+    const mergedList = [...customContracts, ...muralList];
+    app.state.panelContracts = mergedList;
     if (app.data && app.data.saveLocalPanelContracts) {
-      app.data.saveLocalPanelContracts(muralList);
+      app.data.saveLocalPanelContracts(mergedList);
     }
 
     muralList.forEach(c => {
@@ -268,16 +274,18 @@ app.contratos = {
       if (res && Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
         // Garantir que nenhum contrato vazio ou com status Disponível persista
         const limpo = res.panelContracts.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
-        app.state.panelContracts = limpo;
+        // Preserva contratos customizados locais
+        const unsynced = (app.state.panelContracts || []).filter(c => c && !limpo.some(l => l.id === c.id));
+        app.state.panelContracts = [...unsynced, ...limpo];
         if (app.data && app.data.saveLocalPanelContracts) {
-          app.data.saveLocalPanelContracts(limpo);
+          app.data.saveLocalPanelContracts(app.state.panelContracts);
         }
       }
       if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
-      app.ui.toast("Painel de contratos 100% alinhado com o mural (31 contratos)!", "success", "Mural Físico");
+      app.ui.toast("Painel de contratos alinhado com o mural!", "success", "Mural Físico");
     } catch(err) {
       console.warn("Sincronização em nuvem pendente, atualizado no cache local:", err);
-      app.ui.toast("Painel atualizado no navegador com os 31 contratos do mural!", "info", "Mural Físico");
+      app.ui.toast("Painel atualizado no navegador!", "info", "Mural Físico");
     } finally {
       if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
       const viewport = document.getElementById('app-viewport');
@@ -294,7 +302,6 @@ app.contratos = {
     const antesCount = list.length;
     list = list.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
     let modificado = list.length !== antesCount;
-    app.state.panelContracts = list;
 
     // Higienização automática contra coerção de número de contrato em data
     list.forEach(c => {
@@ -314,25 +321,31 @@ app.contratos = {
       }
     });
 
+    // Garante que os novos contratos oficiais 34, 35 e 36 estejam presentes na lista
+    [34, 35, 36].forEach(targetId => {
+      const jaExiste = list.some(c => c && (c.id === targetId || (c.numeroCtt && this.MURAL_AUDIT_DATA.find(m => m.id === targetId)?.numeroCtt === c.numeroCtt)));
+      if (!jaExiste) {
+        const itemMural = this.MURAL_AUDIT_DATA.find(m => m.id === targetId);
+        if (itemMural) {
+          list.push(JSON.parse(JSON.stringify(itemMural)));
+          modificado = true;
+        }
+      }
+    });
+
+    // Se o banco local estiver completamente vazio, inicializa a partir dos dados padrão
+    if (list.length === 0) {
+      list = JSON.parse(JSON.stringify(this.MURAL_AUDIT_DATA));
+      modificado = true;
+    }
+
+    app.state.panelContracts = list;
     if (modificado && app.data && app.data.saveLocalPanelContracts) {
       app.data.saveLocalPanelContracts(list);
     }
-
-    const c1 = list.find(c => c.id === 1);
-    const c8 = list.find(c => c.id === 8);
-    const hasNan = list.some(c => {
-      const s = this.calculateStatus(c);
-      return s.label && s.label.includes('NaN');
-    });
-    const hasCarlosDateBug = c8 && (String(c8.numeroCtt).includes('GMT') || !c8.linkContrato);
-    const precisaSync = list.length === 0 || !c1 || c1.numeroCtt !== '344/2025' || hasNan || hasCarlosDateBug;
-
-    if (precisaSync) {
-      this.syncFromMuralData(false);
-    }
   },
 
-  DEFAULT_FISCAIS: ["ADRI", "FRAN", "LASIER", "NAIARA", "PREFEITURA", "SANDRO"],
+  DEFAULT_FISCAIS: ["ADRI", "FRAN", "JANICE", "LASIER", "NAIARA", "PREFEITURA", "SANDRO"],
 
   getFiscais() {
     let list = null;
@@ -534,7 +547,7 @@ app.contratos = {
             </span>
           </div>
           <div class="text-[10px] text-slate-500 mt-1 flex items-center justify-between">
-            <span>Posição #${c.id} • ${c.objeto ? (c.objeto.length > 35 ? c.objeto.slice(0, 35) + '...' : c.objeto) : 'Serviço'}</span>
+            <span>${c.objeto ? (c.objeto.length > 40 ? c.objeto.slice(0, 40) + '...' : c.objeto) : 'Serviço'}</span>
             <span class="font-semibold text-slate-700">${c.dataVencimentoIso ? 'Venc: ' + this.formatDateBr(c.dataVencimentoIso) : (c.prazoVencimento || '-')}</span>
           </div>
         </div>
@@ -1538,7 +1551,7 @@ app.contratos = {
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600">
-                        Posição #${c.id} • Vago
+                        Espaço Vago
                     </span>
                     <span class="text-xs text-slate-400 group-hover:text-blue-600 font-bold">Mural Físico</span>
                 </div>
@@ -1567,7 +1580,7 @@ app.contratos = {
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 font-bold">
-                        Posição #${c.id} • Folha Afixada
+                        Folha Afixada
                     </span>
                     <span class="px-2 py-0.5 rounded-md bg-purple-100 font-mono text-[9px] font-black text-purple-800">
                         EM ELABORAÇÃO
@@ -1639,7 +1652,6 @@ app.contratos = {
                     ` : ''}
                   </div>
                   <div class="flex items-center gap-1">
-                      <span class="text-[9px] font-bold text-slate-400">#${c.id}</span>
                       <span class="px-2 py-0.5 rounded-md bg-slate-100 font-mono text-[10px] font-black text-slate-700">
                           FISCAL: ${c.fiscal}
                       </span>
@@ -1689,12 +1701,6 @@ app.contratos = {
                       <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento CTT:</span>
                       <span class="font-bold text-slate-800 text-xs">${this.formatDateBr(c.dataVencimentoIso) || 'Não informado'}</span>
                   </div>
-                  ${c.prazoVencimento && c.prazoVencimento !== 'Espaço vago no mural físico' && c.prazoVencimento !== 'Em fase de contratação' ? `
-                    <div class="flex justify-between items-center text-blue-800 bg-blue-50/90 px-2 py-1 rounded-lg border border-blue-100">
-                        <span class="font-black text-[9px] uppercase tracking-wider text-blue-600">Prazo / Alerta:</span>
-                        <span class="font-bold text-[11px] text-right truncate max-w-[140px]" title="${c.prazoVencimento}">${c.prazoVencimento}</span>
-                    </div>
-                  ` : ''}
               </div>
 
               <!-- LINK OFICIAL DO CONTRATO NA PREFEITURA / BETHA CLOUD -->
@@ -1754,7 +1760,7 @@ app.contratos = {
       return `
         <tr class="hover:bg-slate-50 bg-slate-50/50">
             <td class="p-3.5 font-bold text-slate-400 italic">
-                <div>⚪ ${c.empresa} (Posição #${c.id})</div>
+                <div>⚪ ${c.empresa}</div>
             </td>
             <td class="p-3.5 font-mono text-slate-400 font-bold">-</td>
             <td class="p-3.5 text-right font-bold text-slate-400">-</td>
@@ -1774,7 +1780,7 @@ app.contratos = {
       return `
         <tr class="hover:bg-purple-50/50 bg-purple-50/20">
             <td class="p-3.5 font-bold text-purple-950">
-                <div>${c.empresa} (Posição #${c.id})</div>
+                <div>${c.empresa}</div>
                 ${c.linkContrato ? `
                   <div class="mt-1">
                     <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 hover:text-purple-900 hover:underline" title="Abrir página oficial do contrato">
@@ -1805,7 +1811,6 @@ app.contratos = {
       <tr class="hover:bg-slate-50">
           <td class="p-3.5 font-bold text-slate-900">
               <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[10px] text-slate-400 font-mono">#${c.id}</span>
                   <span>${c.empresa}</span>
                   ${budget.isCompartilhado ? `
                     <span class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-blue-100 text-blue-800 border border-blue-200" title="Contrato compartilhado">🌐 Compartilhado</span>

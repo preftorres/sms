@@ -339,7 +339,10 @@ Object.assign(window.app, {
       localStorage.setItem(CONFIG.keys.activeContractTab, app.state.activeContractTab);
     },
 
-    saveLocalPanelContracts() {
+    saveLocalPanelContracts(list) {
+      if (list && Array.isArray(list)) {
+        app.state.panelContracts = list;
+      }
       localStorage.setItem(CONFIG.keys.panelContracts, JSON.stringify(app.state.panelContracts || []));
     },
 
@@ -442,7 +445,10 @@ Object.assign(window.app, {
             }
 
             if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-              app.state.panelContracts = res.panelContracts.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
+              const cloudPanel = res.panelContracts.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
+              const localList = app.state.panelContracts || [];
+              const unsyncedLocals = localList.filter(loc => loc && loc.id && !cloudPanel.some(cp => String(cp.id) === String(loc.id) || (cp.numeroCtt && loc.numeroCtt && String(cp.numeroCtt) === String(loc.numeroCtt) && String(cp.empresa).toLowerCase() === String(loc.empresa).toLowerCase())));
+              app.state.panelContracts = [...unsyncedLocals, ...cloudPanel];
               this.saveLocalPanelContracts();
               if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
                 app.render.contratosHub(document.getElementById('app-viewport'));
@@ -474,7 +480,9 @@ Object.assign(window.app, {
       if (!GOOGLE_API_URL) return;
       try {
         app.ui.setSyncStatus(true, "Salvando dados no servidor...");
-        payload.contract = app.state.activeContractTab;
+        if (!payload.contract) {
+          payload.contract = app.state.activeContractTab;
+        }
 
         // Injeta o usuário logado para trilha de auditoria
         if (!payload.currentUser) {
