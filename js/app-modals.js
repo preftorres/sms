@@ -445,7 +445,7 @@ Exemplo do formato:
       <!-- 9. PAINEL DE CONTRATOS LDO: NOVO CONTRATO                         -->
       <!-- ================================================================= -->
       <div id="modal-novo-painel-contrato" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 fade-in custom-scroll">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-base font-black text-slate-900">Novo Contrato no Mural Geral (LDO)</h3>
@@ -470,10 +470,53 @@ Exemplo do formato:
                 </div>
               </div>
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Valor Anual (R$)</label>
-                <input type="number" step="0.01" id="panel-new-valor" required placeholder="Ex: 48900.00" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
+                <label class="block font-bold text-slate-600 mb-1">Valor Global do Contrato (R$)</label>
+                <input type="number" step="0.01" id="panel-new-valor" required placeholder="Ex: 48900.00" oninput="app.contratos.onValorContratoInput('new')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
               </div>
             </div>
+
+            <!-- COTA ORÇAMENTÁRIA & DIVISÃO LDO / LOA -->
+            <div class="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs">🏛️</span>
+                  <label class="block font-black text-slate-800 text-xs">Cota Orçamentária • LDO / LOA</label>
+                </div>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs hover:bg-slate-50 transition">
+                  <input type="checkbox" id="panel-new-is-compartilhado" onchange="app.contratos.onCompartilhadoChange('new')" class="w-3.5 h-3.5 text-blue-600 rounded">
+                  <span>Contrato Compartilhado</span>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block font-bold text-slate-600 text-[11px] mb-1">
+                    Cota Específica da Saúde (R$)
+                  </label>
+                  <input type="number" step="0.01" id="panel-new-cota-saude" placeholder="Ex: 50000.00" oninput="app.contratos.onCotaSaudeInput('new')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-none focus:border-blue-500 font-bold text-xs">
+                  <p id="panel-new-cota-saude-hint" class="text-[10px] text-slate-400 mt-1">100% da Saúde (igual ao valor global)</p>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="block font-bold text-slate-600 text-[11px]">Comprometimento Anual</label>
+                    <button type="button" onclick="app.contratos.autoSuggestPartition('new')" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline">⚡ Sugerir</button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2026</span>
+                      <input type="number" step="0.01" id="panel-new-ex-atual" placeholder="2026" oninput="app.contratos.onBudgetPartitionInput('new')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-bold text-xs">
+                    </div>
+                    <div>
+                      <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2027 (LOA)</span>
+                      <input type="number" step="0.01" id="panel-new-ex-seguinte" placeholder="2027" oninput="app.contratos.onBudgetPartitionInput('new')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-bold text-xs">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="panel-new-budget-feedback" class="text-[10px] font-bold text-slate-500 pt-0.5"></div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Vencimento do Contrato</label>
@@ -583,7 +626,7 @@ Exemplo do formato:
       <!-- 10. PAINEL DE CONTRATOS LDO: EDITAR CONTRATO                      -->
       <!-- ================================================================= -->
       <div id="modal-editar-painel-contrato" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 fade-in custom-scroll">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-base font-black text-slate-900">Editar Contrato no Mural (LDO)</h3>
@@ -609,10 +652,53 @@ Exemplo do formato:
                 </div>
               </div>
               <div>
-                <label class="block font-bold text-slate-600 mb-1">Valor Anual (R$)</label>
-                <input type="number" step="0.01" id="panel-edit-valor" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
+                <label class="block font-bold text-slate-600 mb-1">Valor Global do Contrato (R$)</label>
+                <input type="number" step="0.01" id="panel-edit-valor" required oninput="app.contratos.onValorContratoInput('edit')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
               </div>
             </div>
+
+            <!-- COTA ORÇAMENTÁRIA & DIVISÃO LDO / LOA -->
+            <div class="p-3.5 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs">🏛️</span>
+                  <label class="block font-black text-slate-800 text-xs">Cota Orçamentária • LDO / LOA</label>
+                </div>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-lg border border-amber-200 shadow-2xs hover:bg-amber-50 transition">
+                  <input type="checkbox" id="panel-edit-is-compartilhado" onchange="app.contratos.onCompartilhadoChange('edit')" class="w-3.5 h-3.5 text-amber-600 rounded">
+                  <span>Contrato Compartilhado</span>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block font-bold text-slate-600 text-[11px] mb-1">
+                    Cota Específica da Saúde (R$)
+                  </label>
+                  <input type="number" step="0.01" id="panel-edit-cota-saude" placeholder="Ex: 50000.00" oninput="app.contratos.onCotaSaudeInput('edit')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-none focus:border-amber-500 font-bold text-xs">
+                  <p id="panel-edit-cota-saude-hint" class="text-[10px] text-slate-400 mt-1">100% da Saúde (igual ao valor global)</p>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="block font-bold text-slate-600 text-[11px]">Comprometimento Anual</label>
+                    <button type="button" onclick="app.contratos.autoSuggestPartition('edit')" class="text-[10px] font-bold text-amber-700 hover:text-amber-900 underline">⚡ Sugerir</button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2026</span>
+                      <input type="number" step="0.01" id="panel-edit-ex-atual" placeholder="2026" oninput="app.contratos.onBudgetPartitionInput('edit')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-amber-500 font-bold text-xs">
+                    </div>
+                    <div>
+                      <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2027 (LOA)</span>
+                      <input type="number" step="0.01" id="panel-edit-ex-seguinte" placeholder="2027" oninput="app.contratos.onBudgetPartitionInput('edit')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-amber-500 font-bold text-xs">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="panel-edit-budget-feedback" class="text-[10px] font-bold text-slate-500 pt-0.5"></div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Vencimento do Contrato</label>

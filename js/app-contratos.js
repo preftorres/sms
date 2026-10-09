@@ -195,7 +195,7 @@ app.contratos = {
     { id: 6, empresa: "JVS CENTRO TERAPÊUTICO LTDA", numeroCtt: "142/2023", prazoVencimento: "12 Meses até 03/11/2026", dataVencimentoIso: "2026-11-03", valorContrato: 107016.00, fiscal: "NAIARA", status: "Ativo", objeto: "Terapias Integradas e Multidisciplinares (JVS PLENO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 03/11/2026 destacado no mural", linkContrato: "" },
     { id: 7, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "390/2025", prazoVencimento: "12 Meses até 03/11/2026", dataVencimentoIso: "2026-11-03", valorContrato: 30684.06, fiscal: "SANDRO", status: "Ativo", objeto: "Serviços Médicos Especializados (AMPLA MAIS EXAMES)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 03/11/2026 destacado no mural", linkContrato: "" },
     { id: 8, empresa: "CARLOS DOS SANTOS TEIXEIRA", numeroCtt: "04/2023", prazoVencimento: "12 Meses até 04/01/2027", dataVencimentoIso: "2027-01-04", valorContrato: 180000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação Imóvel SAMU (CARLOS ALUGUEL SAMU)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel SAMU confirmado no mural: Venc 04/01/2027", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109" },
-    { id: 9, empresa: "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", numeroCtt: "14/2024", prazoVencimento: "12 Meses até 22/01/2027", dataVencimentoIso: "2027-01-22", valorContrato: 1074209.92, fiscal: "PREFEITURA", status: "Ativo", objeto: "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/01/2027 confirmado no mural", linkContrato: "" },
+    { id: 9, empresa: "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", numeroCtt: "14/2024", prazoVencimento: "12 Meses até 22/01/2027", dataVencimentoIso: "2027-01-22", valorContrato: 1074209.92, fiscal: "PREFEITURA", status: "Ativo", objeto: "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/01/2027 confirmado no mural", linkContrato: "", isCompartilhado: true, cotaSaude: 107420.99 },
     { id: 10, empresa: "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", numeroCtt: "29/2026", prazoVencimento: "12 Meses até 10/02/2027", dataVencimentoIso: "2027-02-10", valorContrato: 73200.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Outsourcing de Impressoras (TEC PRINTERS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Fiscal PREFEITURA confirmado no mural", linkContrato: "" },
     { id: 11, empresa: "IBG INDUSTRIA BRASILEIRA DE GASES LTDA", numeroCtt: "77/2024", prazoVencimento: "12 Meses até 22/02/2027", dataVencimentoIso: "2027-02-22", valorContrato: 46800.00, fiscal: "ADRI", status: "Ativo", objeto: "Fornecimento de Oxigênio Medicinal (IBG OXIGÊNIO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 22/02/2027 confirmado no mural", linkContrato: "" },
     { id: 12, empresa: "INSTITUTO DE AMPARO AO EXCEPCIONAL - INAMEX", numeroCtt: "125/2024", prazoVencimento: "12 Meses até 18/03/2027", dataVencimentoIso: "2027-03-18", valorContrato: 56337.48, fiscal: "NAIARA", status: "Ativo", objeto: "Acolhimento e Assistência Especial (INAMEX)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 18/03/2027 confirmado no mural", linkContrato: "" },
@@ -305,6 +305,11 @@ app.contratos = {
       }
       if (c.id === 8 && !c.linkContrato) {
         c.linkContrato = "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109";
+        modificado = true;
+      }
+      if (c.id === 9 && c.isCompartilhado === undefined) {
+        c.isCompartilhado = true;
+        c.cotaSaude = c.cotaSaude || 107420.99;
         modificado = true;
       }
     });
@@ -764,6 +769,154 @@ app.contratos = {
     }
   },
 
+  // --------------------------------------------------------------------------
+  // GESTÃO DE COTAÇÃO & DIVISÃO ORÇAMENTÁRIA (LDO / LOA)
+  // --------------------------------------------------------------------------
+  getContractBudget(c) {
+    if (!c) return { valorGlobal: 0, cotaSaude: 0, exercicioAtual: 0, exercicioSeguinte: 0, isCompartilhado: false, anoAtual: 2026, anoSeguinte: 2027 };
+    const valorGlobal = Number(c.valorContrato || 0);
+    const isCompartilhado = !!c.isCompartilhado;
+    let cotaSaude = (c.cotaSaude !== undefined && c.cotaSaude !== null && c.cotaSaude !== '') ? Number(c.cotaSaude) : valorGlobal;
+    if (!isCompartilhado) cotaSaude = valorGlobal;
+
+    let exAtual = (c.exercicioAtual !== undefined && c.exercicioAtual !== null && c.exercicioAtual !== '') ? Number(c.exercicioAtual) : null;
+    let exSeguinte = (c.exercicioSeguinte !== undefined && c.exercicioSeguinte !== null && c.exercicioSeguinte !== '') ? Number(c.exercicioSeguinte) : null;
+
+    if (exAtual === null || exSeguinte === null) {
+      const suggested = this.calculateEstimatedPartition(cotaSaude, c.dataVencimentoIso, c.prazoVencimento);
+      if (exAtual === null) exAtual = suggested.atual;
+      if (exSeguinte === null) exSeguinte = suggested.seguinte;
+    }
+
+    return {
+      valorGlobal,
+      cotaSaude,
+      exercicioAtual: exAtual,
+      exercicioSeguinte: exSeguinte,
+      isCompartilhado,
+      anoAtual: c.anoAtual || 2026,
+      anoSeguinte: c.anoSeguinte || 2027
+    };
+  },
+
+  calculateEstimatedPartition(totalVal, dataVencIso, prazoTxt = '') {
+    const val = Number(totalVal || 0);
+    if (!val || val <= 0) return { atual: 0, seguinte: 0 };
+
+    const dtVenc = this.getEffectiveDate({ dataVencimentoIso: dataVencIso, prazoVencimento: prazoTxt }) || this.parseAnyDate(dataVencIso);
+    if (!dtVenc) {
+      return { atual: val, seguinte: 0 };
+    }
+
+    const yearVenc = dtVenc.getFullYear();
+    const monthVenc = dtVenc.getMonth() + 1;
+
+    if (yearVenc <= 2026) {
+      return { atual: val, seguinte: 0 };
+    }
+
+    if (yearVenc === 2027) {
+      const monthsIn2027 = Math.min(12, Math.max(1, monthVenc));
+      const monthsIn2026 = 12 - monthsIn2027;
+      const val2026 = Math.round((val * (monthsIn2026 / 12)) * 100) / 100;
+      const val2027 = Math.round((val - val2026) * 100) / 100;
+      return { atual: val2026, seguinte: val2027 };
+    }
+
+    // Para contratos plurianuais (2028 em diante)
+    const val2026 = Math.round((val / 2) * 100) / 100;
+    return { atual: val2026, seguinte: Math.round((val - val2026) * 100) / 100 };
+  },
+
+  onValorContratoInput(prefix) {
+    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
+    const cotaInp = document.getElementById(`panel-${prefix}-cota-saude`);
+
+    if (chk && !chk.checked && cotaInp) {
+      cotaInp.value = valorGlobal > 0 ? valorGlobal : '';
+    }
+    this.autoSuggestPartition(prefix, false);
+    this.onBudgetPartitionInput(prefix);
+  },
+
+  onCompartilhadoChange(prefix) {
+    const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
+    const cotaInp = document.getElementById(`panel-${prefix}-cota-saude`);
+    const hint = document.getElementById(`panel-${prefix}-cota-saude-hint`);
+    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    const isComp = chk && chk.checked;
+
+    if (hint) {
+      if (isComp) {
+        hint.innerHTML = '<span class="text-blue-600 font-bold">🌐 Compartilhado:</span> informe apenas a parcela da Secretaria da Saúde.';
+      } else {
+        hint.textContent = '100% da Saúde (igual ao valor global do contrato)';
+      }
+    }
+
+    if (!isComp && cotaInp) {
+      cotaInp.value = valorGlobal > 0 ? valorGlobal : '';
+    }
+
+    this.onBudgetPartitionInput(prefix);
+  },
+
+  onCotaSaudeInput(prefix) {
+    this.onBudgetPartitionInput(prefix);
+  },
+
+  autoSuggestPartition(prefix, forceOverwrite = true) {
+    const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
+    const isComp = chk && chk.checked;
+    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    let cotaSaude = parseFloat(document.getElementById(`panel-${prefix}-cota-saude`)?.value);
+    if (!isComp || isNaN(cotaSaude)) cotaSaude = valorGlobal;
+
+    const vencIso = document.getElementById(`panel-${prefix}-venc-iso`)?.value;
+    const prazoTxt = document.getElementById(`panel-${prefix}-prazo-txt`)?.value || '';
+
+    const exAtualEl = document.getElementById(`panel-${prefix}-ex-atual`);
+    const exSeguinteEl = document.getElementById(`panel-${prefix}-ex-seguinte`);
+
+    if (forceOverwrite || (!exAtualEl?.value && !exSeguinteEl?.value)) {
+      const part = this.calculateEstimatedPartition(cotaSaude, vencIso, prazoTxt);
+      if (exAtualEl) exAtualEl.value = part.atual > 0 ? part.atual : (cotaSaude > 0 ? cotaSaude : '');
+      if (exSeguinteEl) exSeguinteEl.value = part.seguinte >= 0 ? part.seguinte : '0';
+    }
+
+    this.onBudgetPartitionInput(prefix);
+  },
+
+  onBudgetPartitionInput(prefix) {
+    const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
+    const isComp = chk && chk.checked;
+    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    let cotaSaude = parseFloat(document.getElementById(`panel-${prefix}-cota-saude`)?.value);
+    if (!isComp || isNaN(cotaSaude)) cotaSaude = valorGlobal;
+
+    const exAtual = parseFloat(document.getElementById(`panel-${prefix}-ex-atual`)?.value) || 0;
+    const exSeguinte = parseFloat(document.getElementById(`panel-${prefix}-ex-seguinte`)?.value) || 0;
+    const sum = Math.round((exAtual + exSeguinte) * 100) / 100;
+
+    const fb = document.getElementById(`panel-${prefix}-budget-feedback`);
+    if (!fb) return;
+
+    if (cotaSaude <= 0) {
+      fb.innerHTML = '<span class="text-slate-400">Preencha o valor do contrato para calcular as cotas anuais.</span>';
+      return;
+    }
+
+    const diff = Math.round((sum - cotaSaude) * 100) / 100;
+    if (Math.abs(diff) < 0.05) {
+      fb.innerHTML = `<span class="text-emerald-700 font-bold flex items-center gap-1"><span>✓</span> Soma dos exercícios: R$ ${sum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (100% da cota da Saúde conferida)</span>`;
+    } else if (diff < 0) {
+      fb.innerHTML = `<span class="text-amber-700 font-bold flex items-center gap-1"><span>⚠️</span> Soma dos exercícios: R$ ${sum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Faltam R$ ${Math.abs(diff).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} para totalizar R$ ${cotaSaude.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>`;
+    } else {
+      fb.innerHTML = `<span class="text-rose-700 font-bold flex items-center gap-1"><span>⚠️</span> Soma dos exercícios: R$ ${sum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Excede em R$ ${diff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} a cota da Saúde de R$ ${cotaSaude.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>`;
+    }
+  },
+
   openNewModal() {
     if (!app.permissions.can('panel_create')) return app.ui.toast("Sem permissão para cadastrar contratos no painel.", "warning", "Acesso Restrito");
     const m = document.getElementById('modal-novo-painel-contrato');
@@ -781,6 +934,18 @@ app.contratos = {
       const linkInp = document.getElementById('panel-new-link');
       if (linkInp) linkInp.value = '';
       this.onLinkInput('new');
+
+      // Campos de Cotação LDO / LOA
+      const chkComp = document.getElementById('panel-new-is-compartilhado');
+      if (chkComp) chkComp.checked = false;
+      const cotaEl = document.getElementById('panel-new-cota-saude');
+      if (cotaEl) cotaEl.value = '';
+      const exAtualEl = document.getElementById('panel-new-ex-atual');
+      if (exAtualEl) exAtualEl.value = '';
+      const exSeguinteEl = document.getElementById('panel-new-ex-seguinte');
+      if (exSeguinteEl) exSeguinteEl.value = '';
+      this.onCompartilhadoChange('new');
+
       setTimeout(() => document.getElementById('panel-new-empresa').focus(), 80);
     }
   },
@@ -813,10 +978,24 @@ app.contratos = {
     const criadoPor = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
     const observacao = obsTxt ? this.applyRubrica(obsTxt, '', criadoPor) : '';
 
+    // LDO / LOA
+    const isCompartilhado = document.getElementById('panel-new-is-compartilhado')?.checked || false;
+    let cotaSaude = parseFloat(document.getElementById('panel-new-cota-saude')?.value);
+    if (!isCompartilhado || isNaN(cotaSaude) || cotaSaude <= 0) {
+      cotaSaude = valor;
+    }
+    const exAtual = parseFloat(document.getElementById('panel-new-ex-atual')?.value);
+    const exSeguinte = parseFloat(document.getElementById('panel-new-ex-seguinte')?.value);
+    const part = this.calculateEstimatedPartition(cotaSaude, dataIso, prazoTxt);
+    const exercicioAtual = !isNaN(exAtual) && exAtual >= 0 ? exAtual : part.atual;
+    const exercicioSeguinte = !isNaN(exSeguinte) && exSeguinte >= 0 ? exSeguinte : part.seguinte;
+
     const newObj = {
       id: Date.now(), empresa, numeroCtt, prazoVencimento: prazoTxt,
       dataVencimentoIso: dataIso, valorContrato: valor, fiscal,
-      status: "Ativo", objeto, criadoEm, criadoPor, observacao, linkContrato
+      status: "Ativo", objeto, criadoEm, criadoPor, observacao, linkContrato,
+      isCompartilhado, cotaSaude, exercicioAtual, exercicioSeguinte,
+      anoAtual: 2026, anoSeguinte: 2027
     };
 
     if (!app.state.panelContracts) app.state.panelContracts = [];
@@ -895,6 +1074,19 @@ app.contratos = {
     if (linkEl) linkEl.value = item.linkContrato || '';
     this.onLinkInput('edit');
 
+    // Campos de Cotação LDO / LOA
+    const budget = this.getContractBudget(item);
+    const chkComp = document.getElementById('panel-edit-is-compartilhado');
+    if (chkComp) chkComp.checked = budget.isCompartilhado;
+    const cotaEl = document.getElementById('panel-edit-cota-saude');
+    if (cotaEl) cotaEl.value = budget.cotaSaude > 0 ? budget.cotaSaude : '';
+    const exAtualEl = document.getElementById('panel-edit-ex-atual');
+    if (exAtualEl) exAtualEl.value = budget.exercicioAtual > 0 ? budget.exercicioAtual : '';
+    const exSeguinteEl = document.getElementById('panel-edit-ex-seguinte');
+    if (exSeguinteEl) exSeguinteEl.value = budget.exercicioSeguinte >= 0 ? budget.exercicioSeguinte : '';
+    this.onCompartilhadoChange('edit');
+    this.onBudgetPartitionInput('edit');
+
     const m = document.getElementById('modal-editar-painel-contrato');
     if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
   },
@@ -929,6 +1121,25 @@ app.contratos = {
     item.objeto = document.getElementById('panel-edit-objeto').value.trim();
     item.observacao = obsFinal;
     item.linkContrato = linkEl ? linkEl.value.trim() : '';
+
+    // LDO / LOA
+    const isCompartilhado = document.getElementById('panel-edit-is-compartilhado')?.checked || false;
+    let cotaSaude = parseFloat(document.getElementById('panel-edit-cota-saude')?.value);
+    if (!isCompartilhado || isNaN(cotaSaude) || cotaSaude <= 0) {
+      cotaSaude = item.valorContrato;
+    }
+    const exAtual = parseFloat(document.getElementById('panel-edit-ex-atual')?.value);
+    const exSeguinte = parseFloat(document.getElementById('panel-edit-ex-seguinte')?.value);
+    const part = this.calculateEstimatedPartition(cotaSaude, item.dataVencimentoIso, item.prazoVencimento);
+    const exercicioAtual = !isNaN(exAtual) && exAtual >= 0 ? exAtual : part.atual;
+    const exercicioSeguinte = !isNaN(exSeguinte) && exSeguinte >= 0 ? exSeguinte : part.seguinte;
+
+    item.isCompartilhado = isCompartilhado;
+    item.cotaSaude = cotaSaude;
+    item.exercicioAtual = exercicioAtual;
+    item.exercicioSeguinte = exercicioSeguinte;
+    item.anoAtual = 2026;
+    item.anoSeguinte = 2027;
 
     if (app.data && app.data.saveLocalPanelContracts) {
       app.data.saveLocalPanelContracts(app.state.panelContracts);
@@ -1212,6 +1423,7 @@ app.contratos = {
       let matchStatus = true;
       if (app.state.panelContractsFilter === 'MURAL') matchStatus = true;
       else if (app.state.panelContractsFilter === 'ATIVOS') matchStatus = c.status === 'Ativo';
+      else if (app.state.panelContractsFilter === 'COMPARTILHADOS') matchStatus = !!c.isCompartilhado && c.status === 'Ativo';
       else if (app.state.panelContractsFilter === 'CRITICOS') matchStatus = semaforo.isUrgente && c.status === 'Ativo';
       else if (app.state.panelContractsFilter === 'ATENCAO') matchStatus = semaforo.label.includes('Atenção') && c.status === 'Ativo';
       else if (app.state.panelContractsFilter === 'PREVISTOS') matchStatus = c.status === 'Previsto' || c.status === 'Disponível';
@@ -1317,6 +1529,7 @@ app.contratos = {
   renderCard(c) {
     const sem = this.calculateStatus(c);
     const isArch = c.status === 'Arquivado';
+    const budget = this.getContractBudget(c);
 
     // RENDERIZAÇÃO DE ESPAÇO VAGO NO MURAL FÍSICO
     if (c.status === 'Disponível') {
@@ -1413,11 +1626,18 @@ app.contratos = {
     return `
       <div class="bg-white rounded-[2rem] p-5 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between group relative ${isArch ? 'opacity-70 bg-slate-50' : ''}">
           <div>
-              <!-- TOPO DO CARD: SEMÁFORO E FISCAL -->
+              <!-- TOPO DO CARD: SEMÁFORO, BADGE COMPARTILHADO E FISCAL -->
               <div class="flex items-center justify-between gap-1.5 mb-3">
-                  <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${sem.badgeClass}">
-                      ${sem.label}
-                  </span>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${sem.badgeClass}">
+                        ${sem.label}
+                    </span>
+                    ${budget.isCompartilhado ? `
+                      <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200" title="Contrato Compartilhado com outras secretarias">
+                          🌐 Compartilhado
+                      </span>
+                    ` : ''}
+                  </div>
                   <div class="flex items-center gap-1">
                       <span class="text-[9px] font-bold text-slate-400">#${c.id}</span>
                       <span class="px-2 py-0.5 rounded-md bg-slate-100 font-mono text-[10px] font-black text-slate-700">
@@ -1433,12 +1653,39 @@ app.contratos = {
               <span class="block text-xs font-mono font-bold text-blue-600 mt-1">CTT: ${this.formatCttNumber(c.numeroCtt)}</span>
 
               <!-- DADOS FINANCEIROS E PRAZO -->
-              <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                  <div class="flex justify-between">
-                      <span class="text-slate-400 font-bold text-[10px] uppercase">Valor Anual:</span>
+              <div class="mt-3 p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
+                  <div class="flex justify-between items-center">
+                      <span class="text-slate-400 font-bold text-[10px] uppercase">${budget.isCompartilhado ? 'Global (Prefeitura):' : 'Valor Contrato:'}</span>
                       <span class="font-black text-slate-900 text-xs">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
-                  <div class="flex justify-between">
+                  ${budget.isCompartilhado ? `
+                    <div class="flex justify-between items-center bg-blue-50/80 px-2 py-1 rounded-lg border border-blue-200">
+                        <span class="font-black text-[10px] uppercase tracking-wide text-blue-800 flex items-center gap-1">
+                            <span>🏛️</span> Cota da Saúde:
+                        </span>
+                        <span class="font-black text-blue-900 text-xs">R$ ${budget.cotaSaude.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ` : ''}
+
+                  <!-- DIVISÃO POR EXERCÍCIO LDO / LOA -->
+                  <div class="pt-1.5 border-t border-slate-200/70">
+                      <div class="flex justify-between items-center mb-1">
+                          <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Cota por Exercício:</span>
+                          <span class="text-[9px] font-bold text-slate-500">LDO / LOA</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                          <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                              <span class="text-slate-400 block font-bold text-[9px] uppercase">2026 (Vigente):</span>
+                              <span class="font-black text-slate-800">R$ ${budget.exercicioAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                              <span class="text-slate-400 block font-bold text-[9px] uppercase">2027 (LOA):</span>
+                              <span class="font-black text-emerald-700">R$ ${budget.exercicioSeguinte.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="flex justify-between items-center pt-0.5">
                       <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento CTT:</span>
                       <span class="font-bold text-slate-800 text-xs">${this.formatDateBr(c.dataVencimentoIso) || 'Não informado'}</span>
                   </div>
@@ -1501,6 +1748,7 @@ app.contratos = {
 
   renderTableRow(c) {
     const sem = this.calculateStatus(c);
+    const budget = this.getContractBudget(c);
 
     if (c.status === 'Disponível') {
       return `
@@ -1556,9 +1804,12 @@ app.contratos = {
     return `
       <tr class="hover:bg-slate-50">
           <td class="p-3.5 font-bold text-slate-900">
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-[10px] text-slate-400 font-mono">#${c.id}</span>
                   <span>${c.empresa}</span>
+                  ${budget.isCompartilhado ? `
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-blue-100 text-blue-800 border border-blue-200" title="Contrato compartilhado">🌐 Compartilhado</span>
+                  ` : ''}
               </div>
               ${c.linkContrato ? `
                 <div class="mt-1">
@@ -1571,7 +1822,15 @@ app.contratos = {
               ${c.observacao ? `<div class="text-[10px] text-amber-800 font-semibold italic mt-0.5 max-w-sm truncate" title="${c.observacao}">📝 ${c.observacao}</div>` : ''}
           </td>
           <td class="p-3.5 font-mono text-blue-700 font-bold">${this.formatCttNumber(c.numeroCtt)}</td>
-          <td class="p-3.5 text-right font-black text-slate-900">R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+          <td class="p-3.5 text-right font-black text-slate-900">
+              <div>R$ ${c.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              ${budget.isCompartilhado ? `
+                <div class="text-[10px] text-blue-700 font-black">Cota SMS: R$ ${budget.cotaSaude.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              ` : ''}
+              <div class="text-[9px] text-slate-500 font-bold mt-0.5 whitespace-nowrap">
+                2026: R$ ${budget.exercicioAtual.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} | 2027: R$ ${budget.exercicioSeguinte.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+              </div>
+          </td>
           <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 font-bold text-[10px]">${c.fiscal}</span></td>
           <td class="p-3.5 text-slate-800 text-xs">
               <div class="font-bold">${this.formatDateBr(c.dataVencimentoIso) || '-'}</div>
@@ -1647,12 +1906,30 @@ app.contratos = {
 
   exportCSV() {
     const list = this.getFilteredList();
-    const headers = ["ID", "Empresa", "Numero_CTT", "Objeto", "Observacao", "Fiscal", "Prazo_Vencimento", "Vencimento_ISO", "Valor_Contrato", "Situacao", "Link_Contrato"];
+    const headers = [
+      "ID", "Empresa", "Numero_CTT", "Objeto", "Observacao", "Fiscal", 
+      "Prazo_Vencimento", "Vencimento_ISO", "Compartilhado", 
+      "Valor_Global_Prefeitura", "Cota_Saude_FMS", "Exercicio_2026_RS", 
+      "Exercicio_2027_LOA_RS", "Situacao", "Link_Contrato"
+    ];
     const rows = list.map(c => {
       const sem = this.calculateStatus(c);
+      const b = this.getContractBudget(c);
       return [
-        c.id, `"${c.empresa.replace(/"/g, '""')}"`, `"${this.formatCttNumber(c.numeroCtt)}"`, `"${(c.objeto || '').replace(/"/g, '""')}"`,
-        `"${(c.observacao || '').replace(/"/g, '""')}"`, `"${c.fiscal}"`, `"${c.prazoVencimento}"`, `"${c.dataVencimentoIso}"`, c.valorContrato, `"${sem.label}"`,
+        c.id, 
+        `"${c.empresa.replace(/"/g, '""')}"`, 
+        `"${this.formatCttNumber(c.numeroCtt)}"`, 
+        `"${(c.objeto || '').replace(/"/g, '""')}"`,
+        `"${(c.observacao || '').replace(/"/g, '""')}"`, 
+        `"${c.fiscal}"`, 
+        `"${c.prazoVencimento}"`, 
+        `"${c.dataVencimentoIso}"`,
+        b.isCompartilhado ? "SIM" : "NAO",
+        b.valorGlobal.toFixed(2),
+        b.cotaSaude.toFixed(2),
+        b.exercicioAtual.toFixed(2),
+        b.exercicioSeguinte.toFixed(2),
+        `"${sem.label}"`,
         `"${(c.linkContrato || '').replace(/"/g, '""')}"`
       ].join(";");
     });
@@ -1662,7 +1939,7 @@ app.contratos = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Painel_Contratos_Saude_Torres_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `Painel_Contratos_LDO_LOA_Saude_Torres_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1695,16 +1972,23 @@ app.render.contratosHub = function(el) {
     return s.label.includes('Atenção');
   });
   
-  // CÁLCULOS DOS KPIS SOLICITADOS
+  // CÁLCULOS DOS KPIS LDO / LOA
   const totalPosicoesMural = allContracts.length;
   const totalAtivos = activeContracts.length;
-  const montanteGlobal = activeContracts.reduce((acc, c) => acc + (c.valorContrato || 0), 0);
-  const valorMedio = totalAtivos > 0 ? (montanteGlobal / totalAtivos) : 0;
-  
-  // MAIOR CONTRATO
-  let maiorContrato = { valorContrato: 0, empresa: "Nenhum", numeroCtt: "" };
+
+  let montanteGlobalPrefeitura = 0;
+  let totalCotaSaude = 0;
+  let totalComprometido2026 = 0;
+  let totalComprometido2027 = 0;
+  let totalCompartilhados = 0;
+
   activeContracts.forEach(c => {
-    if (c.valorContrato > maiorContrato.valorContrato) maiorContrato = c;
+    const b = app.contratos.getContractBudget(c);
+    montanteGlobalPrefeitura += b.valorGlobal;
+    totalCotaSaude += b.cotaSaude;
+    totalComprometido2026 += b.exercicioAtual;
+    totalComprometido2027 += b.exercicioSeguinte;
+    if (b.isCompartilhado) totalCompartilhados++;
   });
 
   const filteredList = app.contratos.getFilteredList();
@@ -1727,11 +2011,11 @@ app.render.contratosHub = function(el) {
             <div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Governança Fiscal • Lei nº 5.627 (LDO Torres)</span>
                 <h2 class="text-2xl sm:text-3xl font-black text-slate-900">Painel & Gestão Geral de Contratos</h2>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Mural visual de monitoramento de vigências, semáforo de alerta e previsão orçamentária.</p>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Mural visual de monitoramento de vigências, semáforo de alerta e previsão orçamentária para LDO / LOA.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <button onclick="app.contratos.exportCSV()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
-                    📥 Exportar Relatório LDO (.CSV)
+                    📥 Exportar Relatório LDO / LOA (.CSV)
                 </button>
                 <button onclick="window.print()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition">
                     🖨️ Imprimir
@@ -1744,34 +2028,46 @@ app.render.contratosHub = function(el) {
             </div>
         </div>
 
-        <!-- OS 4 KPIS OBRIGATÓRIOS DO TOPO -->
+        <!-- OS 4 KPIS ESTRATÉGICOS DO TOPO (LDO / LOA) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <!-- 1. TOTAL DE POSIÇÕES NO MURAL -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mural de Contratos</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mural de Contratos</span>
+                    <span class="p-1 bg-slate-100 rounded text-slate-600 text-xs">📋</span>
+                </div>
                 <p class="text-2xl font-black text-slate-900 mt-1">${totalPosicoesMural} Contratos</p>
-                <span class="text-[10px] text-slate-500 font-semibold">${totalAtivos} ativos vigentes • ${previstosList.length} em elaboração</span>
+                <span class="text-[10px] text-slate-500 font-semibold">${totalAtivos} ativos vigentes • ${totalCompartilhados} compartilhados</span>
             </div>
 
-            <!-- 2. VALOR MÉDIO -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Valor Médio (Vigentes)</span>
-                <p class="text-xl sm:text-2xl font-black text-blue-700 mt-1">R$ ${valorMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <span class="text-[10px] text-slate-400">Média por ajuste formal ativo</span>
+            <!-- 2. TOTAL COTA SAÚDE (FMS) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 bg-blue-50/20">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-blue-900 uppercase tracking-wider">Cota Total da Saúde (FMS)</span>
+                    <span class="p-1 bg-blue-100 rounded text-blue-700 text-xs">🏛️</span>
+                </div>
+                <p class="text-xl sm:text-2xl font-black text-blue-700 mt-1">R$ ${totalCotaSaude.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <span class="text-[10px] text-slate-500 font-medium truncate block" title="Global Prefeitura: R$ ${montanteGlobalPrefeitura.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}">Global Prefeitura: R$ ${montanteGlobalPrefeitura.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
 
-            <!-- 3. MAIOR CONTRATO -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 bg-indigo-50/30">
-                <span class="text-[10px] font-black text-indigo-900 uppercase tracking-wider">Maior Contrato em Vigor</span>
-                <p class="text-lg sm:text-xl font-black text-indigo-900 mt-1 truncate" title="${maiorContrato.empresa}">R$ ${maiorContrato.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                <span class="text-[10px] text-indigo-700 font-bold truncate block">${maiorContrato.empresa} (${maiorContrato.numeroCtt})</span>
+            <!-- 3. COMPROMETIDO EXERCÍCIO 2026 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-amber-100 bg-amber-50/30">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider">Exercício 2026 (Ano Vigente)</span>
+                    <span class="p-1 bg-amber-100 rounded text-amber-800 text-xs">📅</span>
+                </div>
+                <p class="text-xl sm:text-2xl font-black text-amber-800 mt-1">R$ ${totalComprometido2026.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <span class="text-[10px] text-amber-700 font-bold">Comprometimento do orçamento atual</span>
             </div>
 
-            <!-- 4. MONTANTE GLOBAL LDO -->
+            <!-- 4. RESERVA LOA 2027 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 bg-emerald-50/30">
-                <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider">Total Contratualizado (FMS)</span>
-                <p class="text-xl sm:text-2xl font-black text-emerald-800 mt-1">R$ ${montanteGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                <span class="text-[10px] text-emerald-700 font-bold">Reserva continuada para LOA 2027</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider">Reserva para LOA 2027</span>
+                    <span class="p-1 bg-emerald-100 rounded text-emerald-800 text-xs">🎯</span>
+                </div>
+                <p class="text-xl sm:text-2xl font-black text-emerald-800 mt-1">R$ ${totalComprometido2027.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <span class="text-[10px] text-emerald-700 font-bold">Previsão obrigatória LDO / LOA 2027</span>
             </div>
         </div>
 
@@ -1791,6 +2087,7 @@ app.render.contratosHub = function(el) {
                 <select id="panel-contratos-filter-select" onchange="app.contratos.setFilter(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
                     <option value="MURAL" ${currFilter === 'MURAL' ? 'selected' : ''}>🖼️ Mural (${totalPosicoesMural})</option>
                     <option value="ATIVOS" ${currFilter === 'ATIVOS' ? 'selected' : ''}>🟢 Ativos (${totalAtivos})</option>
+                    <option value="COMPARTILHADOS" ${currFilter === 'COMPARTILHADOS' ? 'selected' : ''}>🌐 Compartilhados (${totalCompartilhados})</option>
                     <option value="CRITICOS" ${currFilter === 'CRITICOS' ? 'selected' : ''}>🔴 Críticos (${criticosList.length})</option>
                     <option value="ATENCAO" ${currFilter === 'ATENCAO' ? 'selected' : ''}>🟡 Atenção (${atencaoList.length})</option>
                     <option value="PREVISTOS" ${currFilter === 'PREVISTOS' ? 'selected' : ''}>📝 Previstos (${previstosList.length})</option>
