@@ -319,7 +319,7 @@ Object.assign(window.app, {
       try {
         let listP = rawPanel ? JSON.parse(rawPanel) : [];
         if (Array.isArray(listP)) {
-          listP = listP.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+          listP = listP.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
         }
         app.state.panelContracts = listP;
       } catch(e) {
@@ -442,7 +442,7 @@ Object.assign(window.app, {
             }
 
             if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-              app.state.panelContracts = res.panelContracts.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+              app.state.panelContracts = res.panelContracts.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
               this.saveLocalPanelContracts();
               if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
                 app.render.contratosHub(document.getElementById('app-viewport'));

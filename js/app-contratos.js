@@ -266,8 +266,8 @@ app.contratos = {
         currentUser: (app.state.auth && app.state.auth.user && app.state.auth.user.usuario) || 'admin'
       });
       if (res && Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-        // Garantir que nenhum contrato com status Disponível persista
-        const limpo = res.panelContracts.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+        // Garantir que nenhum contrato vazio ou com status Disponível persista
+        const limpo = res.panelContracts.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
         app.state.panelContracts = limpo;
         if (app.data && app.data.saveLocalPanelContracts) {
           app.data.saveLocalPanelContracts(limpo);
@@ -290,9 +290,9 @@ app.contratos = {
   ensureMuralSync() {
     let list = app.state.panelContracts || [];
 
-    // Limpeza de contratos com status "Disponível" ou "ESPAÇO VAZIO"
+    // Limpeza de contratos com status "Disponível", "ESPAÇO VAZIO" ou sem empresa
     const antesCount = list.length;
-    list = list.filter(c => c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO'));
+    list = list.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
     let modificado = list.length !== antesCount;
     app.state.panelContracts = list;
 
@@ -1409,7 +1409,7 @@ app.contratos = {
   },
 
   getFilteredList() {
-    let list = app.state.panelContracts || [];
+    let list = (app.state.panelContracts || []).filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
 
     const normalize = (str) => String(str || '')
       .normalize("NFD")
@@ -1426,7 +1426,7 @@ app.contratos = {
       else if (app.state.panelContractsFilter === 'COMPARTILHADOS') matchStatus = !!c.isCompartilhado && c.status === 'Ativo';
       else if (app.state.panelContractsFilter === 'CRITICOS') matchStatus = semaforo.isUrgente && c.status === 'Ativo';
       else if (app.state.panelContractsFilter === 'ATENCAO') matchStatus = semaforo.label.includes('Atenção') && c.status === 'Ativo';
-      else if (app.state.panelContractsFilter === 'PREVISTOS') matchStatus = c.status === 'Previsto' || c.status === 'Disponível';
+      else if (app.state.panelContractsFilter === 'PREVISTOS') matchStatus = c.status === 'Previsto';
       else if (app.state.panelContractsFilter === 'ARQUIVADOS') matchStatus = c.status === 'Arquivado';
 
       // Filtro Fiscal
@@ -1960,7 +1960,13 @@ app.render.contratosHub = function(el) {
     app.state.panelContractsFilter = 'MURAL';
   }
 
-  const allContracts = app.state.panelContracts || [];
+  const allContracts = (app.state.panelContracts || []).filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
+  if (allContracts.length !== (app.state.panelContracts || []).length) {
+    app.state.panelContracts = allContracts;
+    if (app.data && app.data.saveLocalPanelContracts) {
+      app.data.saveLocalPanelContracts(allContracts);
+    }
+  }
   const activeContracts = allContracts.filter(c => c.status === 'Ativo');
   const previstosList = allContracts.filter(c => c.status === 'Previsto');
   const criticosList = activeContracts.filter(c => {

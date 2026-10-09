@@ -429,6 +429,10 @@ function getPanelContractsList(ss) {
   const list = [];
   for (let i = 1; i < rows.length; i++) {
     if (!rows[i][0] && rows[i][0] !== 0) continue;
+    const empresa = String(rows[i][1] || "").trim();
+    if (!empresa || empresa.indexOf("ESPAÇO VAZIO") !== -1) continue;
+    const status = String(rows[i][7] || "Ativo").trim();
+    if (status === "Disponível") continue;
     list.push({
       id: Number(rows[i][0]),
       empresa: String(rows[i][1]),
@@ -820,6 +824,9 @@ function doPost(e) {
     if (action === "CREATE_PANEL_CONTRACT") {
       const sheet = ensurePanelContractsStructure(ss);
       const c = payload.contract;
+      if (!c || !String(c.empresa || '').trim() || !String(c.numeroCtt || '').trim()) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Empresa e número de contrato são obrigatórios." })).setMimeType(ContentService.MimeType.JSON);
+      }
       sheet.appendRow([
         c.id || Date.now(), c.empresa, String(c.numeroCtt || ""), c.prazoVencimento, c.dataVencimentoIso,
         c.valorContrato, c.fiscal, "Ativo", c.objeto || "", c.criadoEm || "", c.criadoPor || "",
