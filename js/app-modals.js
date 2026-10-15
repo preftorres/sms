@@ -629,7 +629,12 @@ Exemplo do formato:
         <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 fade-in custom-scroll">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="text-base font-black text-slate-900">Editar Contrato no Mural (LDO)</h3>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-black text-slate-900">Editar Contrato no Mural (LDO)</h3>
+                <a href="javascript:void(0)" onclick="app.contratos.openContractHistoryModal()" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-lg transition shadow-2xs">
+                  <span>📜 Alterações</span>
+                </a>
+              </div>
               <p class="text-[11px] text-slate-500">Atualizar vigência, valores, fiscal e apontamentos</p>
             </div>
             <button onclick="app.contratos.closeEditModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
@@ -782,9 +787,11 @@ Exemplo do formato:
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="block font-bold text-slate-600">Observação Institucional (Opcional)</label>
-                <span id="panel-edit-obs-rubrica-badge" class="text-[10px] text-amber-700 font-bold truncate max-w-[240px]"></span>
+                <a href="javascript:void(0)" onclick="app.contratos.openContractHistoryModal()" class="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer">
+                  <span>📜 Alterações</span>
+                </a>
               </div>
-              <textarea id="panel-edit-observacao" rows="2" placeholder="Observações, ressalvas ou histórico administrativo..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500"></textarea>
+              <textarea id="panel-edit-observacao" rows="3" placeholder="Observações, ressalvas ou histórico administrativo..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500"></textarea>
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
@@ -1556,6 +1563,35 @@ Exemplo do formato:
           <div class="flex gap-2">
             <button onclick="app.admin.closeDeleteUserModal()" class="flex-1 py-2.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
             <button onclick="app.admin.confirmDeleteUser()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs shadow-md transition">Sim, Excluir</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- MODAL: HISTÓRICO DE ALTERAÇÕES DO CONTRATO                        -->
+      <!-- ================================================================= -->
+      <div id="modal-historico-alteracoes-contrato" class="hidden fixed inset-0 z-[70] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-2xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-100 fade-in">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">📜</span>
+                <h3 class="text-base font-black text-slate-900">Histórico de Alterações</h3>
+              </div>
+              <p id="hist-ctt-subtitulo" class="text-xs text-slate-500 mt-0.5 font-medium">Contrato — Empresa</p>
+            </div>
+            <button type="button" onclick="app.contratos.closeContractHistoryModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1.5 rounded-lg hover:bg-slate-100 transition">✕</button>
+          </div>
+
+          <!-- Conteúdo com rolagem -->
+          <div id="hist-ctt-lista" class="flex-1 overflow-y-auto space-y-3 custom-scroll pr-1">
+            <!-- Injetado dinamicamente via app.contratos.renderContractHistory -->
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 mt-4 flex justify-end">
+            <button type="button" onclick="app.contratos.closeContractHistoryModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+              Voltar à Edição
+            </button>
           </div>
         </div>
       </div>

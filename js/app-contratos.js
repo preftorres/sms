@@ -579,19 +579,73 @@ app.contratos = {
     }
   },
 
-  applyRubrica(novoTexto, textoOriginal, usuario) {
-    const novo = String(novoTexto || '').trim();
-    const orig = String(textoOriginal || '').trim();
-    if (!novo) return '';
-    if (novo === orig) return orig;
+  cleanObservacao(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/^\[\s*[^\]]+?\s+em\s+\d{1,2}\/\d{1,2}\/\d{4}[^\]]*?\]\s*:?\s*/gi, '')
+      .replace(/\s*\|\s*\[\s*[^\]]+?\s+em\s+\d{1,2}\/\d{1,2}\/\d{4}[^\]]*?\]\s*$/gi, '')
+      .replace(/\[\s*[^\]]+?\s+em\s+\d{1,2}\/\d{1,2}\/\d{4}[^\]]*?\]\s*:?/gi, '')
+      .trim();
+  },
 
-    const now = new Date();
-    const dataHora = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-    
-    if (!novo.startsWith('[')) {
-      return `[${usuario} em ${dataHora}]: ${novo}`;
+  extractLegacyRubricas(text) {
+    if (!text) return [];
+    const str = String(text).trim();
+    if (!str) return [];
+
+    const rubricaRegex = /\[\s*([^\]]+?)\s+em\s+(\d{1,2}\/\d{1,2}\/\d{4}[^\]]*?)\s*\]/gi;
+    const matches = [];
+    let m;
+    while ((m = rubricaRegex.exec(str)) !== null) {
+      matches.push({
+        usuario: m[1].trim(),
+        dataHora: m[2].trim().replace(/\s+s\s+/i, ' às '),
+        startIndex: m.index,
+        endIndex: rubricaRegex.lastIndex
+      });
     }
-    return `${novo} | [${usuario} em ${dataHora}]`;
+
+    if (matches.length === 0) return [];
+
+    const entries = [];
+    for (let i = 0; i < matches.length; i++) {
+      const cur = matches[i];
+      let noteText = '';
+
+      if (matches.length === 1) {
+        const before = str.slice(0, cur.startIndex).replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+        const after = str.slice(cur.endIndex).replace(/^:\s*/, '').replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+        noteText = after || before;
+      } else {
+        if (i === 0) {
+          noteText = str.slice(cur.endIndex, matches[1].startIndex).replace(/^:\s*/, '').replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+        } else {
+          const textBefore = str.slice(matches[i - 1].endIndex, cur.startIndex).replace(/^:\s*/, '').replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+          const textAfter = (i < matches.length - 1)
+            ? str.slice(cur.endIndex, matches[i + 1].startIndex).replace(/^:\s*/, '').replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim()
+            : str.slice(cur.endIndex).replace(/^:\s*/, '').replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+          noteText = textAfter || textBefore;
+        }
+      }
+
+      noteText = noteText.replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+
+      entries.push({
+        usuario: cur.usuario,
+        dataHora: cur.dataHora,
+        modulo: "Contratos LDO",
+        acao: "Edição Anterior (Legado)",
+        detalhes: noteText ? `Apontamento em observação: "${noteText}"` : "Assinatura de alteração registrada no histórico do contrato",
+        nota: noteText,
+        tipo: "legacy"
+      });
+    }
+
+    return entries;
+  },
+
+  applyRubrica(novoTexto) {
+    return this.cleanObservacao(novoTexto);
   },
 
   // CONTROLES DE PRAZO / INFORMAÇÃO DE VENCIMENTO (PERÍODO EM MESES OU DATA ESPECÍFICA - SEM CAMPO LIVRE)
@@ -1071,7 +1125,7 @@ app.contratos = {
     const now = new Date();
     const criadoEm = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     const criadoPor = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
-    const observacao = obsTxt ? this.applyRubrica(obsTxt, '', criadoPor) : '';
+    const observacao = this.cleanObservacao(obsTxt);
 
     // LDO / LOA
     const isCompartilhado = document.getElementById('panel-new-is-compartilhado')?.checked || false;
@@ -1155,15 +1209,7 @@ app.contratos = {
     document.getElementById('panel-edit-objeto').value = item.objeto || '';
     
     const obsEl = document.getElementById('panel-edit-observacao');
-    const badgeEl = document.getElementById('panel-edit-obs-rubrica-badge');
-    obsEl.value = item.observacao || '';
-    if (item.observacao) {
-      badgeEl.textContent = 'Possui registro';
-      badgeEl.title = item.observacao;
-    } else {
-      badgeEl.textContent = '';
-      badgeEl.title = '';
-    }
+    if (obsEl) obsEl.value = this.cleanObservacao(item.observacao || '');
 
     const linkEl = document.getElementById('panel-edit-link');
     if (linkEl) linkEl.value = item.linkContrato || '';
@@ -1203,38 +1249,90 @@ app.contratos = {
     if (!numCtt) return app.ui.toast("Preencha o número do contrato.", "warning", "Campo Obrigatório");
 
     const currentUser = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
-    const newObs = document.getElementById('panel-edit-observacao').value.trim();
-    const obsFinal = this.applyRubrica(newObs, item.observacao || '', currentUser);
+    const newObs = this.cleanObservacao(document.getElementById('panel-edit-observacao').value);
     const linkEl = document.getElementById('panel-edit-link');
+    const newLink = linkEl ? linkEl.value.trim() : '';
 
-    item.empresa = document.getElementById('panel-edit-empresa').value.trim();
-    item.numeroCtt = `${numCtt}/${anoCtt}`;
-    item.valorContrato = this.parseCurrency(document.getElementById('panel-edit-valor').value) || 0;
-    item.dataVencimentoIso = this.formatDateIso(document.getElementById('panel-edit-venc-iso').value);
-    item.fiscal = document.getElementById('panel-edit-fiscal').value.toUpperCase();
-    item.prazoVencimento = document.getElementById('panel-edit-prazo-txt').value.trim();
-    item.objeto = document.getElementById('panel-edit-objeto').value.trim();
-    item.observacao = obsFinal;
-    item.linkContrato = linkEl ? linkEl.value.trim() : '';
+    const newEmpresa = document.getElementById('panel-edit-empresa').value.trim();
+    const newNumCtt = `${numCtt}/${anoCtt}`;
+    const newValor = this.parseCurrency(document.getElementById('panel-edit-valor').value) || 0;
+    const newVencIso = this.formatDateIso(document.getElementById('panel-edit-venc-iso').value);
+    const newFiscal = document.getElementById('panel-edit-fiscal').value.toUpperCase();
+    const newPrazo = document.getElementById('panel-edit-prazo-txt').value.trim();
+    const newObjeto = document.getElementById('panel-edit-objeto').value.trim();
 
     // LDO / LOA
     const isCompartilhado = document.getElementById('panel-edit-is-compartilhado')?.checked || false;
     let cotaSaude = this.parseCurrency(document.getElementById('panel-edit-cota-saude')?.value);
     if (!isCompartilhado || isNaN(cotaSaude) || cotaSaude <= 0) {
-      cotaSaude = item.valorContrato;
+      cotaSaude = newValor;
     }
     const exAtual = this.parseCurrency(document.getElementById('panel-edit-ex-atual')?.value);
     const exSeguinte = this.parseCurrency(document.getElementById('panel-edit-ex-seguinte')?.value);
-    const part = this.calculateEstimatedPartition(cotaSaude, item.dataVencimentoIso, item.prazoVencimento);
+    const part = this.calculateEstimatedPartition(cotaSaude, newVencIso, newPrazo);
     const exercicioAtual = !isNaN(exAtual) && exAtual >= 0 ? exAtual : part.atual;
     const exercicioSeguinte = !isNaN(exSeguinte) && exSeguinte >= 0 ? exSeguinte : part.seguinte;
 
+    // Detectar alterações específicas para o log de auditoria permanente
+    const changes = [];
+    if (item.empresa !== newEmpresa) changes.push(`Empresa: "${item.empresa}" ➔ "${newEmpresa}"`);
+    if (item.numeroCtt !== newNumCtt) changes.push(`Nº Contrato: ${item.numeroCtt} ➔ ${newNumCtt}`);
+    if (Math.abs(Number(item.valorContrato || 0) - newValor) > 0.001) {
+      changes.push(`Valor: ${this.formatCurrency(item.valorContrato)} ➔ ${this.formatCurrency(newValor)}`);
+    }
+    if (item.fiscal !== newFiscal) changes.push(`Fiscal: ${item.fiscal || '(vazio)'} ➔ ${newFiscal}`);
+    if (item.dataVencimentoIso !== newVencIso) {
+      const dtAnt = item.dataVencimentoIso ? this.formatDateBr(this.parseAnyDate(item.dataVencimentoIso)) : '(vazio)';
+      const dtNova = newVencIso ? this.formatDateBr(this.parseAnyDate(newVencIso)) : '(vazio)';
+      changes.push(`Vencimento: ${dtAnt} ➔ ${dtNova}`);
+    }
+    if (item.prazoVencimento !== newPrazo) changes.push(`Prazo: "${item.prazoVencimento}" ➔ "${newPrazo}"`);
+    if ((item.objeto || '').trim() !== newObjeto) {
+      const objResumo = newObjeto.length > 50 ? newObjeto.slice(0, 50) + '...' : newObjeto;
+      changes.push(`Objeto: "${objResumo}"`);
+    }
+    if (this.cleanObservacao(item.observacao || '') !== newObs) {
+      const obsResumo = newObs.length > 60 ? newObs.slice(0, 60) + '...' : newObs;
+      changes.push(obsResumo ? `Observação: "${obsResumo}"` : `Observação limpa/removida`);
+    }
+    if ((item.linkContrato || '').trim() !== newLink) changes.push(`Link oficial atualizado`);
+    if (item.isCompartilhado !== isCompartilhado || Math.abs(Number(item.cotaSaude || 0) - cotaSaude) > 0.001) {
+      changes.push(`Cota Saúde (LDO): ${this.formatCurrency(item.cotaSaude || item.valorContrato)} ➔ ${this.formatCurrency(cotaSaude)}`);
+    }
+
+    const detalhesStr = changes.length > 0
+      ? `Contrato nº ${newNumCtt} (${newEmpresa}) [ID:${item.id}] | ` + changes.join(' | ')
+      : `Contrato nº ${newNumCtt} (${newEmpresa}) [ID:${item.id}] | Dados confirmados sem alteração`;
+
+    item.empresa = newEmpresa;
+    item.numeroCtt = newNumCtt;
+    item.valorContrato = newValor;
+    item.dataVencimentoIso = newVencIso;
+    item.fiscal = newFiscal;
+    item.prazoVencimento = newPrazo;
+    item.objeto = newObjeto;
+    item.observacao = newObs;
+    item.linkContrato = newLink;
     item.isCompartilhado = isCompartilhado;
     item.cotaSaude = cotaSaude;
     item.exercicioAtual = exercicioAtual;
     item.exercicioSeguinte = exercicioSeguinte;
     item.anoAtual = 2026;
     item.anoSeguinte = 2027;
+
+    // Registra imediatamente no histórico de auditoria local em memória para consulta instantânea
+    const now = new Date();
+    const dataHoraStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    if (!app.state.auditLogs) app.state.auditLogs = [];
+    app.state.auditLogs.unshift({
+      id: Date.now(),
+      dataHora: dataHoraStr,
+      usuario: currentUser,
+      modulo: "Contratos LDO",
+      acao: "Editar Contrato",
+      detalhes: detalhesStr,
+      registroId: newNumCtt
+    });
 
     if (app.data && app.data.saveLocalPanelContracts) {
       app.data.saveLocalPanelContracts(app.state.panelContracts);
@@ -1256,7 +1354,8 @@ app.contratos = {
     try {
       await app.data.sendToCloud({
         action: "UPDATE_PANEL_CONTRACT",
-        contract: item
+        contract: item,
+        detalhes: detalhesStr
       });
       if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
       app.ui.toast("Contrato atualizado com sucesso!", "success", "Painel de Contratos");
@@ -1266,6 +1365,451 @@ app.contratos = {
     } finally {
       if (app.ui && app.ui.hideLoading) app.ui.hideLoading();
     }
+  },
+
+  // --------------------------------------------------------------------------
+  // MODAL E TRILHA DE HISTÓRICO DE ALTERAÇÕES DO CONTRATO
+  // --------------------------------------------------------------------------
+  currentHistoryContractId: null,
+
+  async openContractHistoryModal(targetId) {
+    let id = targetId;
+    if (!id) {
+      const editIdEl = document.getElementById('panel-edit-id');
+      if (editIdEl && editIdEl.value) id = Number(editIdEl.value);
+    }
+    const item = (app.state.panelContracts || []).find(c => Number(c.id) === Number(id));
+    if (!item) return app.ui.toast("Selecione um contrato para visualizar as alterações.", "warning", "Histórico");
+
+    this.currentHistoryContractId = item.id;
+
+    const subEl = document.getElementById('hist-ctt-subtitulo');
+    if (subEl) {
+      subEl.textContent = `Contrato nº ${item.numeroCtt || 'S/N'} — ${item.empresa || 'Sem Razão Social'}`;
+    }
+
+    const listEl = document.getElementById('hist-ctt-lista');
+    if (listEl) {
+      listEl.innerHTML = `
+        <div class="p-8 text-center text-slate-400 text-xs">
+          <div class="w-8 h-8 mx-auto mb-2 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          Carregando histórico do contrato da planilha central...
+        </div>
+      `;
+    }
+
+    const modal = document.getElementById('modal-historico-alteracoes-contrato');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    // Busca automática e imediata dos logs mais recentes diretamente na planilha
+    if (app.data && app.data.fetchAuditLogs) {
+      try {
+        const freshLogs = await app.data.fetchAuditLogs(500);
+        if (freshLogs && Array.isArray(freshLogs) && freshLogs.length > 0) {
+          app.state.auditLogs = freshLogs;
+        }
+      } catch (err) {
+        console.error("Erro ao carregar logs da planilha:", err);
+      }
+    }
+
+    await this.renderContractHistory(item);
+  },
+
+  closeContractHistoryModal() {
+    const modal = document.getElementById('modal-historico-alteracoes-contrato');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  },
+
+  isLogMatchingContract(l, item) {
+    if (!l || !item) return false;
+
+    // 1. O módulo deve ser referente a contratos
+    const mod = String(l.modulo || '').toLowerCase();
+    if (!mod.includes('contrato')) return false;
+
+    const idStr = String(item.id || '').trim();
+    const rawNum = String(item.numeroCtt || '').trim();
+    const det = String(l.detalhes || '').trim();
+    const detLower = det.toLowerCase();
+
+    // Normalizar registroId do log (inclusive se o Google Sheets converteu '04/2023' para Date string)
+    let reg = String(l.registroId || '').trim();
+    if (reg.includes('GMT') || (reg.includes('00:00:00') && isNaN(Number(reg)))) {
+      const parsedDt = new Date(reg);
+      if (!isNaN(parsedDt.getTime())) {
+        const mm = String(parsedDt.getMonth() + 1).padStart(2, '0');
+        const yyyy = parsedDt.getFullYear();
+        reg = `${mm}/${yyyy}`;
+      }
+    }
+
+    // 2. Correspondência direta por registroId ou marcador de ID interno
+    if (idStr && (reg === idStr || det.includes(`[ID:${idStr}]`))) {
+      return true;
+    }
+
+    // Palavras-chave significativas da empresa do contrato aberto para desambiguação
+    const empRaw = String(item.empresa || '').toLowerCase();
+    const empKeywords = empRaw
+      .replace(/[^a-z0-9áéíóúâêîôûãõç]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 4 && !['ltda', 'eireli', 'servicos', 'serviços', 'comercio', 'comércio', 'associacao', 'associação', 'instituto', 'empresa', 'prefeitura', 'municipal'].includes(w));
+
+    const matchesEmpresa = empKeywords.length > 0 && empKeywords.some(kw => detLower.includes(kw));
+
+    const isGenericNum = !rawNum || /^(s\/?n|em\s*aberto|sem\s*n[uú]mero|-)$/i.test(rawNum);
+
+    if (!isGenericNum) {
+      let numPattern;
+      let regPatternMatches = false;
+
+      if (rawNum.includes('/')) {
+        const parts = rawNum.split('/');
+        const p1 = parseInt(parts[0], 10);
+        const p2 = parts[1].trim();
+        if (!isNaN(p1) && p2) {
+          numPattern = `0*${p1}\\/${p2}`;
+          const regParts = reg.split('/');
+          if (regParts.length === 2 && parseInt(regParts[0], 10) === p1 && regParts[1].trim() === p2) {
+            regPatternMatches = true;
+          }
+        } else {
+          numPattern = rawNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+      } else {
+        const p = parseInt(rawNum, 10);
+        if (!isNaN(p)) {
+          numPattern = `0*${p}\\b`;
+          if (parseInt(reg, 10) === p) regPatternMatches = true;
+        } else {
+          numPattern = rawNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+      }
+
+      if (!regPatternMatches && reg.toLowerCase() === rawNum.toLowerCase()) {
+        regPatternMatches = true;
+      }
+
+      // Regex para identificar menção expressa a este contrato nos detalhes:
+      // Ex: "Contrato nº 04/2023", "Contrato nº 4/2023", "Contrato 539/2025"
+      const cttRegex = new RegExp(`(?:contrato\\s*(?:n[ºo.]?\\s*)?)${numPattern}(?!\\d)`, 'i');
+      const matchesNumInDet = cttRegex.test(det);
+
+      if (regPatternMatches || matchesNumInDet) {
+        // Desambiguação para casos onde outro contrato tenha o mesmo número (ex: 297/2025):
+        if (empKeywords.length > 0 && (det.includes(' - ') || det.includes('('))) {
+          if (!matchesEmpresa) {
+            const otherCtt = (app.state.panelContracts || []).find(c => c.id !== item.id && c.numeroCtt === item.numeroCtt);
+            if (otherCtt) {
+              const otherEmp = String(otherCtt.empresa || '').toLowerCase();
+              const otherKw = otherEmp.replace(/[^a-z0-9áéíóúâêîôûãõç]/g, ' ').split(/\s+/).filter(w => w.length >= 4);
+              if (otherKw.some(kw => detLower.includes(kw))) {
+                return false;
+              }
+            }
+          }
+        }
+        return true;
+      }
+    } else {
+      // Contrato em aberto ou sem número: vincula rigorosamente pelo nome da empresa
+      if (matchesEmpresa && (detLower.includes('aberto') || detLower.includes('s/n') || detLower.includes('cadastrar') || detLower.includes('contrato'))) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  async renderContractHistory(item) {
+    const listEl = document.getElementById('hist-ctt-lista');
+    if (!listEl) return;
+
+    const matchedLogs = (app.state.auditLogs || []).filter(l => this.isLogMatchingContract(l, item));
+    const legacyEntries = this.extractLegacyRubricas(item.observacao);
+
+    const allEntries = [];
+    const usedLegacyIndices = new Set();
+
+    // 1. Processar logs de auditoria da planilha
+    matchedLogs.forEach(l => {
+      let detalhesText = l.detalhes || '';
+      const isStructuredDiff = detalhesText.includes(' | ');
+
+      // Se for um log antigo sem diff estruturado (ex: "Contrato nº ... - Empresa (Venc: )")
+      if (!isStructuredDiff && (detalhesText.startsWith('Contrato nº') || detalhesText.startsWith('Contrato '))) {
+        // Tenta associar com uma rubrica legada correspondente pela data/hora
+        const logDt = String(l.dataHora || '');
+        let matchedLegacyIdx = -1;
+
+        legacyEntries.forEach((leg, idx) => {
+          if (usedLegacyIndices.has(idx)) return;
+          if (leg.usuario.toLowerCase() === (l.usuario || '').toLowerCase()) {
+            const legDt = String(leg.dataHora || '');
+            if (legDt.slice(0, 10) === logDt.slice(0, 10)) {
+              const legHora = (legDt.match(/(\d{1,2}:\d{2})/) || [])[1];
+              const logHora = (logDt.match(/(\d{1,2}:\d{2})/) || [])[1];
+              if (legHora && logHora && legHora === logHora) {
+                matchedLegacyIdx = idx;
+              } else if (matchedLegacyIdx === -1) {
+                matchedLegacyIdx = idx;
+              }
+            }
+          }
+        });
+
+        if (matchedLegacyIdx !== -1) {
+          usedLegacyIndices.add(matchedLegacyIdx);
+          const matchedLeg = legacyEntries[matchedLegacyIdx];
+          detalhesText = matchedLeg.nota
+            ? `Apontamento em observação: "${matchedLeg.nota}"`
+            : matchedLeg.detalhes;
+        }
+      }
+
+      allEntries.push({
+        id: l.id,
+        dataHora: l.dataHora || '—',
+        usuario: l.usuario || 'sistema',
+        acao: l.acao || 'Alteração',
+        detalhes: detalhesText,
+        tipo: 'audit'
+      });
+    });
+
+    // 2. Adicionar rubricas legadas que não tenham sido associadas a logs da planilha
+    legacyEntries.forEach((leg, idx) => {
+      if (!usedLegacyIndices.has(idx)) {
+        allEntries.push({
+          id: 'legacy_' + Math.random(),
+          dataHora: leg.dataHora,
+          usuario: leg.usuario,
+          acao: leg.acao,
+          detalhes: leg.detalhes,
+          tipo: 'legacy'
+        });
+      }
+    });
+
+    // 3. Ordenação cronológica decrescente (mais recentes primeiro)
+    allEntries.sort((a, b) => {
+      const parseDt = (str) => {
+        if (!str || str === '—') return 0;
+        const m = String(str).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+às\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+        if (m) {
+          return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4] || 0), Number(m[5] || 0), Number(m[6] || 0)).getTime();
+        }
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+      };
+      return parseDt(b.dataHora) - parseDt(a.dataHora);
+    });
+
+    // 4. Se houver apontamentos em observação ou diffs estruturados, elimina logs vagos redundantes
+    const displayEntries = [];
+    allEntries.forEach(entry => {
+      const isVagueOldLog = !entry.detalhes.includes(' | ') && 
+                            !entry.detalhes.startsWith('Apontamento em observação:') &&
+                            (entry.detalhes.startsWith('Contrato nº') || entry.detalhes.startsWith('Contrato '));
+      
+      if (isVagueOldLog) {
+        // Se já existe entrada detalhada (apontamento ou diff) no mesmo dia pelo mesmo usuário, descarta o log vago
+        const hasSpecificSameDay = allEntries.some(other => 
+          other !== entry &&
+          other.usuario.toLowerCase() === entry.usuario.toLowerCase() &&
+          other.dataHora.slice(0, 10) === entry.dataHora.slice(0, 10) &&
+          (other.detalhes.includes(' | ') || other.detalhes.startsWith('Apontamento em observação:'))
+        );
+        if (hasSpecificSameDay) return;
+
+        // Se já existe um log vago registrado no mesmo dia pelo mesmo usuário, ignora duplicações em sequência
+        const alreadyHasVague = displayEntries.some(d => 
+          d.usuario.toLowerCase() === entry.usuario.toLowerCase() &&
+          d.dataHora.slice(0, 10) === entry.dataHora.slice(0, 10)
+        );
+        if (!alreadyHasVague) {
+          displayEntries.push(entry);
+        }
+      } else {
+        displayEntries.push(entry);
+      }
+    });
+
+    if (displayEntries.length === 0) {
+      listEl.innerHTML = `
+        <div class="text-center py-10 px-4 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+          <div class="text-2xl mb-1.5">📜</div>
+          <h5 class="text-xs font-bold text-slate-700">Nenhuma alteração registrada para este contrato</h5>
+          <p class="text-[11px] text-slate-400 max-w-sm mx-auto mt-1">As modificações salvas a partir de agora serão registradas de forma detalhada nesta janela com data, hora, usuário e campos alterados.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = displayEntries.map(entry => {
+      return `
+        <div class="p-3.5 bg-slate-50 hover:bg-slate-100/70 rounded-2xl border border-slate-200/80 transition space-y-2.5">
+          <!-- O que foi modificado (campos e valores) -->
+          <div>
+            ${this.renderHistoryDetails(entry.detalhes, entry.acao, entry.tipo)}
+          </div>
+
+          <!-- Rodapé do card: Usuário responsável e Data/Horário -->
+          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-200/60">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <span class="text-slate-400">👤</span> ${entry.usuario}
+            </span>
+            <span class="text-slate-400 font-medium flex items-center gap-1 whitespace-nowrap">
+              <span>🕒</span> ${entry.dataHora}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  renderHistoryDetails(detalhes, acao, tipo) {
+    if (!detalhes) return '<span class="text-slate-400 italic">Atualização de dados confirmada</span>';
+
+    // 1. Apontamento em observação prévia
+    if (detalhes.startsWith('Apontamento em observação:')) {
+      const nota = detalhes.replace(/^Apontamento em observação:\s*/, '').replace(/^"|"$/g, '').trim();
+      return `
+        <div class="space-y-1.5">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200/80 px-2 py-0.5 rounded-md inline-block">💬 Apontamento da Observação</span>
+          <div class="text-slate-700 text-xs bg-white p-3 rounded-xl border border-slate-200/60 leading-relaxed font-medium whitespace-pre-line">${nota}</div>
+        </div>
+      `;
+    }
+
+    // 2. Novo log com diff de campos separados por " | "
+    const cleanDet = detalhes.replace(/\s*\[ID:\d+\]/gi, '');
+    if (cleanDet.includes(' | ')) {
+      const parts = cleanDet.split(' | ');
+      // parts[0] é a identificação do contrato (já presente no topo do modal)
+      const fieldChanges = parts.slice(1);
+
+      if (fieldChanges.length === 0 || (fieldChanges.length === 1 && fieldChanges[0].includes('sem alteração'))) {
+        return `
+          <div class="flex items-center gap-1.5 text-slate-500 text-xs font-medium bg-white p-2.5 rounded-xl border border-slate-200/60">
+            <span class="text-emerald-500 font-bold">✓</span>
+            <span>Edição confirmada sem alteração de valores ou vigência</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="space-y-1.5">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 block">Campos modificados:</span>
+          <div class="space-y-1">
+            ${fieldChanges.map(change => {
+              if (change.includes(' ➔ ')) {
+                const sepIdx = change.indexOf(': ');
+                if (sepIdx !== -1) {
+                  const campo = change.substring(0, sepIdx);
+                  const transicao = change.substring(sepIdx + 2);
+                  return `
+                    <div class="flex items-start gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200/60 text-xs">
+                      <span class="font-bold text-slate-700 whitespace-nowrap">${campo}:</span>
+                      <span class="text-blue-700 font-semibold">${transicao}</span>
+                    </div>
+                  `;
+                }
+              }
+              return `
+                <div class="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200/60 text-xs text-slate-700 font-medium">
+                  <span class="text-blue-500 font-bold">•</span>
+                  <span>${change}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Cadastrar Contrato
+    const acaoLower = String(acao || '').toLowerCase();
+    if (acaoLower.includes('cadastrar') || acaoLower.includes('criar')) {
+      return `
+        <div class="flex items-center gap-2 text-emerald-800 text-xs font-semibold bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl">
+          <span>✨</span>
+          <span>Contrato cadastrado no mural institucional</span>
+        </div>
+      `;
+    }
+
+    // 4. Arquivar / Desarquivar
+    if (acaoLower.includes('arquivar')) {
+      const isArquivado = detalhes.toLowerCase().includes('marcado como arquivado');
+      return `
+        <div class="flex items-center gap-2 text-amber-800 text-xs font-semibold bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
+          <span>📁</span>
+          <span>${isArquivado ? 'Contrato arquivado' : 'Contrato desarquivado (reativado no painel ativo)'}</span>
+        </div>
+      `;
+    }
+
+    // 5. Excluir
+    if (acaoLower.includes('excluir')) {
+      return `
+        <div class="flex items-center gap-2 text-rose-800 text-xs font-semibold bg-rose-50 border border-rose-200 px-3 py-2 rounded-xl">
+          <span>🗑️</span>
+          <span>Contrato excluído do painel</span>
+        </div>
+      `;
+    }
+
+    // 6. Logs antigos da planilha sem diff estruturado
+    // Ex: "Contrato nº 258/2026 - K & S EMPREENDIMENTOS IMOBILIARIOS LTDA (Venc: 60 Meses até 15/07/2032)"
+    // Ex: "Contrato nº 171/2026 - NILDIESEL RETÍFICA DE MOTORES LTDA (R$ 331.978,43)"
+    if (cleanDet.startsWith('Contrato nº') || cleanDet.startsWith('Contrato ')) {
+      const matchParen = cleanDet.match(/\(([^)]+)\)\s*$/);
+      if (matchParen) {
+        const info = matchParen[1].trim();
+        if (info.startsWith('Venc:')) {
+          const vencVal = info.replace(/^Venc:\s*/, '').trim();
+          if (vencVal) {
+            return `
+              <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200/60 text-xs">
+                <span class="font-bold text-slate-700">📅 Vigência/Vencimento:</span>
+                <span class="text-blue-700 font-semibold">${vencVal}</span>
+              </div>
+            `;
+          }
+        } else if (info.startsWith('R$')) {
+          return `
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200/60 text-xs">
+              <span class="font-bold text-slate-700">💰 Valor do Contrato:</span>
+              <span class="text-blue-700 font-semibold">${info}</span>
+            </div>
+          `;
+        } else if (info) {
+          return `
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200/60 text-xs">
+              <span class="text-blue-500 font-bold">•</span>
+              <span class="text-slate-700 font-medium">${info}</span>
+            </div>
+          `;
+        }
+      }
+
+      return `
+        <div class="flex items-center gap-2 text-slate-600 text-xs bg-white px-3 py-2 rounded-xl border border-slate-200/60 font-medium">
+          <span class="text-blue-500 font-bold">✓</span>
+          <span>Confirmação cadastral na planilha central</span>
+        </div>
+      `;
+    }
+
+    return `<div class="text-slate-700 text-xs bg-white px-3 py-2 rounded-xl border border-slate-200/60 font-medium">${cleanDet}</div>`;
   },
 
   // ARQUIVAR / DESARQUIVAR (PRESERVAÇÃO DO HISTÓRICO LDO)
@@ -1679,9 +2223,13 @@ app.contratos = {
                     </div>
                 </div>
                 ${c.objeto ? `<p class="text-[11px] text-purple-900/80 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
-                ${c.observacao ? `
+                ${this.cleanObservacao(c.observacao) ? `
                   <div class="mt-2.5 p-2 bg-purple-100/60 border border-purple-200 rounded-xl text-[10px] text-purple-900 leading-snug">
-                    📝 ${c.observacao}
+                    <div class="flex items-center justify-between mb-0.5">
+                      <span class="font-bold">📝 Observação:</span>
+                      <button type="button" onclick="event.stopPropagation(); app.contratos.openContractHistoryModal(${c.id})" class="text-[9px] font-bold text-purple-700 hover:underline">📜 Alterações</button>
+                    </div>
+                    <span>${this.cleanObservacao(c.observacao)}</span>
                   </div>
                 ` : ''}
                 ${c.linkContrato ? `
@@ -1798,13 +2346,18 @@ app.contratos = {
 
               ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
 
-              <!-- OBSERVAÇÃO INSTITUCIONAL COM RUBRICA -->
-              ${c.observacao ? `
+              <!-- OBSERVAÇÃO INSTITUCIONAL -->
+              ${this.cleanObservacao(c.observacao) ? `
                 <div class="mt-2.5 p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 leading-snug">
-                  <span class="font-black text-[10px] text-amber-800 uppercase tracking-wide flex items-center gap-1 mb-0.5">
-                    📝 Observação:
-                  </span>
-                  <span class="break-words line-clamp-3" title="${c.observacao}">${c.observacao}</span>
+                  <div class="flex items-center justify-between mb-0.5">
+                    <span class="font-black text-[10px] text-amber-800 uppercase tracking-wide flex items-center gap-1">
+                      📝 Observação:
+                    </span>
+                    <button type="button" onclick="event.stopPropagation(); app.contratos.openContractHistoryModal(${c.id})" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-0.5">
+                      <span>📜 Alterações</span>
+                    </button>
+                  </div>
+                  <span class="break-words line-clamp-3" title="${this.cleanObservacao(c.observacao)}">${this.cleanObservacao(c.observacao)}</span>
                 </div>
               ` : ''}
           </div>
@@ -1818,6 +2371,9 @@ app.contratos = {
               ` : `<span></span>`}
 
               <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="app.contratos.openContractHistoryModal(${c.id})" title="Ver Histórico de Alterações" class="p-1.5 hover:bg-blue-50 text-slate-500 hover:text-blue-700 rounded-lg font-bold">
+                    📜
+                  </button>
                   ${app.permissions.can('panel_edit') ? `
                     <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
                         ✏️
@@ -1871,7 +2427,7 @@ app.contratos = {
                     </a>
                   </div>
                 ` : ''}
-                ${c.observacao ? `<div class="text-[10px] text-purple-700 font-semibold italic mt-0.5">📝 ${c.observacao}</div>` : ''}
+                ${this.cleanObservacao(c.observacao) ? `<div class="text-[10px] text-purple-700 font-semibold italic mt-0.5">📝 ${this.cleanObservacao(c.observacao)}</div>` : ''}
             </td>
             <td class="p-3.5 font-mono text-purple-600 font-bold">${this.formatCttNumber(c.numeroCtt)}</td>
             <td class="p-3.5 text-right font-bold text-slate-400">A Definir</td>
@@ -1881,6 +2437,7 @@ app.contratos = {
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-100 text-purple-700">Em Elaboração</span>
             </td>
             <td class="p-3.5 text-center whitespace-nowrap print:hidden">
+                <button onclick="app.contratos.openContractHistoryModal(${c.id})" class="text-purple-600 hover:text-purple-900 font-bold mr-1.5 text-xs" title="Ver Histórico de Alterações">📜</button>
                 ${app.permissions.can('panel_edit') ? `<button onclick="app.contratos.openEditModal(${c.id})" class="text-purple-700 hover:text-purple-900 font-bold text-xs mr-1.5" title="Preencher / Formalizar">✏️</button>` : ''}
                 ${app.permissions.can('panel_archive') ? `<button onclick="app.contratos.toggleArchive(${c.id})" class="text-purple-600 hover:text-purple-900 font-bold mr-1.5" title="Arquivar">📁</button>` : ''}
                 ${app.admin.isAdminUser() ? `<button onclick="app.contratos.openDeleteModal(${c.id})" class="text-rose-500 hover:text-rose-700 font-bold" title="Excluir Definitivo (Administrador)">🗑️</button>` : ''}
@@ -1906,7 +2463,7 @@ app.contratos = {
                   </a>
                 </div>
               ` : ''}
-              ${c.observacao ? `<div class="text-[10px] text-amber-800 font-semibold italic mt-0.5 max-w-sm truncate" title="${c.observacao}">📝 ${c.observacao}</div>` : ''}
+              ${this.cleanObservacao(c.observacao) ? `<div class="text-[10px] text-amber-800 font-semibold italic mt-0.5 max-w-sm truncate" title="${this.cleanObservacao(c.observacao)}">📝 ${this.cleanObservacao(c.observacao)}</div>` : ''}
           </td>
           <td class="p-3.5 font-mono text-blue-700 font-bold">${this.formatCttNumber(c.numeroCtt)}</td>
           <td class="p-3.5 text-right font-black text-slate-900">
@@ -1929,6 +2486,7 @@ app.contratos = {
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${sem.badgeClass}">${sem.label}</span>
           </td>
           <td class="p-3.5 text-center whitespace-nowrap print:hidden">
+              <button onclick="app.contratos.openContractHistoryModal(${c.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-1.5 text-xs" title="Ver Histórico de Alterações">📜</button>
               ${app.permissions.can('panel_edit') ? `<button onclick="app.contratos.openEditModal(${c.id})" class="text-slate-600 hover:text-amber-700 font-bold mr-1.5" title="Editar">✏️</button>` : ''}
               ${app.permissions.can('panel_archive') ? `<button onclick="app.contratos.toggleArchive(${c.id})" class="text-slate-400 hover:text-slate-700 font-bold mr-1.5" title="Arquivar">📁</button>` : ''}
               ${app.admin.isAdminUser() ? `<button onclick="app.contratos.openDeleteModal(${c.id})" class="text-rose-500 hover:text-rose-700 font-bold" title="Excluir">🗑️</button>` : ''}

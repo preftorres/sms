@@ -598,7 +598,8 @@ function logAudit(ss, logData) {
     const modulo = String(logData.modulo || "Geral").trim();
     const acao = String(logData.acao || "Alteração").trim();
     const detalhes = String(logData.detalhes || "").trim();
-    const registroId = String(logData.registroId || "").trim();
+    const rawRegId = String(logData.registroId || "").trim();
+    const registroId = (rawRegId.indexOf('/') !== -1 && rawRegId.indexOf("'") === -1) ? "'" + rawRegId : rawRegId;
 
     sheet.appendRow([id, dataHoraStr, usuario, modulo, acao, detalhes, registroId]);
   } catch (err) {
@@ -628,7 +629,7 @@ function getAuditLogsList(ss, maxLimit) {
       modulo: String(row[3] || "Geral"),
       acao: String(row[4] || ""),
       detalhes: String(row[5] || ""),
-      registroId: String(row[6] || "")
+      registroId: formatCellToCttNumber(row[6])
     });
   }
   return logs;
@@ -865,7 +866,7 @@ function doPost(e) {
         usuario: payload.currentUser || "admin",
         modulo: "Contratos LDO",
         acao: "Editar Contrato",
-        detalhes: `Contrato nº ${c.numeroCtt} - ${c.empresa} (Venc: ${c.prazoVencimento})`,
+        detalhes: payload.detalhes || `Contrato nº ${c.numeroCtt} - ${c.empresa} (Venc: ${c.prazoVencimento})`,
         registroId: c.numeroCtt
       });
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
