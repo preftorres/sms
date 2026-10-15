@@ -1357,6 +1357,19 @@ app.contratos = {
         contract: item,
         detalhes: detalhesStr
       });
+
+      // Grava o diff detalhado na trilha de auditoria permanente da planilha
+      if (changes.length > 0) {
+        await app.data.sendToCloud({
+          action: "RECORD_AUDIT_LOG",
+          currentUser: currentUser,
+          modulo: "Contratos LDO",
+          acao: "Editar Contrato",
+          detalhes: detalhesStr,
+          registroId: newNumCtt
+        });
+      }
+
       if (app.ui && app.ui.advanceLoading) app.ui.advanceLoading(3);
       app.ui.toast("Contrato atualizado com sucesso!", "success", "Painel de Contratos");
     } catch(err) {
@@ -1409,7 +1422,10 @@ app.contratos = {
       try {
         const freshLogs = await app.data.fetchAuditLogs(500);
         if (freshLogs && Array.isArray(freshLogs) && freshLogs.length > 0) {
-          app.state.auditLogs = freshLogs;
+          // Mescla inteligente: preserva diffs estruturados locais recentes que ainda não desceram da planilha
+          const existingKeys = new Set(freshLogs.map(l => `${l.usuario}_${l.dataHora}_${l.detalhes}`));
+          const localOnly = (app.state.auditLogs || []).filter(l => !existingKeys.has(`${l.usuario}_${l.dataHora}_${l.detalhes}`));
+          app.state.auditLogs = [...localOnly, ...freshLogs];
         }
       } catch (err) {
         console.error("Erro ao carregar logs da planilha:", err);
