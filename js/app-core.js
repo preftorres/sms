@@ -328,6 +328,13 @@ Object.assign(window.app, {
 
       const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
       app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
+      if (app.state.permissions && typeof app.state.permissions === 'object') {
+        Object.keys(DEFAULT_PERMISSIONS).forEach(role => {
+          if (!app.state.permissions[role]) {
+            app.state.permissions[role] = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS[role]));
+          }
+        });
+      }
     },
 
     saveLocalExams() {
@@ -387,6 +394,11 @@ Object.assign(window.app, {
           if (res.status === "success") {
             if (res.permissions && typeof res.permissions === 'object') {
               app.state.permissions = res.permissions;
+              Object.keys(DEFAULT_PERMISSIONS).forEach(role => {
+                if (!app.state.permissions[role]) {
+                  app.state.permissions[role] = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS[role]));
+                }
+              });
               this.saveLocalPermissions();
             }
 
@@ -868,7 +880,7 @@ Object.assign(window.app, {
 
     isGestorFinanceiro() {
       return app.state.auth.isLogged && app.state.auth.user && 
-             (app.state.auth.user.perfil === 'Gestor Financeiro' || app.state.auth.user.perfil === 'Administrador');
+             (app.state.auth.user.perfil === 'Gestor Financeiro' || app.state.auth.user.perfil === 'Gerente' || app.state.auth.user.perfil === 'Administrador');
     },
 
     trigger(directToContract = false) {
@@ -980,10 +992,12 @@ Object.assign(window.app, {
       keys.forEach(k => {
         const compEl = document.getElementById(`perm-comprador-${k}`);
         const gestEl = document.getElementById(`perm-gestor-${k}`);
+        const gerEl = document.getElementById(`perm-gerente-${k}`);
         const visEl = document.getElementById(`perm-visualizador-${k}`);
 
         if (compEl) compEl.checked = getVal('Comprador', k);
         if (gestEl) gestEl.checked = getVal('Gestor Financeiro', k);
+        if (gerEl) gerEl.checked = getVal('Gerente', k);
         if (visEl) visEl.checked = getVal('Visualizador', k);
       });
 
@@ -991,7 +1005,7 @@ Object.assign(window.app, {
     },
 
     updatePermMatrixState() {
-      const profiles = ['comprador', 'gestor', 'visualizador'];
+      const profiles = ['comprador', 'gestor', 'gerente', 'visualizador'];
       const modules = [
         { master: 'audit_access', subs: ['audit_edit_values', 'audit_create_contract', 'audit_manage_procedures'] },
         { master: 'dotacoes_access', subs: ['dotacoes_create', 'dotacoes_check', 'dotacoes_edit', 'dotacoes_delete'] },
@@ -1032,15 +1046,17 @@ Object.assign(window.app, {
         'panel_access', 'panel_create', 'panel_edit', 'panel_archive'
       ];
 
-      const newPerms = { 'Comprador': {}, 'Gestor Financeiro': {}, 'Visualizador': {} };
+      const newPerms = { 'Comprador': {}, 'Gestor Financeiro': {}, 'Gerente': {}, 'Visualizador': {} };
 
       keys.forEach(k => {
         const compEl = document.getElementById(`perm-comprador-${k}`);
         const gestEl = document.getElementById(`perm-gestor-${k}`);
+        const gerEl = document.getElementById(`perm-gerente-${k}`);
         const visEl = document.getElementById(`perm-visualizador-${k}`);
 
         newPerms['Comprador'][k] = compEl ? compEl.checked : false;
         newPerms['Gestor Financeiro'][k] = gestEl ? gestEl.checked : false;
+        newPerms['Gerente'][k] = gerEl ? gerEl.checked : false;
         newPerms['Visualizador'][k] = visEl ? visEl.checked : false;
       });
 
@@ -1077,7 +1093,7 @@ Object.assign(window.app, {
             <span>${u.nome || u.usuario}</span>
           </td>
           <td class="p-3.5 font-mono text-blue-700 font-bold">${u.usuario}</td>
-          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : (u.perfil === 'Visualizador' ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-slate-100 text-slate-700'))}">${u.perfil}</span></td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.perfil === 'Administrador' ? 'bg-purple-100 text-purple-800' : (u.perfil === 'Gerente' ? 'bg-amber-100 text-amber-800 border border-amber-300' : (u.perfil === 'Gestor Financeiro' ? 'bg-emerald-100 text-emerald-800' : (u.perfil === 'Visualizador' ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-slate-100 text-slate-700')))}">${u.perfil}</span></td>
           <td class="p-3.5 text-slate-400">${u.createdAt || "—"}</td>
           <td class="p-3.5 text-center whitespace-nowrap" onclick="event.stopPropagation()">
             <button onclick="app.admin.editUser(${u.id})" class="text-amber-600 hover:text-amber-800 font-bold mr-2 text-xs">Editar</button>

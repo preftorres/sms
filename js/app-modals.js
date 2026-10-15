@@ -471,7 +471,7 @@ Exemplo do formato:
               </div>
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Valor Global do Contrato (R$)</label>
-                <input type="number" step="0.01" id="panel-new-valor" required placeholder="Ex: 48900.00" oninput="app.contratos.onValorContratoInput('new')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
+                <input type="text" inputmode="decimal" id="panel-new-valor" required placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onValorContratoInput('new')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onValorContratoInput('new')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-bold">
               </div>
             </div>
 
@@ -493,7 +493,7 @@ Exemplo do formato:
                   <label class="block font-bold text-slate-600 text-[11px] mb-1">
                     Cota Específica da Saúde (R$)
                   </label>
-                  <input type="number" step="0.01" id="panel-new-cota-saude" placeholder="Ex: 50000.00" oninput="app.contratos.onCotaSaudeInput('new')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-none focus:border-blue-500 font-bold text-xs">
+                  <input type="text" inputmode="decimal" id="panel-new-cota-saude" placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onCotaSaudeInput('new')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onCotaSaudeInput('new')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-none focus:border-blue-500 font-bold text-xs">
                   <p id="panel-new-cota-saude-hint" class="text-[10px] text-slate-400 mt-1">100% da Saúde (igual ao valor global)</p>
                 </div>
                 <div>
@@ -504,11 +504,11 @@ Exemplo do formato:
                   <div class="grid grid-cols-2 gap-2">
                     <div>
                       <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2026</span>
-                      <input type="number" step="0.01" id="panel-new-ex-atual" placeholder="2026" oninput="app.contratos.onBudgetPartitionInput('new')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-bold text-xs">
+                      <input type="text" inputmode="decimal" id="panel-new-ex-atual" placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onBudgetPartitionInput('new')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onBudgetPartitionInput('new')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-bold text-xs">
                     </div>
                     <div>
                       <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2027 (LOA)</span>
-                      <input type="number" step="0.01" id="panel-new-ex-seguinte" placeholder="2027" oninput="app.contratos.onBudgetPartitionInput('new')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-bold text-xs">
+                      <input type="text" inputmode="decimal" id="panel-new-ex-seguinte" placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onBudgetPartitionInput('new')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onBudgetPartitionInput('new')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-bold text-xs">
                     </div>
                   </div>
                 </div>
@@ -653,7 +653,7 @@ Exemplo do formato:
               </div>
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Valor Global do Contrato (R$)</label>
-                <input type="number" step="0.01" id="panel-edit-valor" required oninput="app.contratos.onValorContratoInput('edit')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
+                <input type="text" inputmode="decimal" id="panel-edit-valor" required placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onValorContratoInput('edit')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onValorContratoInput('edit')" class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-bold">
               </div>
             </div>
 
@@ -675,7 +675,7 @@ Exemplo do formato:
                   <label class="block font-bold text-slate-600 text-[11px] mb-1">
                     Cota Específica da Saúde (R$)
                   </label>
-                  <input type="number" step="0.01" id="panel-edit-cota-saude" placeholder="Ex: 50000.00" oninput="app.contratos.onCotaSaudeInput('edit')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-none focus:border-amber-500 font-bold text-xs">
+                  <input type="text" inputmode="decimal" id="panel-edit-cota-saude" placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onCotaSaudeInput('edit')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onCotaSaudeInput('edit')" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-none focus:border-amber-500 font-bold text-xs">
                   <p id="panel-edit-cota-saude-hint" class="text-[10px] text-slate-400 mt-1">100% da Saúde (igual ao valor global)</p>
                 </div>
                 <div>
@@ -686,11 +686,11 @@ Exemplo do formato:
                   <div class="grid grid-cols-2 gap-2">
                     <div>
                       <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2026</span>
-                      <input type="number" step="0.01" id="panel-edit-ex-atual" placeholder="2026" oninput="app.contratos.onBudgetPartitionInput('edit')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-amber-500 font-bold text-xs">
+                      <input type="text" inputmode="decimal" id="panel-edit-ex-atual" placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onBudgetPartitionInput('edit')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onBudgetPartitionInput('edit')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-amber-500 font-bold text-xs">
                     </div>
                     <div>
                       <span class="block text-[10px] font-bold text-slate-500 mb-0.5">Exercício 2027 (LOA)</span>
-                      <input type="number" step="0.01" id="panel-edit-ex-seguinte" placeholder="2027" oninput="app.contratos.onBudgetPartitionInput('edit')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-amber-500 font-bold text-xs">
+                      <input type="text" inputmode="decimal" id="panel-edit-ex-seguinte" placeholder="R$ 0,00" oninput="app.contratos.handleCurrencyInput(this); app.contratos.onBudgetPartitionInput('edit')" onblur="app.contratos.handleCurrencyBlur(this); app.contratos.onBudgetPartitionInput('edit')" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-amber-500 font-bold text-xs">
                     </div>
                   </div>
                 </div>
@@ -1003,6 +1003,7 @@ Exemplo do formato:
                   <select id="user-field-perfil" class="p-2.5 bg-white border rounded-xl outline-none font-bold">
                     <option value="Comprador">Comprador (Lança Dotações)</option>
                     <option value="Gestor Financeiro">Gestor Financeiro (Audita & Dá Baixa)</option>
+                    <option value="Gerente">Gerente (Acesso Total)</option>
                     <option value="Visualizador">Visualizador (Somente Consulta)</option>
                     <option value="Administrador">Administrador</option>
                   </select>
@@ -1041,9 +1042,10 @@ Exemplo do formato:
                   <thead class="bg-slate-100 font-black text-[10px] uppercase text-slate-600">
                     <tr>
                       <th class="p-3">Módulo & Ação Institucional</th>
-                      <th class="p-3 text-center w-32">Comprador</th>
-                      <th class="p-3 text-center w-36">Gestor Financeiro</th>
-                      <th class="p-3 text-center w-32">Visualizador</th>
+                      <th class="p-3 text-center w-28">Comprador</th>
+                      <th class="p-3 text-center w-32">Gestor Financeiro</th>
+                      <th class="p-3 text-center w-28">Gerente</th>
+                      <th class="p-3 text-center w-28">Visualizador</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-200">
@@ -1064,13 +1066,18 @@ Exemplo do formato:
                       </td>
                       <td class="p-2.5 text-center bg-blue-100/50">
                         <label class="inline-flex items-center gap-1.5 cursor-pointer font-black text-[11px] text-blue-950">
+                          <input type="checkbox" id="perm-gerente-audit_access" onchange="app.admin.updatePermMatrixState()" class="w-4 h-4 accent-blue-600 rounded"> Acesso
+                        </label>
+                      </td>
+                      <td class="p-2.5 text-center bg-blue-100/50">
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer font-black text-[11px] text-blue-950">
                           <input type="checkbox" id="perm-visualizador-audit_access" onchange="app.admin.updatePermMatrixState()" class="w-4 h-4 accent-blue-600 rounded"> Acesso
                         </label>
                       </td>
                     </tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Editar Saldos e Faturamento</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-audit_edit_values" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-audit_edit_values" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-audit_edit_values" class="w-4 h-4 accent-blue-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Criar Novos Contratos de Exames</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-audit_create_contract" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-audit_create_contract" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-audit_create_contract" class="w-4 h-4 accent-blue-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Gerenciar Procedimentos (Adicionar/Excluir)</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Editar Saldos e Faturamento</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-audit_edit_values" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-audit_edit_values" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-audit_edit_values" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-audit_edit_values" class="w-4 h-4 accent-blue-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Criar Novos Contratos de Exames</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-audit_create_contract" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-audit_create_contract" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-audit_create_contract" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-audit_create_contract" class="w-4 h-4 accent-blue-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Gerenciar Procedimentos (Adicionar/Excluir)</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-audit_manage_procedures" class="w-4 h-4 accent-blue-600"></td></tr>
 
                     <!-- LIVRO DIGITAL DE DOTAÇÕES -->
                     <tr class="bg-emerald-50/80 font-bold text-emerald-900 border-b border-emerald-200">
@@ -1089,14 +1096,19 @@ Exemplo do formato:
                       </td>
                       <td class="p-2.5 text-center bg-emerald-100/50">
                         <label class="inline-flex items-center gap-1.5 cursor-pointer font-black text-[11px] text-emerald-950">
+                          <input type="checkbox" id="perm-gerente-dotacoes_access" onchange="app.admin.updatePermMatrixState()" class="w-4 h-4 accent-emerald-600 rounded"> Acesso
+                        </label>
+                      </td>
+                      <td class="p-2.5 text-center bg-emerald-100/50">
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer font-black text-[11px] text-emerald-950">
                           <input type="checkbox" id="perm-visualizador-dotacoes_access" onchange="app.admin.updatePermMatrixState()" class="w-4 h-4 accent-emerald-600 rounded"> Acesso
                         </label>
                       </td>
                     </tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Cadastrar Pedido de Dotação</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Dar Baixa Contábil (Confirmar Empenho)</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Editar Lançamento de Dotação</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Excluir Pedido de Dotação</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Cadastrar Pedido de Dotação</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_create" class="w-4 h-4 accent-emerald-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Dar Baixa Contábil (Confirmar Empenho)</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_check" class="w-4 h-4 accent-emerald-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Editar Lançamento de Dotação</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_edit" class="w-4 h-4 accent-emerald-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Excluir Pedido de Dotação</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-dotacoes_delete" class="w-4 h-4 accent-emerald-600"></td></tr>
 
                     <!-- PAINEL GERAL DE CONTRATOS LDO -->
                     <tr class="bg-indigo-50/80 font-bold text-indigo-900 border-b border-indigo-200">
@@ -1115,13 +1127,18 @@ Exemplo do formato:
                       </td>
                       <td class="p-2.5 text-center bg-indigo-100/50">
                         <label class="inline-flex items-center gap-1.5 cursor-pointer font-black text-[11px] text-indigo-950">
+                          <input type="checkbox" id="perm-gerente-panel_access" onchange="app.admin.updatePermMatrixState()" class="w-4 h-4 accent-indigo-600 rounded"> Acesso
+                        </label>
+                      </td>
+                      <td class="p-2.5 text-center bg-indigo-100/50">
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer font-black text-[11px] text-indigo-950">
                           <input type="checkbox" id="perm-visualizador-panel_access" onchange="app.admin.updatePermMatrixState()" class="w-4 h-4 accent-indigo-600 rounded"> Acesso
                         </label>
                       </td>
                     </tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Adicionar Novo Contrato no Mural</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_create" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_create" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-panel_create" class="w-4 h-4 accent-indigo-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Editar Dados do Contrato no Mural</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_edit" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_edit" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-panel_edit" class="w-4 h-4 accent-indigo-600"></td></tr>
-                    <tr><td class="p-3 pl-6 text-slate-700">Arquivar / Desarquivar Contrato</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_archive" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_archive" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-panel_archive" class="w-4 h-4 accent-indigo-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Adicionar Novo Contrato no Mural</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_create" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_create" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-panel_create" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-panel_create" class="w-4 h-4 accent-indigo-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Editar Dados do Contrato no Mural</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_edit" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_edit" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-panel_edit" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-panel_edit" class="w-4 h-4 accent-indigo-600"></td></tr>
+                    <tr><td class="p-3 pl-6 text-slate-700">Arquivar / Desarquivar Contrato</td><td class="p-3 text-center"><input type="checkbox" id="perm-comprador-panel_archive" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gestor-panel_archive" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-gerente-panel_archive" class="w-4 h-4 accent-indigo-600"></td><td class="p-3 text-center"><input type="checkbox" id="perm-visualizador-panel_archive" class="w-4 h-4 accent-indigo-600"></td></tr>
                   </tbody>
                 </table>
               </div>

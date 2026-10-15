@@ -841,13 +841,95 @@ app.contratos = {
     return { atual: val2026, seguinte: Math.round((val - val2026) * 100) / 100 };
   },
 
+  formatCurrency(val) {
+    if (val === null || val === undefined || val === '') return '';
+    const num = Number(val);
+    if (isNaN(num)) return '';
+    return `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  },
+
+  parseCurrency(val) {
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    let str = String(val).replace(/R\$\s*/gi, '').trim();
+    if (str.includes('.') && str.includes(',')) {
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else if (str.includes(',')) {
+      str = str.replace(',', '.');
+    } else if (str.includes('.')) {
+      const parts = str.split('.');
+      if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+        str = str.replace(/\./g, '');
+      }
+    }
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  },
+
+  handleCurrencyInput(el) {
+    if (!el) return;
+    const cursor = el.selectionStart;
+    const oldVal = el.value || '';
+    const oldLen = oldVal.length;
+
+    let str = oldVal.replace(/^R\$\s*/i, '');
+    let intPart = '';
+    let decPart = '';
+    let hasComma = false;
+
+    if (str.includes(',')) {
+      hasComma = true;
+      const parts = str.split(',');
+      intPart = parts[0].replace(/\D/g, '');
+      decPart = parts.slice(1).join('').replace(/\D/g, '').slice(0, 2);
+    } else if (str.includes('.') && (str.indexOf('.') === str.lastIndexOf('.')) && (str.length - str.indexOf('.') <= 3) && !str.includes(',')) {
+      hasComma = true;
+      const parts = str.split('.');
+      intPart = parts[0].replace(/\D/g, '');
+      decPart = parts[1].replace(/\D/g, '').slice(0, 2);
+    } else {
+      intPart = str.replace(/\D/g, '');
+    }
+
+    if (!intPart && !decPart && !hasComma) {
+      el.value = '';
+      return;
+    }
+
+    const intFormatted = intPart ? Number(intPart).toLocaleString('pt-BR') : (hasComma ? '0' : '');
+    let formatted = '';
+    if (hasComma) {
+      formatted = `R$ ${intFormatted},${decPart}`;
+    } else if (intFormatted) {
+      formatted = `R$ ${intFormatted}`;
+    }
+
+    el.value = formatted;
+
+    const diff = formatted.length - oldLen;
+    const newPos = Math.max(0, Math.min(formatted.length, (cursor || 0) + diff));
+    try {
+      el.setSelectionRange(newPos, newPos);
+    } catch(e) {}
+  },
+
+  handleCurrencyBlur(el) {
+    if (!el || !el.value) return;
+    const num = this.parseCurrency(el.value);
+    if (num > 0) {
+      el.value = this.formatCurrency(num);
+    } else if (el.value.trim() !== '') {
+      el.value = '';
+    }
+  },
+
   onValorContratoInput(prefix) {
-    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    const valorGlobal = this.parseCurrency(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
     const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
     const cotaInp = document.getElementById(`panel-${prefix}-cota-saude`);
 
     if (chk && !chk.checked && cotaInp) {
-      cotaInp.value = valorGlobal > 0 ? valorGlobal : '';
+      cotaInp.value = valorGlobal > 0 ? this.formatCurrency(valorGlobal) : '';
     }
     this.autoSuggestPartition(prefix, false);
     this.onBudgetPartitionInput(prefix);
@@ -857,7 +939,7 @@ app.contratos = {
     const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
     const cotaInp = document.getElementById(`panel-${prefix}-cota-saude`);
     const hint = document.getElementById(`panel-${prefix}-cota-saude-hint`);
-    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    const valorGlobal = this.parseCurrency(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
     const isComp = chk && chk.checked;
 
     if (hint) {
@@ -869,7 +951,7 @@ app.contratos = {
     }
 
     if (!isComp && cotaInp) {
-      cotaInp.value = valorGlobal > 0 ? valorGlobal : '';
+      cotaInp.value = valorGlobal > 0 ? this.formatCurrency(valorGlobal) : '';
     }
 
     this.onBudgetPartitionInput(prefix);
@@ -882,9 +964,9 @@ app.contratos = {
   autoSuggestPartition(prefix, forceOverwrite = true) {
     const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
     const isComp = chk && chk.checked;
-    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
-    let cotaSaude = parseFloat(document.getElementById(`panel-${prefix}-cota-saude`)?.value);
-    if (!isComp || isNaN(cotaSaude)) cotaSaude = valorGlobal;
+    const valorGlobal = this.parseCurrency(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    let cotaSaude = this.parseCurrency(document.getElementById(`panel-${prefix}-cota-saude`)?.value);
+    if (!isComp || isNaN(cotaSaude) || cotaSaude <= 0) cotaSaude = valorGlobal;
 
     const vencIso = document.getElementById(`panel-${prefix}-venc-iso`)?.value;
     const prazoTxt = document.getElementById(`panel-${prefix}-prazo-txt`)?.value || '';
@@ -894,8 +976,8 @@ app.contratos = {
 
     if (forceOverwrite || (!exAtualEl?.value && !exSeguinteEl?.value)) {
       const part = this.calculateEstimatedPartition(cotaSaude, vencIso, prazoTxt);
-      if (exAtualEl) exAtualEl.value = part.atual > 0 ? part.atual : (cotaSaude > 0 ? cotaSaude : '');
-      if (exSeguinteEl) exSeguinteEl.value = part.seguinte >= 0 ? part.seguinte : '0';
+      if (exAtualEl) exAtualEl.value = part.atual > 0 ? this.formatCurrency(part.atual) : (cotaSaude > 0 ? this.formatCurrency(cotaSaude) : '');
+      if (exSeguinteEl) exSeguinteEl.value = part.seguinte >= 0 ? this.formatCurrency(part.seguinte) : this.formatCurrency(0);
     }
 
     this.onBudgetPartitionInput(prefix);
@@ -904,12 +986,12 @@ app.contratos = {
   onBudgetPartitionInput(prefix) {
     const chk = document.getElementById(`panel-${prefix}-is-compartilhado`);
     const isComp = chk && chk.checked;
-    const valorGlobal = parseFloat(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
-    let cotaSaude = parseFloat(document.getElementById(`panel-${prefix}-cota-saude`)?.value);
-    if (!isComp || isNaN(cotaSaude)) cotaSaude = valorGlobal;
+    const valorGlobal = this.parseCurrency(document.getElementById(`panel-${prefix}-valor`)?.value) || 0;
+    let cotaSaude = this.parseCurrency(document.getElementById(`panel-${prefix}-cota-saude`)?.value);
+    if (!isComp || isNaN(cotaSaude) || cotaSaude <= 0) cotaSaude = valorGlobal;
 
-    const exAtual = parseFloat(document.getElementById(`panel-${prefix}-ex-atual`)?.value) || 0;
-    const exSeguinte = parseFloat(document.getElementById(`panel-${prefix}-ex-seguinte`)?.value) || 0;
+    const exAtual = this.parseCurrency(document.getElementById(`panel-${prefix}-ex-atual`)?.value) || 0;
+    const exSeguinte = this.parseCurrency(document.getElementById(`panel-${prefix}-ex-seguinte`)?.value) || 0;
     const sum = Math.round((exAtual + exSeguinte) * 100) / 100;
 
     const fb = document.getElementById(`panel-${prefix}-budget-feedback`);
@@ -973,7 +1055,7 @@ app.contratos = {
     const empresa = document.getElementById('panel-new-empresa').value.trim();
     let numCtt = document.getElementById('panel-new-ctt-num').value.replace(/[^0-9]/g, '').slice(0, 5);
     const anoCtt = document.getElementById('panel-new-ctt-ano').value;
-    const valor = parseFloat(document.getElementById('panel-new-valor').value) || 0;
+    const valor = this.parseCurrency(document.getElementById('panel-new-valor').value) || 0;
     const rawDataIso = document.getElementById('panel-new-venc-iso').value;
     const dataIso = this.formatDateIso(rawDataIso);
     const fiscal = document.getElementById('panel-new-fiscal').value.toUpperCase();
@@ -993,12 +1075,12 @@ app.contratos = {
 
     // LDO / LOA
     const isCompartilhado = document.getElementById('panel-new-is-compartilhado')?.checked || false;
-    let cotaSaude = parseFloat(document.getElementById('panel-new-cota-saude')?.value);
+    let cotaSaude = this.parseCurrency(document.getElementById('panel-new-cota-saude')?.value);
     if (!isCompartilhado || isNaN(cotaSaude) || cotaSaude <= 0) {
       cotaSaude = valor;
     }
-    const exAtual = parseFloat(document.getElementById('panel-new-ex-atual')?.value);
-    const exSeguinte = parseFloat(document.getElementById('panel-new-ex-seguinte')?.value);
+    const exAtual = this.parseCurrency(document.getElementById('panel-new-ex-atual')?.value);
+    const exSeguinte = this.parseCurrency(document.getElementById('panel-new-ex-seguinte')?.value);
     const part = this.calculateEstimatedPartition(cotaSaude, dataIso, prazoTxt);
     const exercicioAtual = !isNaN(exAtual) && exAtual >= 0 ? exAtual : part.atual;
     const exercicioSeguinte = !isNaN(exSeguinte) && exSeguinte >= 0 ? exSeguinte : part.seguinte;
@@ -1067,7 +1149,7 @@ app.contratos = {
     this.populateYearSelect(document.getElementById('panel-edit-ctt-ano'), ano);
     this.populateFiscalSelect(document.getElementById('panel-edit-fiscal'), item.fiscal);
 
-    document.getElementById('panel-edit-valor').value = item.valorContrato;
+    document.getElementById('panel-edit-valor').value = item.valorContrato > 0 ? this.formatCurrency(item.valorContrato) : '';
     document.getElementById('panel-edit-venc-iso').value = this.formatDateIso(item.dataVencimentoIso);
     this.setupPrazoControls('edit', item.prazoVencimento, item.dataVencimentoIso);
     document.getElementById('panel-edit-objeto').value = item.objeto || '';
@@ -1092,11 +1174,11 @@ app.contratos = {
     const chkComp = document.getElementById('panel-edit-is-compartilhado');
     if (chkComp) chkComp.checked = budget.isCompartilhado;
     const cotaEl = document.getElementById('panel-edit-cota-saude');
-    if (cotaEl) cotaEl.value = budget.cotaSaude > 0 ? budget.cotaSaude : '';
+    if (cotaEl) cotaEl.value = budget.cotaSaude > 0 ? this.formatCurrency(budget.cotaSaude) : '';
     const exAtualEl = document.getElementById('panel-edit-ex-atual');
-    if (exAtualEl) exAtualEl.value = budget.exercicioAtual > 0 ? budget.exercicioAtual : '';
+    if (exAtualEl) exAtualEl.value = budget.exercicioAtual > 0 ? this.formatCurrency(budget.exercicioAtual) : '';
     const exSeguinteEl = document.getElementById('panel-edit-ex-seguinte');
-    if (exSeguinteEl) exSeguinteEl.value = budget.exercicioSeguinte >= 0 ? budget.exercicioSeguinte : '';
+    if (exSeguinteEl) exSeguinteEl.value = budget.exercicioSeguinte >= 0 ? this.formatCurrency(budget.exercicioSeguinte) : '';
     this.onCompartilhadoChange('edit');
     this.onBudgetPartitionInput('edit');
 
@@ -1127,7 +1209,7 @@ app.contratos = {
 
     item.empresa = document.getElementById('panel-edit-empresa').value.trim();
     item.numeroCtt = `${numCtt}/${anoCtt}`;
-    item.valorContrato = parseFloat(document.getElementById('panel-edit-valor').value) || 0;
+    item.valorContrato = this.parseCurrency(document.getElementById('panel-edit-valor').value) || 0;
     item.dataVencimentoIso = this.formatDateIso(document.getElementById('panel-edit-venc-iso').value);
     item.fiscal = document.getElementById('panel-edit-fiscal').value.toUpperCase();
     item.prazoVencimento = document.getElementById('panel-edit-prazo-txt').value.trim();
@@ -1137,12 +1219,12 @@ app.contratos = {
 
     // LDO / LOA
     const isCompartilhado = document.getElementById('panel-edit-is-compartilhado')?.checked || false;
-    let cotaSaude = parseFloat(document.getElementById('panel-edit-cota-saude')?.value);
+    let cotaSaude = this.parseCurrency(document.getElementById('panel-edit-cota-saude')?.value);
     if (!isCompartilhado || isNaN(cotaSaude) || cotaSaude <= 0) {
       cotaSaude = item.valorContrato;
     }
-    const exAtual = parseFloat(document.getElementById('panel-edit-ex-atual')?.value);
-    const exSeguinte = parseFloat(document.getElementById('panel-edit-ex-seguinte')?.value);
+    const exAtual = this.parseCurrency(document.getElementById('panel-edit-ex-atual')?.value);
+    const exSeguinte = this.parseCurrency(document.getElementById('panel-edit-ex-seguinte')?.value);
     const part = this.calculateEstimatedPartition(cotaSaude, item.dataVencimentoIso, item.prazoVencimento);
     const exercicioAtual = !isNaN(exAtual) && exAtual >= 0 ? exAtual : part.atual;
     const exercicioSeguinte = !isNaN(exSeguinte) && exSeguinte >= 0 ? exSeguinte : part.seguinte;
