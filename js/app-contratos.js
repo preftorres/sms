@@ -2343,66 +2343,94 @@ app.contratos = {
                       </div>
                   </div>
 
-                  <div class="flex justify-between items-center pt-0.5">
-                      <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento CTT:</span>
-                      <span class="font-bold text-slate-800 text-xs">${this.formatDateBr(c.dataVencimentoIso) || 'Não informado'}</span>
-                  </div>
+              <div class="flex justify-between items-center pt-0.5">
+                  <span class="text-slate-400 font-bold text-[10px] uppercase">Vencimento CTT:</span>
+                  <span class="font-bold text-slate-800 text-xs">${this.formatDateBr(c.dataVencimentoIso) || 'Não informado'}</span>
               </div>
-
-              <!-- LINK OFICIAL DO CONTRATO NA PREFEITURA / BETHA CLOUD -->
-              ${c.linkContrato ? `
-                <div class="mt-2.5">
-                  <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/90 transition shadow-2xs group/link" title="Abrir página oficial do contrato na Prefeitura / Betha Transparência">
-                    <span>🔗</span>
-                    <span class="group-hover/link:underline">Contrato na Prefeitura (Betha)</span>
-                    <span class="text-[10px] text-blue-400">↗</span>
-                  </a>
-                </div>
-              ` : ''}
-
-              ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
-
-              <!-- OBSERVAÇÃO INSTITUCIONAL -->
-              ${this.cleanObservacao(c.observacao) ? `
-                <div class="mt-2.5 p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 leading-snug">
-                  <div class="flex items-center justify-between mb-0.5">
-                    <span class="font-black text-[10px] text-amber-800 uppercase tracking-wide flex items-center gap-1">
-                      📝 Observação:
-                    </span>
-                    <button type="button" onclick="event.stopPropagation(); app.contratos.openContractHistoryModal(${c.id})" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-0.5">
-                      <span>📜 Alterações</span>
-                    </button>
-                  </div>
-                  <span class="break-words line-clamp-3" title="${this.cleanObservacao(c.observacao)}">${this.cleanObservacao(c.observacao)}</span>
-                </div>
-              ` : ''}
           </div>
 
-          <!-- AÇÕES NO RODAPÉ -->
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              ${app.permissions.can('panel_archive') ? `
-                <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-slate-400 hover:text-slate-700">
-                    ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
-                </button>
-              ` : `<span></span>`}
-
-              <div class="flex items-center gap-1.5">
-                  <button type="button" onclick="app.contratos.openContractHistoryModal(${c.id})" title="Ver Histórico de Alterações" class="p-1.5 hover:bg-blue-50 text-slate-500 hover:text-blue-700 rounded-lg font-bold">
-                    📜
-                  </button>
-                  ${app.permissions.can('panel_edit') ? `
-                    <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
-                        ✏️
-                    </button>
-                  ` : ''}
-                  ${app.admin.isAdminUser() ? `
-                    <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Administrador)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
-                        🗑️
-                    </button>
-                  ` : ''}
+          <!-- VÍNCULO COM EMPENHOS DO CONTRATO -->
+          ${(() => {
+            const linkedEmps = (app.empenhos && typeof app.empenhos.getEmpenhosByContract === 'function')
+              ? app.empenhos.getEmpenhosByContract(c)
+              : [];
+            if (linkedEmps.length === 0) return '';
+            const totalEmp = linkedEmps.reduce((acc, e) => acc + (Number(e.valorTotal) || 0), 0);
+            const usadoEmp = linkedEmps.reduce((acc, e) => acc + (Number(e.valorUsado) || 0), 0);
+            const saldoEmp = Math.max(0, totalEmp - usadoEmp);
+            const cttFormatted = this.formatCttNumber(c.numeroCtt);
+            return `
+              <div onclick="event.stopPropagation(); app.empenhos.filterByContract('${String(cttFormatted).replace(/'/g, "\\'")}')" class="mt-2.5 p-2.5 bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 group/emp" title="Clique para ver os empenhos deste contrato">
+                <div class="min-w-0">
+                  <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wide flex items-center gap-1">
+                    <span>💳</span> ${linkedEmps.length} Empenho${linkedEmps.length > 1 ? 's' : ''} (${linkedEmps.map(e => e.numeroEmpenho).join(', ')})
+                  </span>
+                  <span class="text-[11px] font-black text-emerald-700 block mt-0.5">
+                    Saldo Restante: R$ ${saldoEmp.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <span class="text-[10px] font-black text-emerald-700 group-hover/emp:translate-x-0.5 transition shrink-0">Ver →</span>
               </div>
+            `;
+          })()}
+
+          <!-- LINK OFICIAL DO CONTRATO NA PREFEITURA / BETHA CLOUD -->
+          ${c.linkContrato ? `
+            <div class="mt-2.5">
+              <a href="${c.linkContrato}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/90 transition shadow-2xs group/link" title="Abrir página oficial do contrato na Prefeitura / Betha Transparência">
+                <span>🔗</span>
+                <span class="group-hover/link:underline">Contrato na Prefeitura (Betha)</span>
+                <span class="text-[10px] text-blue-400">↗</span>
+              </a>
+            </div>
+          ` : ''}
+
+          ${c.objeto ? `<p class="text-[11px] text-slate-500 italic mt-2 line-clamp-2">${c.objeto}</p>` : ''}
+
+          <!-- OBSERVAÇÃO INSTITUCIONAL -->
+          ${this.cleanObservacao(c.observacao) ? `
+            <div class="mt-2.5 p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 leading-snug">
+              <div class="flex items-center justify-between mb-0.5">
+                <span class="font-black text-[10px] text-amber-800 uppercase tracking-wide flex items-center gap-1">
+                  📝 Observação:
+                </span>
+                <button type="button" onclick="event.stopPropagation(); app.contratos.openContractHistoryModal(${c.id})" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-0.5">
+                  <span>📜 Alterações</span>
+                </button>
+              </div>
+              <span class="break-words line-clamp-3" title="${this.cleanObservacao(c.observacao)}">${this.cleanObservacao(c.observacao)}</span>
+            </div>
+          ` : ''}
+      </div>
+
+      <!-- AÇÕES NO RODAPÉ -->
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          ${app.permissions.can('panel_archive') ? `
+            <button onclick="app.contratos.toggleArchive(${c.id})" class="text-[11px] font-bold text-slate-400 hover:text-slate-700">
+                ${isArch ? '↩️ Desarquivar' : '📁 Arquivar'}
+            </button>
+          ` : `<span></span>`}
+
+          <div class="flex items-center gap-1.5">
+              <button type="button" onclick="app.empenhos.filterByContract('${String(this.formatCttNumber(c.numeroCtt)).replace(/'/g, "\\'")}')" title="Ver ou Cadastrar Empenhos deste Contrato" class="p-1.5 hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 rounded-lg font-bold">
+                💳
+              </button>
+              <button type="button" onclick="app.contratos.openContractHistoryModal(${c.id})" title="Ver Histórico de Alterações" class="p-1.5 hover:bg-blue-50 text-slate-500 hover:text-blue-700 rounded-lg font-bold">
+                📜
+              </button>
+              ${app.permissions.can('panel_edit') ? `
+                <button onclick="app.contratos.openEditModal(${c.id})" title="Editar Contrato" class="p-1.5 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-lg font-bold">
+                    ✏️
+                </button>
+              ` : ''}
+              ${app.admin.isAdminUser() ? `
+                <button onclick="app.contratos.openDeleteModal(${c.id})" title="Excluir Definitivo (Administrador)" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg font-bold">
+                    🗑️
+                </button>
+              ` : ''}
           </div>
       </div>
+  </div>
     `;
   },
 
@@ -2663,14 +2691,30 @@ app.render.contratosHub = function(el) {
   const currFilter = app.state.panelContractsFilter || 'MURAL';
   const currSort = app.state.panelSort || 'ALFABETICA_ASC';
 
+  const activeEmpenhosCount = (app.state.empenhos || []).filter(e => e && e.status !== 'Arquivado').length;
+
   el.innerHTML = `
     <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
         
-        <div class="mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <button onclick="app.ui.navigate('saude_links')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition group py-1">
                 <svg class="w-4 h-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 <span>Voltar para o Portal de Acessos</span>
             </button>
+
+            <!-- SELETOR INTEGRADO: CONTRATOS LDO vs CONTROLE DE EMPENHOS -->
+            <div class="inline-flex items-center bg-slate-200/80 p-1 rounded-2xl border border-slate-300/80 self-start sm:self-auto">
+                <button onclick="app.ui.navigate('contratos')" class="px-3.5 py-1.5 rounded-xl text-xs font-black bg-white text-indigo-700 shadow-xs transition flex items-center gap-1.5">
+                    <span>📋</span>
+                    <span>Mural de Contratos (LDO)</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 text-indigo-800">${totalPosicoesMural}</span>
+                </button>
+                <button onclick="app.ui.navigate('empenhos')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                    <span>💳</span>
+                    <span>Controle de Empenhos</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-300/80 text-slate-700">${activeEmpenhosCount}</span>
+                </button>
+            </div>
         </div>
 
         <!-- CABEÇALHO DO PAINEL -->

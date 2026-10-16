@@ -85,6 +85,20 @@ function popularPainelContratosMural() {
   Logger.log("✓ Painel de Contratos atualizado com sucesso com os 31 contratos do mural!");
 }
 
+/**
+ * ============================================================================
+ * FUNÇÃO DE EXECUÇÃO DIRETA: CRIAR / POPULAR ABA _Empenhos NA PLANILHA
+ * Selecione esta função no menu suspenso do editor e clique em "Executar" (Run)
+ * se quiser criar imediatamente a aba _Empenhos na planilha.
+ * (Nota: Ela também é criada automaticamente na primeira leitura/gravação do painel!)
+ * ============================================================================
+ */
+function popularEmpenhosIniciais() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ensureEmpenhosStructure(ss);
+  Logger.log("✓ Aba _Empenhos pronta! Total de linhas na aba: " + sheet.getLastRow());
+}
+
 // IDs REAIS DAS PASTAS DE BACKUP DO GOOGLE DRIVE
 const ID_PASTA_PREFTORRES = "1omc63ImTO0aVWHT15WDjEusbhqlN-r92";
 const ID_PASTA_DIEGO = "1x38IjFJ3PjYT3dPV9_Lc9KeOIu7yTCKb";
@@ -96,10 +110,16 @@ const DOTACOES_SHEET = "_Dotacoes";
 const PANEL_SHEET = "_Painel_Contratos";
 const PERMISSIONS_SHEET = "_Permissoes";
 const AUDIT_LOGS_SHEET = "_Logs_Auditoria";
+const EMPENHOS_SHEET = "_Empenhos";
 
 const HEADERS_PANEL = [
   "id", "empresa", "numeroCtt", "prazoVencimento", "dataVencimentoIso",
   "valorContrato", "fiscal", "status", "objeto", "criadoEm", "criadoPor", "observacao", "linkContrato"
+];
+const HEADERS_EMPENHOS = [
+  "id", "numeroEmpenho", "empresa", "valorTotal", "valorUsado", "ata", "numeroContrato",
+  "contratoId", "objeto", "dataEmissaoIso", "status", "observacao", "linkExterno",
+  "criadoEm", "criadoPor", "historicoConsumoJson"
 ];
 const HEADERS_EXAMS = ["id", "item", "cat", "descEmpenho", "descPrestador", "vlUnit", "qtdEmpenho", "saldoAnterior", "faturado"];
 const HEADERS_SHORTCUTS = ["id", "title", "url", "desc"];
@@ -161,6 +181,59 @@ function ensurePermissionsStructure(ss) {
   if (!sheet) {
     sheet = ss.insertSheet(PERMISSIONS_SHEET);
     sheet.appendRow(["perfil", "permissoesJson"]);
+  }
+  return sheet;
+}
+
+const INITIAL_EMPENHOS_ROWS = [
+  [
+    1, "14/2026", "CARLOS DOS SANTOS TEIXEIRA", 186600.00, 139950.00, "", "04/2023",
+    8, "Locação Imóvel SAMU (Rua Coronel Pacheco, 784 - Torres/RS)", "2026-01-10", "Ativo",
+    "Aluguel para pagamento a partir do dia 05 de cada mês no valor bruto de R$ 15.550,00 menos 4,8% de IR (R$ 14.803,60 líquido).",
+    "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109",
+    "16/10/2026", "diego", "[]"
+  ],
+  [
+    2, "8/2025", "CARLOS DOS SANTOS TEIXEIRA", 90000.00, 90000.00, "", "04/2023",
+    8, "Locação Imóvel SAMU - Exercício Anterior (Quitado)", "2025-01-08", "Ativo",
+    "Empenho 8/2025 integralmente utilizado no exercício.", "",
+    "16/10/2026", "diego", "[]"
+  ],
+  [
+    3, "3173/2026", "LABORATORIO DE ANALISES CLINICAS FONTANA LTDA", 129163.00, 48291.20, "Chamamento 210/26", "73/2026",
+    19, "Credenciamento de Exames Laboratoriais - Cota Global", "2026-03-15", "Ativo",
+    "Empenho Global vinculado ao Termo de Credenciamento de análises clínicas.", "",
+    "16/10/2026", "admin", "[]"
+  ],
+  [
+    4, "3406/2026", "LABORATORIO BIOMEDICO LTDA - ME", 85000.00, 31450.00, "Chamamento 210/26", "67/2026",
+    "", "Prestação de Serviços de Exames Laboratoriais (Biomédico)", "2026-04-02", "Ativo",
+    "Controle de saldo de faturamento mensal.", "",
+    "16/10/2026", "admin", "[]"
+  ]
+];
+
+function ensureEmpenhosStructure(ss) {
+  ss = ss || SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(EMPENHOS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(EMPENHOS_SHEET);
+    sheet.appendRow(HEADERS_EMPENHOS);
+    sheet.getRange("B:B").setNumberFormat("@");
+    sheet.getRange("G:G").setNumberFormat("@");
+    try {
+      sheet.getRange(1, 1, 1, HEADERS_EMPENHOS.length)
+        .setFontWeight("bold")
+        .setBackground("#0f172a")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    } catch (e) {}
+    if (INITIAL_EMPENHOS_ROWS.length > 0) {
+      sheet.getRange(2, 1, INITIAL_EMPENHOS_ROWS.length, HEADERS_EMPENHOS.length).setValues(INITIAL_EMPENHOS_ROWS);
+    }
+  } else {
+    sheet.getRange("B:B").setNumberFormat("@");
+    sheet.getRange("G:G").setNumberFormat("@");
   }
   return sheet;
 }
@@ -452,6 +525,41 @@ function getPanelContractsList(ss) {
   return list;
 }
 
+function getEmpenhosList(ss) {
+  ss = ss || SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ensureEmpenhosStructure(ss);
+  const rows = sheet.getDataRange().getValues();
+  const list = [];
+  for (let i = 1; i < rows.length; i++) {
+    if (!rows[i][0] && rows[i][0] !== 0) continue;
+    const numEmp = formatCellToCttNumber(rows[i][1]);
+    if (!numEmp) continue;
+    let hist = [];
+    try {
+      if (rows[i][15]) hist = JSON.parse(String(rows[i][15]));
+    } catch (e) { hist = []; }
+    list.push({
+      id: Number(rows[i][0]),
+      numeroEmpenho: numEmp,
+      empresa: String(rows[i][2] || ""),
+      valorTotal: Number(rows[i][3]) || 0,
+      valorUsado: Number(rows[i][4]) || 0,
+      ata: String(rows[i][5] || ""),
+      numeroContrato: formatCellToCttNumber(rows[i][6]),
+      contratoId: rows[i][7] || "",
+      objeto: String(rows[i][8] || ""),
+      dataEmissaoIso: formatCellToIsoDate(rows[i][9]),
+      status: String(rows[i][10] || "Ativo"),
+      observacao: String(rows[i][11] || ""),
+      linkExterno: String(rows[i][12] || ""),
+      criadoEm: String(rows[i][13] || ""),
+      criadoPor: String(rows[i][14] || ""),
+      historicoConsumo: Array.isArray(hist) ? hist : []
+    });
+  }
+  return list;
+}
+
 function getDotacoesList(ss) {
   ss = ss || SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ensureDotacoesStructure(ss);
@@ -702,6 +810,7 @@ function doGet(e) {
     const shortcuts = getShortcutsList(ss);
     const dotacoes = getDotacoesList(ss);
     const panelContracts = getPanelContractsList(ss);
+    const empenhos = getEmpenhosList(ss);
     const permissions = getPermissionsMatrix(ss);
     
     const requestedContract = (e && e.parameter && e.parameter.contract) 
@@ -764,6 +873,7 @@ function doGet(e) {
       shortcuts: shortcuts,
       dotacoes: dotacoes,
       panelContracts: panelContracts,
+      empenhos: empenhos,
       permissions: permissions
     })).setMimeType(ContentService.MimeType.JSON);
 
@@ -922,6 +1032,100 @@ function doPost(e) {
         message: "Painel de contratos sincronizado com os 31 contratos auditados do mural físico!",
         panelContracts: updatedList
       })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // --- MÓDULO DE CONTROLE DE EMPENHOS & SALDOS ---
+    if (action === "CREATE_EMPENHO") {
+      const sheet = ensureEmpenhosStructure(ss);
+      const emp = payload.empenho;
+      if (!emp || !String(emp.numeroEmpenho || "").trim()) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Número do empenho é obrigatório." })).setMimeType(ContentService.MimeType.JSON);
+      }
+      const numEmpStr = (String(emp.numeroEmpenho).indexOf("/") !== -1 && String(emp.numeroEmpenho).indexOf("'") === -1)
+        ? "'" + String(emp.numeroEmpenho).trim()
+        : String(emp.numeroEmpenho).trim();
+      const numCttStr = (String(emp.numeroContrato || "").indexOf("/") !== -1 && String(emp.numeroContrato || "").indexOf("'") === -1)
+        ? "'" + String(emp.numeroContrato).trim()
+        : String(emp.numeroContrato || "").trim();
+
+      sheet.appendRow([
+        emp.id || Date.now(), numEmpStr, emp.empresa || "", Number(emp.valorTotal) || 0, Number(emp.valorUsado) || 0,
+        emp.ata || "", numCttStr, emp.contratoId || "", emp.objeto || "", emp.dataEmissaoIso || "",
+        emp.status || "Ativo", emp.observacao || "", emp.linkExterno || "", emp.criadoEm || "", emp.criadoPor || "",
+        JSON.stringify(emp.historicoConsumo || [])
+      ]);
+      logAudit(ss, {
+        usuario: payload.currentUser || emp.criadoPor || "admin",
+        modulo: "Empenhos",
+        acao: "Cadastrar Empenho",
+        detalhes: payload.detalhes || `Empenho nº ${emp.numeroEmpenho} - ${emp.empresa}`,
+        registroId: emp.numeroEmpenho
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "UPDATE_EMPENHO") {
+      const sheet = ensureEmpenhosStructure(ss);
+      const emp = payload.empenho;
+      const rows = sheet.getDataRange().getValues();
+      let found = false;
+      for (let i = 1; i < rows.length; i++) {
+        if (Number(rows[i][0]) === Number(emp.id)) {
+          const rowNum = i + 1;
+          sheet.getRange(rowNum, 2).setNumberFormat("@").setValue(String(emp.numeroEmpenho || ""));
+          sheet.getRange(rowNum, 3).setValue(emp.empresa || "");
+          sheet.getRange(rowNum, 4).setValue(Number(emp.valorTotal) || 0);
+          sheet.getRange(rowNum, 5).setValue(Number(emp.valorUsado) || 0);
+          sheet.getRange(rowNum, 6).setValue(emp.ata || "");
+          sheet.getRange(rowNum, 7).setNumberFormat("@").setValue(String(emp.numeroContrato || ""));
+          sheet.getRange(rowNum, 8).setValue(emp.contratoId || "");
+          sheet.getRange(rowNum, 9).setValue(emp.objeto || "");
+          sheet.getRange(rowNum, 10).setValue(emp.dataEmissaoIso || "");
+          sheet.getRange(rowNum, 11).setValue(emp.status || "Ativo");
+          sheet.getRange(rowNum, 12).setValue(emp.observacao || "");
+          sheet.getRange(rowNum, 13).setValue(emp.linkExterno || "");
+          sheet.getRange(rowNum, 16).setValue(JSON.stringify(emp.historicoConsumo || []));
+          found = true;
+          break;
+        }
+      }
+      if (!found && emp && emp.numeroEmpenho) {
+        sheet.appendRow([
+          emp.id || Date.now(), String(emp.numeroEmpenho), emp.empresa || "", Number(emp.valorTotal) || 0, Number(emp.valorUsado) || 0,
+          emp.ata || "", String(emp.numeroContrato || ""), emp.contratoId || "", emp.objeto || "", emp.dataEmissaoIso || "",
+          emp.status || "Ativo", emp.observacao || "", emp.linkExterno || "", emp.criadoEm || "", emp.criadoPor || "",
+          JSON.stringify(emp.historicoConsumo || [])
+        ]);
+      }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Empenhos",
+        acao: "Editar Empenho",
+        detalhes: payload.detalhes || `Empenho nº ${emp.numeroEmpenho} atualizado`,
+        registroId: emp.numeroEmpenho
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "DELETE_EMPENHO") {
+      const sheet = ensureEmpenhosStructure(ss);
+      const rows = sheet.getDataRange().getValues();
+      let empNum = payload.numeroEmpenho || payload.id;
+      for (let i = 1; i < rows.length; i++) {
+        if (Number(rows[i][0]) === Number(payload.id)) {
+          empNum = rows[i][1] || empNum;
+          sheet.deleteRow(i + 1);
+          break;
+        }
+      }
+      logAudit(ss, {
+        usuario: payload.currentUser || "admin",
+        modulo: "Empenhos",
+        acao: "Excluir Empenho",
+        detalhes: `Empenho ${empNum} excluído em definitivo`,
+        registroId: empNum
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // --- MÓDULO DE DOTAÇÕES (FLUXO 3 ETAPAS) ---

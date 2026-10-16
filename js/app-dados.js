@@ -16,6 +16,7 @@ const CONFIG = {
     examsCache: 'torres_exams_cache_v1',
     dotacoesCache: 'torres_dotacoes_cache_v6',
     panelContracts: 'torres_panel_contracts_v1',
+    empenhosCache: 'torres_empenhos_v1',
     permissions: 'torres_permissions_matrix_v2',
     auditSession: 'torres_audit_logged_user'
   }
@@ -630,3 +631,84 @@ const DEFAULT_PERMISSIONS = {
     'panel_archive': false
   }
 };
+
+// BASE INICIAL DE EMPENHOS (SECRETARIA MUNICIPAL DE SAÚDE)
+const INITIAL_EMPENHOS = [
+  {
+    id: 1001,
+    numeroEmpenho: "14/2026",
+    empresa: "CARLOS DOS SANTOS TEIXEIRA",
+    valorTotal: 186600.00,
+    valorUsado: 139950.00,
+    ata: "",
+    numeroContrato: "04/2023",
+    contratoId: 8,
+    dataEmissaoIso: "2026-01-05",
+    objeto: "Locação Imóvel SAMU (Rua Coronel Pacheco, 784 - Torres/RS)",
+    observacao: "Aluguel mensal bruto R$ 15.550,00 (líquido R$ 14.803,60 após 4,8% IR). Pagamento a partir do dia 05.",
+    linkExterno: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109",
+    status: "Ativo",
+    criadoEm: "15/10/2026 às 11:28",
+    criadoPor: "diego",
+    historicoConsumo: [
+      { id: 1, dataHora: "15/10/2026 às 11:28", usuario: "diego", valor: 139950.00, documento: "Competências Jan a Set/2026", observacao: "9 parcelas mensais executadas (R$ 15.550,00/mês)", saldoAnterior: 186600.00, saldoNovo: 46650.00 }
+    ]
+  },
+  {
+    id: 1002,
+    numeroEmpenho: "8/2025",
+    empresa: "CARLOS DOS SANTOS TEIXEIRA",
+    valorTotal: 90000.00,
+    valorUsado: 90000.00,
+    ata: "",
+    numeroContrato: "04/2023",
+    contratoId: 8,
+    dataEmissaoIso: "2025-01-10",
+    objeto: "Locação Imóvel SAMU - Exercício 2025",
+    observacao: "Empenho do exercício 2025 integralmente utilizado.",
+    linkExterno: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109",
+    status: "Ativo",
+    criadoEm: "15/10/2026 às 11:28",
+    criadoPor: "diego",
+    historicoConsumo: [
+      { id: 1, dataHora: "15/10/2026 às 11:28", usuario: "diego", valor: 90000.00, documento: "Encerramento Exercício 2025", observacao: "Saldo integralmente liquidado", saldoAnterior: 90000.00, saldoNovo: 0.00 }
+    ]
+  },
+  {
+    id: 1003,
+    numeroEmpenho: "3173/2026",
+    empresa: "LABORATORIO DE ANALISES CLINICAS FONTANA LTDA",
+    valorTotal: 196425.50,
+    valorUsado: 36128.40,
+    ata: "",
+    numeroContrato: "73/2026",
+    contratoId: null,
+    dataEmissaoIso: "2026-03-10",
+    objeto: "Empenho Global - Prestação de Serviços de Exames Laboratoriais",
+    observacao: "Vinculado à Auditoria de Cotas de Exames (NFS-e 3205 a 3264).",
+    linkExterno: "",
+    status: "Ativo",
+    criadoEm: "15/10/2026 às 14:00",
+    criadoPor: "admin",
+    historicoConsumo: []
+  },
+  {
+    id: 1004,
+    numeroEmpenho: "3406/2026",
+    empresa: "LABORATORIO BIOMEDICO LTDA - ME",
+    valorTotal: 120000.00,
+    valorUsado: 48500.00,
+    ata: "",
+    numeroContrato: "67/2026",
+    contratoId: null,
+    dataEmissaoIso: "2026-03-15",
+    objeto: "Análises Clínicas e Exames Laboratoriais",
+    observacao: "Empenho principal de exames laboratoriais.",
+    linkExterno: "",
+    status: "Ativo",
+    criadoEm: "15/10/2026 às 14:00",
+    criadoPor: "admin",
+    historicoConsumo: []
+  }
+];
+

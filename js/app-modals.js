@@ -1597,6 +1597,239 @@ Exemplo do formato:
       </div>
 
       <!-- ================================================================= -->
+      <!-- 19. MODAL: CADASTRAR / EDITAR EMPENHO (COM DONUT AO VIVO)         -->
+      <!-- ================================================================= -->
+      <div id="modal-form-empenho" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 fade-in my-auto max-h-[92vh] overflow-y-auto custom-scroll">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Controle de Execução Orçamentária</span>
+              <h3 id="emp-form-title" class="text-lg font-black text-slate-900">Cadastrar Novo Empenho</h3>
+              <p id="emp-form-subtitle" class="text-xs text-slate-500">Controle de saldo, ATA geradora e contrato vinculado</p>
+            </div>
+            <button type="button" onclick="app.empenhos.closeFormModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
+          </div>
+
+          <form onsubmit="app.empenhos.saveEmpenho(event)" class="space-y-4 mt-4 text-xs">
+            <input type="hidden" id="emp-form-id">
+
+            <!-- LINHA 1: Nº DO EMPENHO, DATA DE EMISSÃO E ATA GERADORA -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="font-bold text-slate-700 block mb-1">Nº do Empenho *</label>
+                <input type="text" id="emp-form-numero" required placeholder="Ex: 14/2026 ou 3173/2026" class="w-full p-2.5 bg-slate-50 border rounded-xl font-mono font-black text-blue-700 outline-none focus:bg-white focus:border-blue-500">
+              </div>
+              <div>
+                <label class="font-bold text-slate-700 block mb-1">Data de Emissão</label>
+                <input type="date" id="emp-form-data" class="w-full p-2.5 bg-slate-50 border rounded-xl font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-500">
+              </div>
+              <div>
+                <label class="font-bold text-slate-700 block mb-1">ATA que gerou o Empenho</label>
+                <input type="text" id="emp-form-ata" placeholder="Ex: 229/2025 (Opcional)" class="w-full p-2.5 bg-slate-50 border rounded-xl font-mono font-bold text-amber-900 outline-none focus:bg-white focus:border-amber-500">
+              </div>
+            </div>
+
+            <!-- LINHA 2: VÍNCULO COM CONTRATO (OPCIONAL - SELECIONÁVEL OU DIGITÁVEL) -->
+            <div class="p-3.5 bg-indigo-50/50 border border-indigo-200/80 rounded-2xl space-y-2.5">
+              <div class="flex items-center justify-between">
+                <label class="font-black text-indigo-950 text-xs flex items-center gap-1.5">
+                  <span>📄</span> Contrato Vinculado (Opcional)
+                </label>
+                <span class="text-[10px] text-indigo-700 font-semibold">Selecionar um contrato preenche a empresa automaticamente</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div class="sm:col-span-2">
+                  <select id="emp-form-contrato-select" onchange="app.empenhos.onContractSelectChange('form')" class="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-slate-800 outline-none focus:border-indigo-600 text-xs">
+                    <option value="">— Sem Contrato Vinculado (Avulso / Somente ATA) —</option>
+                  </select>
+                </div>
+                <div>
+                  <input type="text" id="emp-form-contrato-manual" placeholder="Ou digite Nº CTT (Ex: 04/2023)" class="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-mono font-bold text-indigo-900 outline-none focus:border-indigo-600 text-xs">
+                </div>
+              </div>
+            </div>
+
+            <!-- LINHA 3: EMPRESA / CREDOR -->
+            <div>
+              <label class="font-bold text-slate-700 block mb-1">Empresa / Fornecedor (Credor) *</label>
+              <input type="text" id="emp-form-empresa" required placeholder="Razão Social ou Nome do Credor..." class="w-full p-2.5 bg-slate-50 border rounded-xl font-bold text-slate-900 outline-none focus:bg-white focus:border-blue-500">
+            </div>
+
+            <!-- LINHA 4: VALORES FINANCEIROS + PREVIEW DO GRÁFICO CIRCULAR EM TEMPO REAL -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-center gap-4">
+              <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="font-black text-slate-700 block mb-1">Valor Total Empenhado (R$) *</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-2.5 font-black text-slate-400">R$</span>
+                    <input type="text" inputmode="numeric" id="emp-form-total" required oninput="app.empenhos.onValueInput('form', 'total')" placeholder="0,00" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl font-black text-slate-900 outline-none focus:border-blue-600">
+                  </div>
+                </div>
+                <div>
+                  <label class="font-black text-slate-700 block mb-1">Valor Já Usado / Liquidado (R$)</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-2.5 font-black text-slate-400">R$</span>
+                    <input type="text" inputmode="numeric" id="emp-form-usado" oninput="app.empenhos.onValueInput('form', 'usado')" placeholder="0,00" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl font-black text-amber-800 outline-none focus:border-amber-500">
+                  </div>
+                </div>
+              </div>
+
+              <!-- PREVIEW DO SALDO RESTANTE E DONUT -->
+              <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-2xs shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                <div id="emp-form-donut-preview"></div>
+                <div>
+                  <span class="text-[9px] font-black uppercase text-slate-400 block">Saldo Restante:</span>
+                  <span id="emp-form-saldo-preview" class="text-base font-black text-emerald-700">R$ 0,00</span>
+                  <div class="mt-1">
+                    <span id="emp-form-status-preview" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800">Saldo Disponível</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LINHA 5: OBJETO E LINK EXTERNO -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="font-bold text-slate-700 block mb-1">Objeto / Finalidade do Empenho</label>
+                <input type="text" id="emp-form-objeto" placeholder="Ex: Locação de Imóvel SAMU / Aquisição de insumos..." class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none focus:bg-white focus:border-blue-500">
+              </div>
+              <div>
+                <label class="font-bold text-slate-700 block mb-1">Link Portal da Transparência / Betha (Opcional)</label>
+                <input type="url" id="emp-form-link" placeholder="https://transparencia.betha.cloud/..." class="w-full p-2.5 bg-slate-50 border rounded-xl text-blue-700 font-medium outline-none focus:bg-white focus:border-blue-500">
+              </div>
+            </div>
+
+            <!-- LINHA 6: OBSERVAÇÃO + LINK DE HISTÓRICO -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-700">Observação / Anotações Internas</label>
+                <button type="button" id="emp-btn-hist-modal" onclick="app.empenhos.openHistoryModal()" class="hidden text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition">
+                  <span>📜</span>
+                  <span>Histórico de Consumo & Alterações</span>
+                </button>
+              </div>
+              <textarea id="emp-form-observacao" rows="2" placeholder="Anotações sobre notas fiscais, rateio ou particularidades deste empenho..." class="w-full p-2.5 bg-amber-50/40 border border-amber-300 rounded-xl outline-none focus:bg-white focus:border-amber-500 text-slate-800 font-medium"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t">
+              <button type="button" onclick="app.empenhos.closeFormModal()" class="px-4 py-2.5 border rounded-xl font-bold text-slate-500 hover:bg-slate-100">Cancelar</button>
+              <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md">Salvar Empenho</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- 20. MODAL: ABATER VALOR / LANÇAR NOTA OU USO RÁPIDO NO EMPENHO    -->
+      <!-- ================================================================= -->
+      <div id="modal-abater-empenho" class="hidden fixed inset-0 z-[65] bg-slate-900/75 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-emerald-200 fade-in">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Baixa Rápida de Saldo</span>
+              <h3 class="text-base font-black text-slate-900">➕ Abater Valor / Lançar Uso</h3>
+              <p id="abater-emp-titulo" class="text-xs text-slate-500 font-bold mt-0.5 truncate max-w-[310px]"></p>
+            </div>
+            <button type="button" onclick="app.empenhos.closeAbaterModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
+          </div>
+
+          <form onsubmit="app.empenhos.confirmarAbatimento(event)" class="space-y-4 mt-4 text-xs">
+            <input type="hidden" id="abater-emp-id">
+
+            <!-- COMPARATIVO DE SALDO ATUAL -> NOVO SALDO COM GRÁFICO -->
+            <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+              <div class="space-y-1">
+                <div>
+                  <span class="text-[10px] font-bold uppercase text-slate-400 block">Saldo Disponível Atual:</span>
+                  <span id="abater-emp-saldo-atual" class="text-sm font-black text-slate-700">R$ 0,00</span>
+                </div>
+                <div class="pt-1 border-t border-slate-200">
+                  <span class="text-[10px] font-black uppercase text-emerald-800 block">Novo Saldo Após Baixa:</span>
+                  <span id="abater-emp-novo-saldo" class="text-base font-black text-emerald-700">R$ 0,00</span>
+                </div>
+              </div>
+              <div id="abater-emp-donut-preview"></div>
+            </div>
+
+            <div id="abater-emp-warn" class="hidden p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl font-bold text-[11px]"></div>
+
+            <div>
+              <label class="font-black text-slate-800 block mb-1">Valor a Abater / Consumir (R$) *</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-2.5 font-black text-emerald-700 text-sm">R$</span>
+                <input type="text" inputmode="numeric" id="abater-emp-valor" required oninput="app.empenhos.onAbaterValorInput()" placeholder="0,00" class="w-full pl-10 pr-4 py-2.5 bg-emerald-50/40 border-2 border-emerald-400 rounded-xl font-black text-base text-slate-900 outline-none focus:bg-white focus:border-emerald-600">
+              </div>
+            </div>
+
+            <div>
+              <label class="font-bold text-slate-700 block mb-1">Nº da Nota Fiscal / Competência / Documento</label>
+              <input type="text" id="abater-emp-doc" placeholder="Ex: NF 1420 ou Aluguel Outubro/2026" class="w-full p-2.5 bg-slate-50 border rounded-xl font-bold text-slate-800 outline-none focus:bg-white focus:border-blue-500">
+            </div>
+
+            <div>
+              <label class="font-bold text-slate-700 block mb-1">Observação do Lançamento (Opcional)</label>
+              <input type="text" id="abater-emp-obs" placeholder="Detalhes adicionais desta baixa..." class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none focus:bg-white focus:border-blue-500">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t">
+              <button type="button" onclick="app.empenhos.closeAbaterModal()" class="px-4 py-2.5 border rounded-xl font-bold text-slate-500 hover:bg-slate-100">Cancelar</button>
+              <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md">Confirmar Abatimento</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- 21. MODAL: HISTÓRICO DE CONSUMO & ALTERAÇÕES DO EMPENHO           -->
+      <!-- ================================================================= -->
+      <div id="modal-historico-empenho" class="hidden fixed inset-0 z-[70] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-2xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-100 fade-in">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">💳</span>
+                <h3 class="text-base font-black text-slate-900">Histórico de Consumo & Alterações</h3>
+              </div>
+              <p id="hist-emp-subtitulo" class="text-xs text-slate-500 mt-0.5 font-medium">Empenho — Empresa</p>
+            </div>
+            <button type="button" onclick="app.empenhos.closeHistoryModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1.5 rounded-lg hover:bg-slate-100 transition">✕</button>
+          </div>
+
+          <div id="hist-emp-lista" class="flex-1 overflow-y-auto space-y-4 custom-scroll pr-1"></div>
+
+          <div class="pt-4 border-t border-slate-100 mt-4 flex justify-end">
+            <button type="button" onclick="app.empenhos.closeHistoryModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+              Fechar Histórico
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- 22. MODAL: CONFIRMAR EXCLUSÃO DE EMPENHO                          -->
+      <!-- ================================================================= -->
+      <div id="modal-excluir-empenho" class="hidden fixed inset-0 z-[75] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-rose-200 fade-in text-center">
+          <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+            🗑️
+          </div>
+          <h3 class="text-base font-black text-slate-900">Excluir Empenho</h3>
+          <p class="text-xs text-slate-500 mt-1">Deseja remover definitivamente este empenho do painel?</p>
+
+          <div class="my-4 p-3 bg-slate-50 rounded-2xl border text-xs">
+            <div class="font-mono font-black text-blue-700" id="del-emp-numero"></div>
+            <div class="font-bold text-slate-800 mt-0.5" id="del-emp-empresa"></div>
+          </div>
+
+          <input type="hidden" id="del-emp-id">
+          <div class="flex gap-2">
+            <button type="button" onclick="app.empenhos.closeDeleteModal()" class="flex-1 py-2.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
+            <button type="button" onclick="app.empenhos.confirmDelete()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs shadow-md transition">Sim, Excluir</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
       <!-- 18. MODAL DE ESPERA VISUAL & SINCRONIZAÇÃO DA PLANILHA            -->
       <!-- ================================================================= -->
       <div id="modal-espera-visual" class="hidden fixed inset-0 z-[80] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">

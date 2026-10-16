@@ -28,6 +28,12 @@ Object.assign(window.app, {
     panelViewMode: 'CARDS',
     panelSearch: '',
     deletePanelTarget: null,
+    empenhos: [],
+    empenhosFilter: 'TODOS_ATIVOS',
+    empenhosContractFilter: 'TODOS',
+    empenhosViewMode: 'CARDS',
+    empenhosSearch: '',
+    empenhosSort: 'RECENTES',
     users: [],
     permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS)),
     auth: { isLogged: false, user: null },
@@ -62,6 +68,13 @@ Object.assign(window.app, {
           app.contratos.closeNewModal();
           app.contratos.closeEditModal();
           app.contratos.closeDeleteModal();
+          if (app.contratos.closeContractHistoryModal) app.contratos.closeContractHistoryModal();
+        }
+        if (app.empenhos) {
+          app.empenhos.closeFormModal();
+          app.empenhos.closeAbaterModal();
+          app.empenhos.closeHistoryModal();
+          app.empenhos.closeDeleteModal();
         }
         if (app.admin) {
           app.admin.closeResetPasswordModal();
@@ -326,6 +339,27 @@ Object.assign(window.app, {
         app.state.panelContracts = [];
       }
 
+      const rawEmpenhos = localStorage.getItem(CONFIG.keys.empenhosCache);
+      try {
+        let listE = rawEmpenhos ? JSON.parse(rawEmpenhos) : null;
+        if (!Array.isArray(listE) || listE.length === 0) {
+          listE = typeof INITIAL_EMPENHOS !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_EMPENHOS)) : [];
+          app.state.empenhos = listE;
+          this.saveLocalEmpenhos();
+        } else {
+          // Mescla sem nunca sobrescrever empenhos do usuário
+          if (typeof INITIAL_EMPENHOS !== 'undefined' && Array.isArray(INITIAL_EMPENHOS)) {
+            INITIAL_EMPENHOS.forEach(seed => {
+              const exists = listE.some(x => Number(x.id) === Number(seed.id) || (x.numeroEmpenho && String(x.numeroEmpenho).trim() === String(seed.numeroEmpenho).trim()));
+              if (!exists) listE.push(JSON.parse(JSON.stringify(seed)));
+            });
+          }
+          app.state.empenhos = listE;
+        }
+      } catch(e) {
+        app.state.empenhos = typeof INITIAL_EMPENHOS !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_EMPENHOS)) : [];
+      }
+
       const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
       app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
       if (app.state.permissions && typeof app.state.permissions === 'object') {
@@ -351,6 +385,13 @@ Object.assign(window.app, {
         app.state.panelContracts = list;
       }
       localStorage.setItem(CONFIG.keys.panelContracts, JSON.stringify(app.state.panelContracts || []));
+    },
+
+    saveLocalEmpenhos(list) {
+      if (list && Array.isArray(list)) {
+        app.state.empenhos = list;
+      }
+      localStorage.setItem(CONFIG.keys.empenhosCache, JSON.stringify(app.state.empenhos || []));
     },
 
     saveLocalDotacoes() {
@@ -467,10 +508,22 @@ Object.assign(window.app, {
               }
             }
 
+            if (Array.isArray(res.empenhos) && res.empenhos.length > 0) {
+              const cloudEmps = res.empenhos.filter(e => e && String(e.numeroEmpenho || e.empresa || '').trim().length > 0);
+              const localEmps = app.state.empenhos || [];
+              const unsyncedEmps = localEmps.filter(loc => loc && loc.id && !cloudEmps.some(ce => String(ce.id) === String(loc.id) || (ce.numeroEmpenho && loc.numeroEmpenho && String(ce.numeroEmpenho).trim() === String(loc.numeroEmpenho).trim())));
+              app.state.empenhos = [...unsyncedEmps, ...cloudEmps];
+              this.saveLocalEmpenhos();
+              if (app.state.view === 'empenhos_hub' && app.render.empenhosHub) {
+                app.render.empenhosHub(document.getElementById('app-viewport'));
+              }
+            }
+
             if (app.state.view === 'auditoria_detalhe') app.render.auditoriaDetalhe(document.getElementById('app-viewport'));
             else if (app.state.view === 'auditoria_hub') app.render.auditoriaHub(document.getElementById('app-viewport'));
             else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(document.getElementById('app-viewport'));
             else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(document.getElementById('app-viewport'));
+            else if (app.state.view === 'empenhos_hub' && app.render.empenhosHub) app.render.empenhosHub(document.getElementById('app-viewport'));
 
             if (showFeedback) app.ui.toast("Dados sincronizados com sucesso!", "success", "✓ Sincronizado");
           }
@@ -554,6 +607,8 @@ Object.assign(window.app, {
         targetView = 'dotacoes_hub';
       } else if (hash === 'contratos' || hash === 'painel_contratos' || hash === 'contratos_hub') {
         targetView = 'contratos_hub';
+      } else if (hash === 'empenhos' || hash === 'empenhos_hub') {
+        targetView = 'empenhos_hub';
       } else if (['landing', 'saude_links'].includes(hash)) {
         targetView = hash;
       }
@@ -562,7 +617,7 @@ Object.assign(window.app, {
     },
 
     async go(view) {
-      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub');
+      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub' || view === 'empenhos_hub');
       if (isRestricted && !app.state.auth.isLogged) {
         app.auditAuth.promptLogin(view);
         return;
@@ -581,6 +636,11 @@ Object.assign(window.app, {
         }
         if (view === 'contratos_hub' && !app.permissions.can('panel_access')) {
           app.ui.toast("Seu perfil não tem permissão para acessar o Painel de Contratos LDO.", "warning", "Acesso Restrito");
+          if (app.state.view !== 'saude_links') this.go('saude_links');
+          return;
+        }
+        if (view === 'empenhos_hub' && !app.permissions.can('panel_access') && !app.permissions.can('dotacoes_access')) {
+          app.ui.toast("Seu perfil não tem permissão para acessar o Controle de Empenhos.", "warning", "Acesso Restrito");
           if (app.state.view !== 'saude_links') this.go('saude_links');
           return;
         }
@@ -816,10 +876,12 @@ Object.assign(window.app, {
       const isAuditoria = app.state.view === 'auditoria_hub' || app.state.view === 'auditoria_detalhe';
       const isDotacoes = app.state.view === 'dotacoes_hub';
       const isContratos = app.state.view === 'contratos_hub';
+      const isEmpenhos = app.state.view === 'empenhos_hub';
 
       const canAudit = !app.state.auth.isLogged || app.permissions.can('audit_access');
       const canDot = !app.state.auth.isLogged || app.permissions.can('dotacoes_access');
       const canPanel = !app.state.auth.isLogged || app.permissions.can('panel_access');
+      const canEmpenhos = !app.state.auth.isLogged || app.permissions.can('panel_access') || app.permissions.can('dotacoes_access');
 
       const auditBtnClass = canAudit
         ? (isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
@@ -842,6 +904,13 @@ Object.assign(window.app, {
         ? `app.ui.navigate('contratos')`
         : `app.ui.toast('Seu perfil não tem permissão para acessar o Painel de Contratos LDO.', 'warning', 'Acesso Restrito')`;
 
+      const empBtnClass = canEmpenhos
+        ? (isEmpenhos ? 'bg-amber-100 text-amber-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
+        : 'text-white/30 cursor-not-allowed hover:bg-transparent';
+      const empClick = canEmpenhos
+        ? `app.ui.navigate('empenhos')`
+        : `app.ui.toast('Seu perfil não tem permissão para acessar o Controle de Empenhos.', 'warning', 'Acesso Restrito')`;
+
       nav.innerHTML = `
         <button onclick="app.ui.navigate('landing')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
           Início
@@ -857,6 +926,9 @@ Object.assign(window.app, {
         </button>
         <button onclick="${panelClick}" title="${canPanel ? 'Painel de Contratos LDO' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${panelBtnClass} text-[11px] sm:text-xs">
           ${!canPanel ? '🔒 ' : ''}Contratos LDO
+        </button>
+        <button onclick="${empClick}" title="${canEmpenhos ? 'Controle de Empenhos e Saldos' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${empBtnClass} text-[11px] sm:text-xs">
+          ${!canEmpenhos ? '🔒 ' : ''}Empenhos
         </button>
       `;
     },
@@ -1806,6 +1878,7 @@ Object.assign(window.app, {
       else if (app.state.view === 'auditoria_detalhe' && app.render.auditoriaDetalhe) app.render.auditoriaDetalhe(vp);
       else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(vp);
       else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(vp);
+      else if (app.state.view === 'empenhos_hub' && app.render.empenhosHub) app.render.empenhosHub(vp);
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -1915,6 +1988,7 @@ Object.assign(window.app, {
       const canAudit = !app.state.auth.isLogged || app.permissions.can('audit_access');
       const canDotacoes = !app.state.auth.isLogged || app.permissions.can('dotacoes_access');
       const canContratos = !app.state.auth.isLogged || app.permissions.can('panel_access');
+      const canEmpenhos = !app.state.auth.isLogged || app.permissions.can('panel_access') || app.permissions.can('dotacoes_access');
 
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -2053,6 +2127,27 @@ Object.assign(window.app, {
                     </div>
                 </button>
                 `}
+
+                <!-- CARD 4: CONTROLE DE EMPENHOS & SALDOS -->
+                ${canEmpenhos ? `
+                <button onclick="app.ui.navigate('empenhos')" 
+                   class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-amber-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-amber-50/60">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-200">Saldos & ATAs</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                        </div>
+                        <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-amber-600 transition">Controle de Empenhos & Saldos</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Cards visuais com gráfico circular de consumo, valor total, valor usado, saldo restante, ATA e contrato.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-600">
+                        <span>Acessar Controle de Empenhos</span>
+                        <span class="group-hover:translate-x-1 transition">→</span>
+                    </div>
+                </button>
+                ` : ''}
 
                 <!-- LINKS SALVOS -->
                 ${app.state.links.map(l => `
