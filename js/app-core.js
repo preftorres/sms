@@ -498,11 +498,25 @@ Object.assign(window.app, {
             }
 
             if (Array.isArray(res.panelContracts) && res.panelContracts.length > 0) {
-              const cloudPanel = res.panelContracts.filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
+              const cloudPanel = res.panelContracts
+                .filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0)
+                .map(c => {
+                  if (c.status !== 'Previsto' && app.contratos && typeof app.contratos.isRenovacaoPrazo === 'function') {
+                    if ((Number(c.id) === 1792416195061 || String(c.numeroCtt) === '160/2025') && c.prazoVencimento && !app.contratos.isRenovacaoPrazo(c.prazoVencimento)) {
+                      c.prazoVencimento = `Renovação: ${c.prazoVencimento}`;
+                    } else if (!app.contratos.isRenovacaoPrazo(c.prazoVencimento)) {
+                      c.prazoVencimento = "";
+                    }
+                  }
+                  return c;
+                });
               const localList = app.state.panelContracts || [];
               const unsyncedLocals = localList.filter(loc => loc && loc.id && !cloudPanel.some(cp => String(cp.id) === String(loc.id) || (cp.numeroCtt && loc.numeroCtt && String(cp.numeroCtt) === String(loc.numeroCtt) && String(cp.empresa).toLowerCase() === String(loc.empresa).toLowerCase())));
               app.state.panelContracts = [...unsyncedLocals, ...cloudPanel];
               this.saveLocalPanelContracts();
+              if (app.contratos && typeof app.contratos.ensureMuralSync === 'function') {
+                app.contratos.ensureMuralSync();
+              }
               if (app.state.view === 'contratos_hub' && app.render.contratosHub) {
                 app.render.contratosHub(document.getElementById('app-viewport'));
               }

@@ -539,7 +539,7 @@ Exemplo do formato:
             </div>
             <div class="p-3 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-2">
               <div class="flex items-center justify-between">
-                <label class="block font-black text-slate-700 text-xs">Prazo / Informação de Vencimento</label>
+                <label class="block font-black text-slate-700 text-xs">Prazo de Renovação / Adição de contrato</label>
                 <span class="text-[10px] text-blue-600 font-bold">Sobrescreve a bandeira/cor se preenchido</span>
               </div>
               
@@ -726,7 +726,7 @@ Exemplo do formato:
             </div>
             <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-2">
               <div class="flex items-center justify-between">
-                <label class="block font-black text-slate-800 text-xs">Prazo / Informação de Vencimento</label>
+                <label class="block font-black text-slate-800 text-xs">Prazo de Renovação / Adição de contrato</label>
                 <span class="text-[10px] text-amber-800 font-bold">Sobrescreve a bandeira/cor se preenchido</span>
               </div>
               
