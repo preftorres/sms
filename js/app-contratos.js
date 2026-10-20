@@ -380,7 +380,7 @@ app.contratos = {
     }
   },
 
-  DEFAULT_FISCAIS: ["ADRI", "FRAN", "JANICE", "LASIER", "NAIARA", "PREFEITURA", "SANDRO"],
+  DEFAULT_FISCAIS: ["ADRI", "FERNANDA", "FRAN", "JANICE", "LASIER", "NAIARA", "NÃO INFORMADO", "PREFEITURA", "SANDRO"],
 
   getFiscais() {
     let list = null;
@@ -400,6 +400,7 @@ app.contratos = {
       });
     }
     if (!list.includes("PREFEITURA")) list.push("PREFEITURA");
+    if (!list.includes("NÃO INFORMADO")) list.push("NÃO INFORMADO");
     return Array.from(new Set(list.map(f => String(f).trim().toUpperCase()))).filter(Boolean).sort();
   },
 
@@ -504,8 +505,8 @@ app.contratos = {
     const fiscal = String(selectEl.value || '').trim().toUpperCase();
     if (!fiscal) return;
 
-    if (fiscal === "PREFEITURA") {
-      return app.ui.toast("O fiscal padrão institucional 'PREFEITURA' não pode ser excluído.", "warning", "Ação Não Permitida");
+    if (fiscal === "PREFEITURA" || fiscal === "NÃO INFORMADO") {
+      return app.ui.toast(`A opção padrão institucional '${fiscal}' não pode ser excluída.`, "warning", "Ação Não Permitida");
     }
 
     // 1. CHECAGEM OBRIGATÓRIA: Verificar se o fiscal está vinculado a contratos
@@ -857,6 +858,326 @@ app.contratos = {
     }
   },
 
+  onLinkPaste(prefix) {
+    this.onLinkInput(prefix);
+    const input = document.getElementById(`panel-${prefix}-link`);
+    if (!input) return;
+    const url = input.value.trim();
+    if (this.parseBethaUrl(url)) {
+      this.importFromBethaLink(prefix);
+    }
+  },
+
+  // --------------------------------------------------------------------------
+  // IMPORTAÇÃO AUTOMÁTICA VIA PORTAL DA TRANSPARÊNCIA (BETHA CLOUD)
+  // --------------------------------------------------------------------------
+  parseBethaUrl(url) {
+    if (!url || typeof url !== 'string') return null;
+    const match = url.trim().match(/transparencia\.betha\.cloud\/#\/([^/]+)\/consulta\/(\d+)\/detalhe\/([^\s?#]+)/i);
+    if (!match) return null;
+    return {
+      portalId: decodeURIComponent(match[1]),
+      consultaId: match[2],
+      detalheId: decodeURIComponent(match[3])
+    };
+  },
+
+  getBethaAnonymousToken() {
+    if (this._bethaTokenCache && this._bethaTokenCache.expiresAt > Date.now()) {
+      return Promise.resolve(this._bethaTokenCache.token);
+    }
+    return new Promise((resolve, reject) => {
+      const cbName = '__bethaAuthCb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('Tempo limite excedido ao autenticar no Portal da Transparência Betha.'));
+      }, 10000);
+
+      function cleanup() {
+        clearTimeout(timeout);
+        try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = (data) => {
+        cleanup();
+        if (data && data.accessToken) {
+          const ttl = (parseInt(data.expiresIn, 10) || 3000) * 1000;
+          this._bethaTokenCache = {
+            token: data.accessToken,
+            expiresAt: Date.now() + ttl - 60000
+          };
+          resolve(data.accessToken);
+        } else {
+          reject(new Error('Não foi possível obter token anônimo do Portal Betha.'));
+        }
+      };
+
+      script.onerror = () => {
+        cleanup();
+        reject(new Error('Falha de conexão com o servidor de autenticação do Portal Betha.'));
+      };
+
+      script.src = `https://plataforma-oauth.betha.cloud/auth/oauth2/authorize?client_id=91a97459-f1d8-4b29-b5fa-2e51d1692623&response_type=token&redirect_uri=https://transparencia.betha.cloud/auth-callback.html&scope=transparencia.public&silent=true&access_mode=anonymous&callback=${cbName}`;
+      document.body.appendChild(script);
+    });
+  },
+
+  setImportStatus(prefix, type, message) {
+    const el = document.getElementById(`panel-${prefix}-import-status`);
+    if (!el) return;
+    if (!message) {
+      el.className = 'hidden mt-2.5 text-[11px] font-semibold rounded-xl px-3 py-2 border';
+      el.innerHTML = '';
+      return;
+    }
+    const styles = {
+      loading: 'bg-blue-100/80 border-blue-300 text-blue-900',
+      success: 'bg-emerald-50 border-emerald-300 text-emerald-900',
+      warning: 'bg-amber-50 border-amber-300 text-amber-900',
+      error: 'bg-rose-50 border-rose-300 text-rose-900'
+    };
+    el.className = `mt-2.5 text-[11px] font-semibold rounded-xl px-3 py-2 border flex items-start gap-2 transition-all ${styles[type] || styles.loading}`;
+    el.innerHTML = message;
+  },
+
+  async importFromBethaLink(prefix = 'new') {
+    const input = document.getElementById(`panel-${prefix}-link`);
+    const btn = document.getElementById(`btn-import-betha-${prefix}`);
+    if (!input) return;
+
+    const url = input.value.trim();
+    if (!url) {
+      this.setImportStatus(prefix, 'warning', '<span>⚠️</span><span>Cole o link do contrato no campo acima para importar os dados automaticamente.</span>');
+      input.focus();
+      return;
+    }
+
+    const parsed = this.parseBethaUrl(url);
+    if (!parsed) {
+      this.setImportStatus(prefix, 'error', '<span>❌</span><span>Formato de link não reconhecido. Use um link de detalhe de contrato do Portal da Transparência Betha (ex.: <code>https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/...</code>).</span>');
+      return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin inline-block">⏳</span><span>Buscando...</span>';
+    }
+    this.setImportStatus(prefix, 'loading', '<span class="animate-spin inline-block">🔄</span><span>Conectando ao Portal da Transparência Betha e extraindo dados do contrato...</span>');
+
+    try {
+      const token = await this.getBethaAnonymousToken();
+      const appContext = btoa(JSON.stringify({ portal: parsed.portalId }));
+      const apiUrl = `https://api.transparencia.betha.cloud/transparencia/api/busca/${parsed.consultaId}/detalhes/${encodeURIComponent(parsed.detalheId)}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'App-Context': appContext
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`O Portal da Transparência retornou status HTTP ${response.status}.`);
+      }
+
+      const data = await response.json();
+      if (!data || (!data.nomeContratado && !data.numero)) {
+        throw new Error('Os dados do contrato não foram encontrados neste link.');
+      }
+
+      // 1. Empresa / Razão Social
+      const empresa = String(data.nomeContratado || '').trim();
+      const empEl = document.getElementById(`panel-${prefix}-empresa`);
+      if (empEl && empresa) empEl.value = empresa;
+
+      // 2. Número e Ano do Contrato
+      const numCtt = String(data.numero || '').replace(/[^0-9]/g, '').slice(0, 5);
+      const anoCtt = String(data.ano || new Date().getFullYear()).trim();
+      const numEl = document.getElementById(`panel-${prefix}-ctt-num`);
+      if (numEl && numCtt) numEl.value = numCtt;
+      const anoEl = document.getElementById(`panel-${prefix}-ctt-ano`);
+      if (anoEl && anoCtt) this.populateYearSelect(anoEl, anoCtt);
+
+      // 3. Fiscal do Contrato (trata contratos sem fiscal ou associa ao primeiro nome cadastrado)
+      const rawFiscal = String(data.fiscal || '').trim().toUpperCase();
+      const fiscalEl = document.getElementById(`panel-${prefix}-fiscal`);
+      const isFiscalAusente = !rawFiscal || /^(-|s\/f|n[aã]o\s*informado|sem\s*fiscal|null|undefined)$/i.test(rawFiscal);
+      let fiscalSelecionado = 'NÃO INFORMADO';
+      if (!isFiscalAusente) {
+        const firstWord = rawFiscal.split(/\s+/)[0];
+        const fiscaisList = this.getFiscais();
+        const matchFiscal = fiscaisList.find(f => rawFiscal === f || rawFiscal.startsWith(f + ' ') || f === firstWord);
+        fiscalSelecionado = matchFiscal || firstWord;
+      }
+      if (fiscalEl) {
+        this.populateFiscalSelect(fiscalEl, fiscalSelecionado);
+      }
+
+      // 4. Valor Total do Contrato (prioriza valorFinal atualizado ou valorInicial)
+      const valorNum = Number(data.valorFinal ?? data.valorInicial ?? 0);
+      const valorEl = document.getElementById(`panel-${prefix}-valor`);
+      if (valorEl && valorNum > 0) {
+        valorEl.value = this.formatCurrency(valorNum);
+      }
+
+      // 5. Data de Vencimento (dataVigenciaFinal ou dataVencimento)
+      const rawVenc = data.dataVigenciaFinal || data.dataVencimento || '';
+      const vencIso = this.formatDateIso(rawVenc);
+      const vencEl = document.getElementById(`panel-${prefix}-venc-iso`);
+      if (vencEl && vencIso) {
+        vencEl.value = vencIso;
+      }
+
+      // 6. Prazo de Renovação / Adição de Contrato (mantém padrão data exata para respeitar o vencimento real)
+      this.setupPrazoControls(prefix, '', vencIso);
+
+      // 7. Objeto / Descrição dos Itens do Contrato (limita aos 3 primeiros itens quando a lista for extensa, ex.: laboratórios)
+      const MAX_ITENS_RESUMO = 3;
+      let objetoBase = String(data.objetoContratacao || '').trim();
+      if (objetoBase.length > 260) {
+        objetoBase = objetoBase.slice(0, 260).trim() + '...';
+      }
+
+      const itensList = Array.isArray(data.itens) ? data.itens : [];
+      let objetoStr = objetoBase;
+
+      if (itensList.length > 0) {
+        const formatarDetalheItem = (it) => {
+          const qtd = (it.quantidade !== undefined && it.quantidade !== null && it.quantidade !== '')
+            ? Number(it.quantidade).toLocaleString('pt-BR')
+            : '';
+          const un = String(it.unidadeMedida || '').trim();
+          const vlrUnit = (it.valorUnitario !== undefined && it.valorUnitario !== null && it.valorUnitario !== '')
+            ? this.formatCurrency(it.valorUnitario)
+            : '';
+          if (!qtd && !vlrUnit) return '';
+          return `${qtd}${un ? ' ' + un : ''}${vlrUnit ? (qtd ? ' × ' : '') + vlrUnit : ''}`;
+        };
+
+        const descricoesUnicas = Array.from(new Set(itensList.map(it => String(it.descricao || '').trim()).filter(Boolean)));
+
+        // Caso especial: poucos itens (até 3) que compartilham exatamente a mesma descrição (ex.: TRANSALVA com 2 cotas do mesmo serviço)
+        if (itensList.length <= MAX_ITENS_RESUMO && descricoesUnicas.length === 1) {
+          let descUnica = descricoesUnicas[0];
+          if (descUnica.length > 260) descUnica = descUnica.slice(0, 260).trim() + '...';
+          const resumos = itensList.map(formatarDetalheItem).filter(Boolean);
+          const detalheQtd = resumos.length > 0 ? ` (${resumos.join(' + ')})` : '';
+          if (!objetoBase) {
+            objetoStr = `${descUnica}${detalheQtd}`;
+          } else if (!objetoBase.toLowerCase().includes(descUnica.toLowerCase().slice(0, 25))) {
+            objetoStr = `${objetoBase} — ${descUnica}${detalheQtd}`;
+          } else {
+            objetoStr = `${objetoBase}${detalheQtd}`;
+          }
+        } else {
+          // Lista de múltiplos itens distintos ou listas extensas (ex.: laboratórios com 70+ exames): exibe apenas os 3 primeiros
+          const primeirosItens = itensList.slice(0, MAX_ITENS_RESUMO).map((it, idx) => {
+            let desc = String(it.descricao || `Item ${idx + 1}`).trim().replace(/\s+/g, ' ');
+            if (desc.length > 160) desc = desc.slice(0, 160).trim() + '...';
+            const det = formatarDetalheItem(it);
+            return `- ${desc}${det ? ` (${det})` : ''}`;
+          });
+
+          const restantes = itensList.length - MAX_ITENS_RESUMO;
+          if (restantes > 0) {
+            primeirosItens.push(`... e mais ${restantes} ${restantes === 1 ? 'item' : 'itens'} — veja a relação completa pelo link do contrato.`);
+          }
+
+          const blocoItens = primeirosItens.join('\n');
+          if (!objetoBase) {
+            objetoStr = blocoItens;
+          } else if (itensList.length === 1 && objetoBase.toLowerCase().includes(String(itensList[0].descricao || '').trim().toLowerCase().slice(0, 25))) {
+            const detUnico = formatarDetalheItem(itensList[0]);
+            objetoStr = `${objetoBase}${detUnico ? ` (${detUnico})` : ''}`;
+          } else {
+            objetoStr = `${objetoBase}\n${blocoItens}`;
+          }
+        }
+      } else if (objetoStr.length > 500) {
+        objetoStr = objetoStr.slice(0, 500).trim() + '... (veja a descrição completa pelo link do contrato)';
+      }
+
+      const objEl = document.getElementById(`panel-${prefix}-objeto`);
+      if (objEl && objetoStr) objEl.value = objetoStr;
+
+      // 8. Observações / Detalhes complementares (Processo, Licitação, Empenhos vinculados, Vigência inicial)
+      const obsParts = [];
+      if (data.modalidadeLicitacao && data.numeroLicitacao) {
+        obsParts.push(`${data.modalidadeLicitacao} nº ${data.numeroLicitacao}/${data.anoLicitacao || ''}`);
+      } else if (data.numeroProcesso) {
+        obsParts.push(`Processo nº ${data.numeroProcesso}/${data.anoProcesso || ''}`);
+      }
+      if (data.dataAssinatura || data.dataVigenciaInicial) {
+        const dtIni = this.formatDateBr(this.formatDateIso(data.dataVigenciaInicial || data.dataAssinatura));
+        if (dtIni) obsParts.push(`Início: ${dtIni}`);
+      }
+      const empenhosList = Array.isArray(data.empenhos) ? data.empenhos : [];
+      if (empenhosList.length > 0) {
+        const empStrs = empenhosList.slice(0, 4).map(emp => {
+          const nEmp = emp.numero ? `${emp.numero}/${emp.ano || ''}` : '';
+          const vEmp = emp.valor ? this.formatCurrency(emp.valor) : '';
+          return `Emp. ${nEmp}${vEmp ? ' (' + vEmp + ')' : ''}`;
+        });
+        const empRestantes = empenhosList.length - 4;
+        const empTexto = empRestantes > 0
+          ? `${empStrs.join(', ')} e mais ${empRestantes} empenho(s) (ver pelo link)`
+          : empStrs.join(', ');
+        obsParts.push(empTexto);
+      }
+      const obsEl = document.getElementById(`panel-${prefix}-observacao`);
+      if (obsEl && obsParts.length > 0 && !obsEl.value.trim()) {
+        obsEl.value = obsParts.join(' • ');
+      }
+
+      // 9. Recalcular previsão LDO / LOA automaticamente com base no valor e vencimento importados
+      this.onValorContratoInput(prefix);
+
+      const cttLabel = numCtt ? `${numCtt}/${anoCtt}` : 'identificado';
+      const empCount = empenhosList.length;
+      const itensCount = itensList.length;
+      const valorFmt = valorNum > 0 ? this.formatCurrency(valorNum) : 'R$ 0,00';
+      const vencFmt = this.formatDateBr(vencIso) || 'Não informado';
+      const resumoItensBanner = itensCount > MAX_ITENS_RESUMO
+        ? ` • <b>${itensCount} itens</b> (listados os 3 primeiros)`
+        : (itensCount > 0 ? ` • ${itensCount} ${itensCount === 1 ? 'item' : 'itens'}` : '');
+      const resumoFiscalBanner = isFiscalAusente ? ` • Fiscal: <b>Não informado no portal</b>` : ` • Fiscal: <b>${fiscalSelecionado}</b>`;
+      this.setImportStatus(
+        prefix,
+        'success',
+        `<span>✅</span><div><strong>Contrato ${cttLabel} importado com sucesso!</strong><br><span class="font-normal">Contratado: <b>${empresa || 'N/I'}</b> • Valor: <b>${valorFmt}</b> • Vencimento: <b>${vencFmt}</b>${resumoFiscalBanner}${resumoItensBanner}${empCount > 0 ? ` • ${empCount} empenho(s)` : ''}. Confira os dados abaixo e clique em Salvar Contrato.</span></div>`
+      );
+      if (app.ui && app.ui.toast) {
+        app.ui.toast(`Dados do Contrato ${cttLabel} preenchidos automaticamente!`, 'success', 'Importação Betha');
+      }
+    } catch (err) {
+      console.error('Erro ao importar link Betha:', err);
+      const rawMsg = String((err && err.message) || '');
+      let msgPt = 'Não foi possível comunicar com o Portal da Transparência Betha no momento.';
+      if (/tempo limite|status HTTP|não foram encontrados|token anônimo|servidor de autenticação/i.test(rawMsg)) {
+        msgPt = rawMsg;
+      } else if (/failed to fetch|network|load failed/i.test(rawMsg)) {
+        msgPt = 'Falha de conexão com a internet ou bloqueio de rede ao consultar o Portal da Transparência.';
+      } else if (rawMsg) {
+        msgPt = 'Ocorreu uma falha interna ao processar os dados retornados pelo Portal da Transparência.';
+      }
+      this.setImportStatus(
+        prefix,
+        'error',
+        `<span>❌</span><span>Não foi possível importar os dados automaticamente: ${msgPt} Você ainda pode preencher os campos manualmente.</span>`
+      );
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml || '<span>⚡</span><span>Buscar e Preencher</span>';
+      }
+    }
+  },
+
   // --------------------------------------------------------------------------
   // GESTÃO DE COTAÇÃO & DIVISÃO ORÇAMENTÁRIA (LDO / LOA)
   // --------------------------------------------------------------------------
@@ -1095,7 +1416,7 @@ app.contratos = {
       document.getElementById('panel-new-empresa').value = '';
       document.getElementById('panel-new-ctt-num').value = '';
       this.populateYearSelect(document.getElementById('panel-new-ctt-ano'), 2026);
-      this.populateFiscalSelect(document.getElementById('panel-new-fiscal'));
+      this.populateFiscalSelect(document.getElementById('panel-new-fiscal'), 'NÃO INFORMADO');
       document.getElementById('panel-new-valor').value = '';
       document.getElementById('panel-new-venc-iso').value = '';
       this.setupPrazoControls('new', '', '');
@@ -1104,6 +1425,7 @@ app.contratos = {
       const linkInp = document.getElementById('panel-new-link');
       if (linkInp) linkInp.value = '';
       this.onLinkInput('new');
+      this.setImportStatus('new', null, '');
 
       // Campos de Cotação LDO / LOA
       const chkComp = document.getElementById('panel-new-is-compartilhado');
@@ -1116,7 +1438,10 @@ app.contratos = {
       if (exSeguinteEl) exSeguinteEl.value = '';
       this.onCompartilhadoChange('new');
 
-      setTimeout(() => document.getElementById('panel-new-empresa').focus(), 80);
+      setTimeout(() => {
+        const focusTarget = document.getElementById('panel-new-link') || document.getElementById('panel-new-empresa');
+        if (focusTarget) focusTarget.focus();
+      }, 80);
     }
   },
 
@@ -1235,6 +1560,7 @@ app.contratos = {
     const linkEl = document.getElementById('panel-edit-link');
     if (linkEl) linkEl.value = item.linkContrato || '';
     this.onLinkInput('edit');
+    this.setImportStatus('edit', null, '');
 
     // Campos de Cotação LDO / LOA
     const budget = this.getContractBudget(item);
@@ -2762,7 +3088,7 @@ app.render.contratosHub = function(el) {
                 </button>
                 ${app.permissions.can('panel_create') ? `
                   <button onclick="app.contratos.openNewModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5">
-                       <span class="text-sm">+</span> Novo Contrato no Mural
+                       <span class="text-sm">+</span> Novo Contrato
                   </button>
                 ` : ''}
             </div>

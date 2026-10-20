@@ -448,11 +448,39 @@ Exemplo do formato:
         <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 fade-in custom-scroll">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="text-base font-black text-slate-900">Novo Contrato no Mural Geral (LDO)</h3>
-              <p class="text-[11px] text-slate-500">Cadastrar novo ajuste formal de despesa continuada</p>
+              <h3 class="text-base font-black text-slate-900">Novo Contrato (LDO)</h3>
+              <p class="text-[11px] text-slate-500">Importe automaticamente pelo link do Portal Betha ou preencha manualmente</p>
             </div>
             <button onclick="app.contratos.closeNewModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
           </div>
+
+          <!-- IMPORTAÇÃO AUTOMÁTICA PELO LINK DO PORTAL DA TRANSPARÊNCIA (BETHA) -->
+          <div class="mb-4 p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50/80 to-blue-50 border border-blue-200 rounded-2xl shadow-2xs space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <label for="panel-new-link" class="font-black text-blue-950 text-xs flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Possui o link do contrato para importação de dados?</span>
+              </label>
+              <a id="panel-new-link-preview" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[10px] font-black text-blue-700 hover:text-blue-900 flex items-center gap-1 shrink-0">
+                <span>↗ Abrir Link</span>
+              </a>
+            </div>
+            <p class="text-[11px] text-blue-800/80 leading-snug">
+              Cole abaixo o link do contrato no Portal da Transparência (Betha) e o sistema vasculhará a página e preencherá todos os campos automaticamente.
+            </p>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-0.5">
+              <div class="relative flex-1 flex items-center">
+                <span class="absolute left-3 text-blue-500 text-xs">🔗</span>
+                <input type="url" id="panel-new-link" placeholder="Cole aqui: https://transparencia.betha.cloud/#/..." class="w-full pl-8 pr-3 py-2 bg-white border border-blue-300 rounded-xl outline-none focus:border-blue-600 font-medium text-slate-800 text-xs shadow-2xs" oninput="app.contratos.onLinkInput('new')" onpaste="setTimeout(() => app.contratos.onLinkPaste('new'), 60)">
+              </div>
+              <button type="button" id="btn-import-betha-new" onclick="app.contratos.importFromBethaLink('new')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                <span>🔍</span>
+                <span>Importar Dados</span>
+              </button>
+            </div>
+            <div id="panel-new-import-status" class="hidden text-[11px] font-bold rounded-xl px-3 py-2"></div>
+          </div>
+
           <form onsubmit="app.contratos.saveNewContract(event)" class="space-y-3 text-xs">
             <div>
               <label class="block font-bold text-slate-600 mb-1">Empresa / Razão Social</label>
@@ -595,28 +623,15 @@ Exemplo do formato:
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Objeto do Contrato</label>
-              <textarea id="panel-new-objeto" rows="2" placeholder="Ex: Coleta, transporte e incineração de resíduos de saúde..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
+              <textarea id="panel-new-objeto" rows="3" placeholder="Ex: Coleta, transporte e incineração de resíduos de saúde..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Observação Institucional (Opcional)</label>
-              <textarea id="panel-new-observacao" rows="2" placeholder="Observações, ressalvas ou histórico administrativo (assinatura/rubrica automática ao gravar)..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
-            </div>
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block font-bold text-slate-600">Link Oficial do Contrato (Portal / Betha Cloud)</label>
-                <a id="panel-new-link-preview" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[10px] font-black text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                  <span>↗ Abrir Link</span>
-                </a>
-              </div>
-              <div class="relative flex items-center">
-                <span class="absolute left-3 text-slate-400 text-xs">🔗</span>
-                <input type="url" id="panel-new-link" placeholder="Ex: https://transparencia.betha.cloud/#/... ou link do 1Doc" class="w-full pl-8 pr-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500 font-medium text-slate-700" oninput="app.contratos.onLinkInput('new')">
-              </div>
-              <p class="text-[10px] text-slate-400 mt-1">Direciona para a página oficial do contrato na prefeitura, arquivos e anexos.</p>
+              <textarea id="panel-new-observacao" rows="3" placeholder="Observações, empenhos, ressalvas ou histórico administrativo..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-blue-500"></textarea>
             </div>
             <div class="pt-3 flex gap-2">
               <button type="button" onclick="app.contratos.closeNewModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-              <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md">Salvar no Mural</button>
+              <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md">Salvar Contrato</button>
             </div>
           </form>
         </div>
@@ -630,7 +645,7 @@ Exemplo do formato:
           <div class="flex items-center justify-between mb-4">
             <div>
               <div class="flex items-center gap-2">
-                <h3 class="text-base font-black text-slate-900">Editar Contrato no Mural (LDO)</h3>
+                <h3 class="text-base font-black text-slate-900">Editar Contrato (LDO)</h3>
                 <a href="javascript:void(0)" onclick="app.contratos.openContractHistoryModal()" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-lg transition shadow-2xs">
                   <span>📜 Alterações</span>
                 </a>
@@ -800,10 +815,17 @@ Exemplo do formato:
                   <span>↗ Abrir Link</span>
                 </a>
               </div>
-              <div class="relative flex items-center">
-                <span class="absolute left-3 text-slate-400 text-xs">🔗</span>
-                <input type="url" id="panel-edit-link" placeholder="Ex: https://transparencia.betha.cloud/#/... ou link do 1Doc" class="w-full pl-8 pr-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-medium text-slate-700" oninput="app.contratos.onLinkInput('edit')">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div class="relative flex-1 flex items-center">
+                  <span class="absolute left-3 text-slate-400 text-xs">🔗</span>
+                  <input type="url" id="panel-edit-link" placeholder="Ex: https://transparencia.betha.cloud/#/... ou link do 1Doc" class="w-full pl-8 pr-3 py-2 bg-slate-50 border rounded-xl outline-none focus:border-amber-500 font-medium text-slate-700" oninput="app.contratos.onLinkInput('edit')">
+                </div>
+                <button type="button" id="btn-import-betha-edit" onclick="app.contratos.importFromBethaLink('edit')" class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-black rounded-xl text-xs transition flex items-center justify-center gap-1 shrink-0 cursor-pointer" title="Buscar e preencher dados a partir do link do Portal Betha">
+                  <span>⚡</span>
+                  <span>Importar do Link</span>
+                </button>
               </div>
+              <div id="panel-edit-import-status" class="hidden text-[11px] font-bold rounded-xl px-3 py-2 mt-1.5"></div>
               <p class="text-[10px] text-slate-400 mt-1">Direciona para a página oficial do contrato na prefeitura, arquivos e anexos.</p>
             </div>
             <div class="pt-3 flex gap-2">
