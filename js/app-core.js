@@ -23,7 +23,8 @@ Object.assign(window.app, {
     pendingDotacaoTemp: null,
     deleteDotacaoTarget: null,
     panelContracts: [],
-    panelContractsFilter: 'ATIVOS',
+    panelContractsFilter: 'TODOS',
+    panelContractsFilters: [],
     panelFiscalFilter: 'TODOS',
     panelViewMode: 'CARDS',
     panelSearch: '',
@@ -156,8 +157,8 @@ Object.assign(window.app, {
       }
     },
 
-    promptLogin(targetView = 'auditoria_hub') {
-      app.state.pendingView = targetView;
+    promptLogin(targetView) {
+      app.state.pendingView = targetView || app.state.view || 'saude_links';
       if (!document.getElementById('modal-audit-login') && window.app.modals) {
         window.app.modals.init();
       }
@@ -185,13 +186,22 @@ Object.assign(window.app, {
     },
 
     cancelLogin() {
+      const modal = document.getElementById('modal-audit-login');
+      const wasOpen = modal && !modal.classList.contains('hidden');
       this.closeLoginModal();
       app.state.pendingView = null;
-      const target = (app.state.previousView && !app.state.previousView.startsWith('auditoria') && app.state.previousView !== 'dotacoes_hub' && app.state.previousView !== 'contratos_hub')
-        ? app.state.previousView
-        : 'saude_links';
-      window.location.hash = target;
-      app.ui.navigate(target);
+      if (!wasOpen) return;
+
+      const restrictedViews = ['auditoria_hub', 'auditoria_detalhe', 'dotacoes_hub', 'contratos_hub', 'empenhos_hub'];
+      const currentView = app.state.view || 'saude_links';
+      const target = !restrictedViews.includes(currentView)
+        ? currentView
+        : ((app.state.previousView && !restrictedViews.includes(app.state.previousView)) ? app.state.previousView : 'saude_links');
+
+      if (app.state.view !== target || window.location.hash.replace('#', '') !== target) {
+        window.location.hash = target;
+        app.ui.navigate(target);
+      }
     },
 
     async handleLogin(e) {
@@ -233,7 +243,7 @@ Object.assign(window.app, {
           this.updateBadge();
           this.closeLoginModal();
 
-          const target = app.state.pendingView || 'auditoria_hub';
+          const target = app.state.pendingView || app.state.view || 'saude_links';
           app.state.pendingView = null;
           app.router.go(target);
         } else {
@@ -250,7 +260,8 @@ Object.assign(window.app, {
           sessionStorage.setItem(CONFIG.keys.auditSession, JSON.stringify(fallbackUser));
           this.updateBadge();
           this.closeLoginModal();
-          const target = app.state.pendingView || 'auditoria_hub';
+          const target = app.state.pendingView || app.state.view || 'saude_links';
+          app.state.pendingView = null;
           app.router.go(target);
         } else {
           // Mensagem estritamente profissional e segura, sem exibir credenciais ou detalhes internos
@@ -633,6 +644,12 @@ Object.assign(window.app, {
     async go(view) {
       const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub' || view === 'empenhos_hub');
       if (isRestricted && !app.state.auth.isLogged) {
+        const vp = document.getElementById('app-viewport');
+        if (vp && !vp.innerHTML.trim()) {
+          app.state.view = 'saude_links';
+          app.ui.updateActiveMenu();
+          app.render.all();
+        }
         app.auditAuth.promptLogin(view);
         return;
       }
@@ -971,7 +988,7 @@ Object.assign(window.app, {
 
     trigger(directToContract = false) {
       if (!app.state.auth.isLogged) {
-        app.auditAuth.promptLogin('landing');
+        app.auditAuth.promptLogin(app.state.pendingView || app.state.view || 'saude_links');
         return;
       }
       this.openPanel(directToContract);

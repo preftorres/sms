@@ -186,11 +186,11 @@ app.contratos = {
     }
   },
 
-  // BASE OFICIAL DOS CONTRATOS DO PAINEL DA SECRETARIA DA SAÚDE (ATUALIZADA COM TODAS AS EDIÇÕES MANUAIS ATÉ 19/10/2026)
+  // BASE OFICIAL DOS CONTRATOS DO PAINEL DA SECRETARIA DA SAÚDE (ATUALIZADA COM TODAS AS EDIÇÕES MANUAIS ATÉ 20/10/2026)
   MURAL_AUDIT_DATA: [
     // --- QUADRO 1: MURAL PAREDE AZUL (Posições 1 a 19) ---
-    { id: 1, empresa: "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", numeroCtt: "344/2025", prazoVencimento: "", dataVencimentoIso: "2027-09-26", valorContrato: 257664.00, fiscal: "FRAN", status: "Ativo", objeto: "Enfermagem", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "", linkContrato: "" },
-    { id: 2, empresa: "PRECISÃO TRATAMENTO DE ÁGUA LTDA", numeroCtt: "297/2025", prazoVencimento: "", dataVencimentoIso: "2027-09-30", valorContrato: 7734.00, fiscal: "LASIER", status: "Ativo", objeto: "Tratamento de Água nas Unidades (PRESCISÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prorrogação à caneta até 30/09/2027; fiscal Lasier com anotação no mural", linkContrato: "" },
+    { id: 1, empresa: "MEDENF IVOTI SERVIÇOS MÉDICOS E DE ENFERMAGEM", numeroCtt: "344/2025", prazoVencimento: "", dataVencimentoIso: "2027-09-26", valorContrato: 257664.00, fiscal: "FRAN", status: "Ativo", objeto: "Serviços Médicos", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "PRESTAÇÃO DE HORAS DE SERVIÇOS MÉDICOS - GINECOLOGISTA", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:15262_109" },
+    { id: 2, empresa: "PRECISÃO TRATAMENTO DE ÁGUA LTDA", numeroCtt: "297/2025", prazoVencimento: "", dataVencimentoIso: "2027-09-30", valorContrato: 7734.00, fiscal: "LASIER", status: "Ativo", objeto: "MONITORAMENTO E CONTROLE DO TRATAMENTO DE ÁGUA", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:10455_109" },
     { id: 3, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "377/2024", prazoVencimento: "", dataVencimentoIso: "2027-10-04", valorContrato: 3747715.20, fiscal: "FRAN", status: "Ativo", objeto: "Gestão Médica Hospitalar (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prestação de serviços médicos Clinico Geral (Atenção Básica) e Diretor Técnico - Média e Alta Complexidade.\nProcesso 18496/2026", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:13167_109" },
     { id: 4, empresa: "R. DIMER EMPREENDIMENTOS IMOBILIARIOS LTDA", numeroCtt: "539/2025", prazoVencimento: "", dataVencimentoIso: "2026-12-23", valorContrato: 93600.00, fiscal: "FERNANDA", status: "Ativo", objeto: "Locação de imóvel urbano destinado à instalação do Programa TEAcolhe RS", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "[diego em 15/10/2026 às 11:17]: Aluguel de R$7.800 menos 4,8% de IR ou R$ 7.425,60 pago todo o dia 22.", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:16053_109" },
     { id: 5, empresa: "SILVIO FARIAS ALVES", numeroCtt: "203/2021", prazoVencimento: "", dataVencimentoIso: "2026-10-19", valorContrato: 49663.20, fiscal: "LASIER", status: "Arquivado", objeto: "LOCAÇÃO DE UM IMÓVEL. PARA USO DA VIGILÂNCIA SANITÁRIA E AMBIENTAL", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "[diego em 15/10/2026 às 10:50]: Aluguel Vigilância; fiscal Sandro. Pago para Silvano Tupinambá.", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9000_109" },
@@ -198,16 +198,16 @@ app.contratos = {
     { id: 7, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "390/2025", prazoVencimento: "", dataVencimentoIso: "2026-11-03", valorContrato: 30684.06, fiscal: "SANDRO", status: "Ativo", objeto: "Serviços Médicos Especializados (AMPLA MAIS EXAMES)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Verifiquei a situação do contrato com a Vivian Réus e a renovação não será realizada. O motivo é que a empresa presta serviços de exames de imagem, área que atualmente conta com um credenciamento próprio de empresas.\nAlém disso, a Vivian informou que a empresa Ampla Mais é de Xangri-lá e já possui um empenho vigente.", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:15631_109" },
     { id: 8, empresa: "CARLOS DOS SANTOS TEIXEIRA", numeroCtt: "04/2023", prazoVencimento: "", dataVencimentoIso: "2027-01-04", valorContrato: 180000.00, fiscal: "FERNANDA", status: "Ativo", objeto: "LOCAÇÃO DE UM IMÓVEL, PARA USO DA SAMU E ASSISTÊNCIA FARMACÊUTICA", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Aluguel para pagamento a partir do dia 05 de cada mês no valor bruto de R$15.550,00 menos 4,8% de IR, portanto R$14.803,60\n\nEndereço: Rua Coronel Pacheco, 784 - Torres / RS\n\nEmpenhos:\n8/2025 valor de R$90.000,00\n14/2026 valor de R$186.600,00\n\nProcesso Administrativo:  759/2026", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:9928_109" },
     { id: 9, empresa: "DELTA SOLUÇÕES EM INFORMÁTICA LTDA", numeroCtt: "14/2024", prazoVencimento: "", dataVencimentoIso: "2027-01-22", valorContrato: 1074209.92, fiscal: "PREFEITURA", status: "Ativo", objeto: "Sistemas e Gestão de TI (DELTA INFORMÁTICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:11552_109", isCompartilhado: true, cotaSaude: 107420.99 },
-    { id: 10, empresa: "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", numeroCtt: "29/2026", prazoVencimento: "", dataVencimentoIso: "2027-02-10", valorContrato: 73200.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Outsourcing de Impressoras (TEC PRINTERS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Fiscal PREFEITURA confirmado no mural", linkContrato: "" },
+    { id: 10, empresa: "TECPRINTERS TECNOLOGIA DE IMPRESSÃO LTDA", numeroCtt: "29/2026", prazoVencimento: "", dataVencimentoIso: "2027-02-10", valorContrato: 73200.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Outsourcing de Impressoras (TEC PRINTERS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "LOCAÇÃO DE IMPRESSORAS MULTIFUNCIONAIS, INCLUINDO CONFIGURAÇÕES, SUPORTE\nTÉCNICO, FORNECIMENTO DE SUPRIMENTOS E GERENCIAMENTO.", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:16348_109" },
     { id: 11, empresa: "IBG INDUSTRIA BRASILEIRA DE GASES LTDA", numeroCtt: "77/2024", prazoVencimento: "", dataVencimentoIso: "2027-02-22", valorContrato: 46800.00, fiscal: "ADRI", status: "Ativo", objeto: "Fornecimento de Oxigênio Medicinal (IBG OXIGÊNIO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:11831_109" },
     { id: 12, empresa: "INSTITUTO DE AMPARO AO EXCEPCIONAL - INAMEX", numeroCtt: "125/2024", prazoVencimento: "", dataVencimentoIso: "2027-03-18", valorContrato: 56337.48, fiscal: "NAIARA", status: "Ativo", objeto: "Acolhimento e Assistência Especial (INAMEX)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "INTERNAÇÃO COMPULSÓRIA EM CLINICA TERAPÊUTICA", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:12015_109" },
-    { id: 13, empresa: "ONE GESTÃO E SERVIÇOS LTDA", numeroCtt: "149/2026", prazoVencimento: "", dataVencimentoIso: "2027-05-04", valorContrato: 240240.00, fiscal: "NAIARA", status: "Ativo", objeto: "Serviços Especializados de Apoio (ONE GESTÃO)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 04/05/2027 confirmado no mural", linkContrato: "" },
+    { id: 13, empresa: "ONE GESTÃO E SERVIÇOS LTDA", numeroCtt: "149/2026", prazoVencimento: "", dataVencimentoIso: "2027-05-04", valorContrato: 240240.00, fiscal: "NAIARA", status: "Ativo", objeto: "CONTRATAÇÃO DE SERVIÇOS MÉDICOS (HORAS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prestação de serviços especializados em Cardiologia - Média e Alta Complexidade", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17065_109" },
     { id: 14, empresa: "INTEGRALIDADE MÉDICA LTDA", numeroCtt: "151/2026", prazoVencimento: "", dataVencimentoIso: "2027-05-04", valorContrato: 1367024.00, fiscal: "FRAN", status: "Ativo", objeto: "Plantões Médicos de Urgência (INTEGRALIDADE MÉDICA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prestação de serviços especializados em Pediatria (Atenção Básica) e Médico Traumatologista/Ortopedista", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17067_109" },
     { id: 15, empresa: "HIDRAMACO PEÇAS E ACESSÓRIOS LTDA", numeroCtt: "274/2026", prazoVencimento: "", dataVencimentoIso: "2027-07-22", valorContrato: 90240.46, fiscal: "SANDRO", status: "Ativo", objeto: "Peças e Reposição Mecânica (HIDRAMACO SULCAR)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17646_109" },
     { id: 16, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "297/2025", prazoVencimento: "", dataVencimentoIso: "2027-08-28", valorContrato: 1026110.34, fiscal: "NAIARA", status: "Ativo", objeto: "Serviços Médicos Ambulatoriais (ELO SERVIÇOS)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Prestação de serviços médicos de Clínico Geral, Psiquiatra.", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:15118_109" },
     { id: 17, empresa: "AMBIENTUUS TECNOLOGIA AMBIENTAL", numeroCtt: "264/2023", prazoVencimento: "", dataVencimentoIso: "2027-08-30", valorContrato: 36720.00, fiscal: "ADRI", status: "Ativo", objeto: "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA PARA PRESTAÇÃO DE SERVIÇOS - Tratamento de Resíduos Hospitalares", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Renovação número 740098\n\nDiversos empenhos, ver contratação no link!", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:10386_109" },
     { id: 18, empresa: "HENGER COMÉRCIO E SERVIÇOS LTDA", numeroCtt: "166/2026", prazoVencimento: "", dataVencimentoIso: "2029-05-05", valorContrato: 90000.00, fiscal: "ADRI", status: "Ativo", objeto: "Manutenção Predial Continuada (HENGER)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "EMPRESA ESPECIALIZADA PARA LOCAÇÃO DE GERADOR DE ENERGIA ELÉTRICA", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17133_109" },
-    { id: 19, empresa: "LABORATÓRIO DE ANÁLISES CLÍNICAS", numeroCtt: "43/2024", prazoVencimento: "", dataVencimentoIso: "2027-09-03", valorContrato: 129163.00, fiscal: "PREFEITURA", status: "Ativo", objeto: "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Termo de Credenciamento 43/2024 afixado no mural", linkContrato: "" },
+    { id: 19, empresa: "ANÁLISE LABORATÓRIO LTDA", numeroCtt: "454/2026", prazoVencimento: "", dataVencimentoIso: "2027-10-06", valorContrato: 94680.90, fiscal: "NAIARA", status: "Ativo", objeto: "Credenciamento de Exames Laboratoriais (LABORATÓRIO ANALISE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "SERVIÇOS DE EXAMES LABORATORIAIS DE ANÁLISES CLÍNICAS - CHAMAMENTO PÚBLICO Nº 210/2026 - TERMO DE CREDENCIAMENTO Nº 42/2026", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18351_109" },
 
     // --- QUADRO 2: QUADRO BRANCO (Posições 22 a 33) ---
     { id: 22, empresa: "SIMSAUDE SERVIÇOS SA", numeroCtt: "342/2025", prazoVencimento: "", dataVencimentoIso: "2026-11-16", valorContrato: 828960.00, fiscal: "ADRI", status: "Ativo", objeto: "Consultas e Atendimentos Médicos (SIM SAÚDE)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Processo Administrativo de Renovação: 20709/2026 - Está na PGM", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:15847_109" },
@@ -217,7 +217,7 @@ app.contratos = {
     { id: 26, empresa: "DANIEL CARDOSO MAGNUS", numeroCtt: "195/2026", prazoVencimento: "", dataVencimentoIso: "2027-06-01", valorContrato: 19800.00, fiscal: "LASIER", status: "Ativo", objeto: "Aplicação BTI Controle de Vetores (DANIEL APLICAÇÃO BTI)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Serviço de mão de obra para aplicação de Larvicida", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17356_109" },
     { id: 27, empresa: "VIAÇÃO OURO E PRATA SA", numeroCtt: "231/2026", prazoVencimento: "", dataVencimentoIso: "2027-06-30", valorContrato: 1355940.00, fiscal: "SANDRO", status: "Ativo", objeto: "Passagens TFD (OURO E PRATA)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Nº CTT 231/2026 confirmado no mural", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17513_109" },
     { id: 28, empresa: "K & S EMPREENDIMENTOS IMOBILIARIOS LTDA", numeroCtt: "258/2026", prazoVencimento: "", dataVencimentoIso: "2027-07-15", valorContrato: 96000.00, fiscal: "NAIARA", status: "Ativo", objeto: "Locação de imóvel destinado ao funcionamento da Clínica Municipal de Fisioterapia da Secretaria Municipal de Saúde de Torres/RS. situado na Avenida Benjamin Constant. nº 594. Bairro Praia Grande. Período de 60 (sessenta) meses.", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "[diego em 15/10/2026 às 11:39]: Aluguel pago todo dia 14 do mês no valor bruto de R$8.000,00 menos 4,8% de IR, portanto R$7.616.\n\nEmpenho(s):\n11009/2026 de R$ 48.000,00", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:17630_109" },
-    { id: 29, empresa: "ULTRA AIR COMÉRCIO DE GASES INDUSTRIAIS", numeroCtt: "232/2025", prazoVencimento: "", dataVencimentoIso: "2027-07-17", valorContrato: 52266.50, fiscal: "ADRI", status: "Ativo", objeto: "Gases Medicinais e Ar Comprimido (ULTRA AIR)", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Vencimento 17/07/2027 confirmado no mural", linkContrato: "" },
+    { id: 29, empresa: "ULTRA AIR COMÉRCIO DE GASES INDUSTRIAIS", numeroCtt: "232/2025", prazoVencimento: "", dataVencimentoIso: "2027-07-17", valorContrato: 52266.50, fiscal: "ADRI", status: "Ativo", objeto: "RECARGA DE OXIGÊNIO MEDICINAL", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:14879_109" },
     { id: 30, empresa: "SOSSEG (EDUCAÇÃO)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Arquivado", objeto: "Serviços de Educação / Apoio à Saúde", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
     { id: 31, empresa: "CRISTO REI (CLÍNICA)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Serviços e Consultas Clínicas", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
     { id: 32, empresa: "IB SAÚDE (HOSPITAL)", numeroCtt: "Em Aberto", prazoVencimento: "Em fase de contratação", dataVencimentoIso: "", valorContrato: 0, fiscal: "PREFEITURA", status: "Previsto", objeto: "Gestão e Atendimento Hospitalar", criadoEm: "07/10/2026", criadoPor: "admin", observacao: "Folha afixada no mural reservada para novo contrato", linkContrato: "" },
@@ -226,7 +226,14 @@ app.contratos = {
     { id: 35, empresa: "AMPLAMAIS SERVIÇOS MÉDICOS LTDA", numeroCtt: "432/2026", prazoVencimento: "", dataVencimentoIso: "2027-09-18", valorContrato: 40080.60, fiscal: "SANDRO", status: "Ativo", objeto: "Exames de Ultrassonografia/Ecografia Mamária com extensão axilar", criadoEm: "09/10/2026", criadoPor: "admin", observacao: "Pregão 329/2025 - Processo 20402/2026 - Portaria 306/2026", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18180_109", isCompartilhado: false, cotaSaude: 40080.60 },
     { id: 36, empresa: "NILDIESEL RETÍFICA DE MOTORES LTDA", numeroCtt: "171/2026", prazoVencimento: "", dataVencimentoIso: "2027-05-08", valorContrato: 331978.43, fiscal: "JANICE", status: "Ativo", objeto: "Manutenção Preventiva e Corretiva para Frota Linha Pesada (NILDIESEL)", criadoEm: "09/10/2026", criadoPor: "admin", observacao: "[admin em 09/10/2026 às 13:02]: Pregão 50/2025 - Processo 9.225/2026. Fiscal Janice (Portaria 132/2025)", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:16352_109", isCompartilhado: false, cotaSaude: 331978.43 },
     { id: 1792181801134, empresa: "SILVIO FARIAS ALVES", numeroCtt: "463/2026", prazoVencimento: "", dataVencimentoIso: "2027-10-20", valorContrato: 59400.00, fiscal: "SANDRO", status: "Ativo", objeto: "Locação de um imóvel. para uso da Vigilância Sanitária e Ambiental - Secretaria de Saúde - localizado na Rua Alexandrino de Alencar. nº640. na cidade de Torres RS. próximo ao Hospital Nossa Srª dos Navegantes.", criadoEm: "16/10/2026 às 17:16", criadoPor: "diego", observacao: "Empenho 17050, com data de 14/10/2026\nValor Unitário (mensalidade): R$ 4.950,00", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18486_109" },
-    { id: 1792416195061, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "160/2025", prazoVencimento: "Renovação: 12 Meses até 28/04/2027", dataVencimentoIso: "2026-04-28", valorContrato: 395154.00, fiscal: "ADRI", status: "Ativo", objeto: "- Prestação de Serviços Médicos Clínico Geral 600 R$ 168,79\n- PSIQUIATRA (COM RQE) 1200 R$ 244,90", criadoEm: "19/10/2026 às 10:23", criadoPor: "diego", observacao: "Renovação nº 687246 em 28/04/2026", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:14377_109" }
+    { id: 1792416195061, empresa: "ELO SERVIÇOS DE SAÚDE LTDA", numeroCtt: "160/2025", prazoVencimento: "Renovação: 12 Meses até 28/04/2027", dataVencimentoIso: "2026-04-28", valorContrato: 395154.00, fiscal: "ADRI", status: "Ativo", objeto: "- Prestação de Serviços Médicos Clínico Geral 600 R$ 168,79\n- PSIQUIATRA (COM RQE) 1200 R$ 244,90", criadoEm: "19/10/2026 às 10:23", criadoPor: "diego", observacao: "Renovação nº 687246 em 28/04/2026", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:14377_109" },
+    { id: 1792431497660, empresa: "HIDRAMACO PECAS E ACESSORIOS LTDA", numeroCtt: "391/2026", prazoVencimento: "", dataVencimentoIso: "2027-09-04", valorContrato: 140989.83, fiscal: "SANDRO", status: "Ativo", objeto: "- Serviço especializado de manutenção preventiva e corretiva (mão de obra) - veículos linha leve | Qnt 1500 | Un. R$ 45,75 | Total R$ 68.625,00\n- Peças e acessórios originais / genuínos veículos linha leve | Qnt. 0.77 | Un. R$ 93.980,40 | Total R$ 72.364,91", criadoEm: "19/10/2026 às 14:38", criadoPor: "diego", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18025_109" },
+    { id: 1792439690939, empresa: "LABORATORIO DE ANALISES CLINICAS FONTANA EIRELI", numeroCtt: "73/2026", prazoVencimento: "", dataVencimentoIso: "2027-03-12", valorContrato: 129163.00, fiscal: "SANDRO", status: "Ativo", objeto: "Lista com 75 exames laboratoriais diversos (clicar no link, depois em Itens do contrato)", criadoEm: "19/10/2026 às 16:54", criadoPor: "diego", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:16602_109" },
+    { id: 1792439936637, empresa: "M. B. LABORATORIO DE ANALISES CLINICAS LTDA", numeroCtt: "77/2026", prazoVencimento: "", dataVencimentoIso: "2027-03-16", valorContrato: 129163.00, fiscal: "SANDRO", status: "Ativo", objeto: "Lista com 75 exames laboratoriais diversos (acessar link do contrato aqui e ir em Itens do contrato)", criadoEm: "19/10/2026 às 16:58", criadoPor: "diego", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:16647_109" },
+    { id: 1792440053977, empresa: "LABORATORIO BIOMEDICO LTDA - ME", numeroCtt: "67/2026", prazoVencimento: "", dataVencimentoIso: "2027-03-09", valorContrato: 129303.00, fiscal: "SANDRO", status: "Ativo", objeto: "Lista com 75 exames laboratoriais diversos (clicar no link, depois em Itens do contrato)", criadoEm: "19/10/2026 às 17:00", criadoPor: "diego", observacao: "", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:16589_109" },
+    { id: 1792520493903, empresa: "TRANSALVA EMERGENCIAS MEDICAS LTDA", numeroCtt: "455/2026", prazoVencimento: "", dataVencimentoIso: "2027-10-06", valorContrato: 47985.00, fiscal: "NAIARA", status: "Ativo", objeto: "Remoção de Pacientes (UTI MÓVEL). (1.500 KM × R$ 31,99)", criadoEm: "20/10/2026 às 15:21", criadoPor: "diego", observacao: "Pregão eletrônico nº 173/2024 • Início: 06/10/2026 • Emp. 16750/2026 (R$ 47.985,00)", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18133_109" },
+    { id: 1792520548930, empresa: "TRANSALVA EMERGENCIAS MEDICAS LTDA", numeroCtt: "450/2026", prazoVencimento: "", dataVencimentoIso: "2027-03-29", valorContrato: 356960.00, fiscal: "NAIARA", status: "Ativo", objeto: "Remoção de paciente em Ambulâncias de Suporte Básico tipo B. O trajeto a ser percorrido será o de Porto Alegre/ Torres - Ambulâncias de Suporte Básico tipo B. quilometragem livre. | Remoção de paciente em Ambulâncias de Suporte Básico tipo B. O trajeto a ser percorrido terá quilometragem live até o limite total de 200 km percorridos. | Remoção de Pacientes (UTI MÓVEL). O trajeto a ser percorrido será o de Torres / Porto Alegre Porto Alegre/Torres. com espera de até três horas para retorno do paciente. (5 VG × R$ 3.400,00 + 5 VG × R$ 2.700,00 + 10 VG × R$ 5.599,00 + 23 VG × R$ 5.399,00 + 7 VG × R$ 5.399,00 + 29 VG × R$ 3.100,00 + 6 VG × R$ 3.100,00)", criadoEm: "20/10/2026 às 15:22", criadoPor: "diego", observacao: "Pregão eletrônico nº 173/2024 • Início: 29/09/2026 • Emp. 16438/2026 (R$ 18.600,00), Emp. 16440/2026 (R$ 37.793,00), Emp. 16441/2026 (R$ 89.900,00), Emp. 16442/2026 (R$ 124.177,00)", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18181_109" },
+    { id: 1792521139368, empresa: "TRANSALVA EMERGENCIAS MEDICAS LTDA", numeroCtt: "456/2026", prazoVencimento: "", dataVencimentoIso: "2027-10-06", valorContrato: 108500.00, fiscal: "NAIARA", status: "Ativo", objeto: "Remoção de Pacientes (UTI MÓVEL). O trajeto a ser percorrido será o de Torres /Capão da Canoa. (29 VG × R$ 3.100,00 + 6 VG × R$ 3.100,00)", criadoEm: "20/10/2026 às 15:32", criadoPor: "diego", observacao: "Pregão eletrônico nº 173/2024 • Início: 06/10/2026 • Emp. 16748/2026 (R$ 108.500,00)", linkContrato: "https://transparencia.betha.cloud/#/6qw94oPr_CfMG4vEdtL7rw==/consulta/82342/detalhe/104:109:18314_109" }
   ],
 
   occupySlot(id) {
@@ -942,6 +949,45 @@ app.contratos = {
     el.innerHTML = message;
   },
 
+  findExistingContract({ link, numeroCtt, empresa, excludeId }) {
+    const list = (app.state.panelContracts || []).filter(c => c && c.status !== 'Disponível' && String(c.empresa || '').trim().length > 0);
+    const parsedTargetLink = this.parseBethaUrl(link);
+    const normTargetLink = String(link || '').trim().toLowerCase();
+    const normTargetCtt = String(this.formatCttNumber(numeroCtt) || '').trim().toLowerCase();
+    const isRealCtt = normTargetCtt && normTargetCtt !== 'em aberto' && normTargetCtt !== 's/n';
+
+    for (const c of list) {
+      if (excludeId && Number(c.id) === Number(excludeId)) continue;
+
+      // 1. Verificação por Link / ID de Detalhe do Portal Betha (100% exato)
+      if (normTargetLink && c.linkContrato) {
+        const parsedExisting = this.parseBethaUrl(c.linkContrato);
+        if (parsedTargetLink && parsedExisting && parsedTargetLink.detalheId === parsedExisting.detalheId) {
+          return { contract: c, reason: 'link' };
+        }
+        if (String(c.linkContrato).trim().toLowerCase() === normTargetLink) {
+          return { contract: c, reason: 'link' };
+        }
+      }
+
+      // 2. Verificação por Número/Ano do Contrato (ex.: 456/2026)
+      if (isRealCtt) {
+        const existingCtt = String(this.formatCttNumber(c.numeroCtt) || '').trim().toLowerCase();
+        if (existingCtt === normTargetCtt) {
+          return { contract: c, reason: 'numero' };
+        }
+      }
+    }
+    return null;
+  },
+
+  openExistingFromDuplicateWarning(existingId) {
+    this.closeNewModal();
+    setTimeout(() => {
+      this.openEditModal(Number(existingId));
+    }, 60);
+  },
+
   async importFromBethaLink(prefix = 'new') {
     const input = document.getElementById(`panel-${prefix}-link`);
     const btn = document.getElementById(`btn-import-betha-${prefix}`);
@@ -1146,13 +1192,38 @@ app.contratos = {
         ? ` • <b>${itensCount} itens</b> (listados os 3 primeiros)`
         : (itensCount > 0 ? ` • ${itensCount} ${itensCount === 1 ? 'item' : 'itens'}` : '');
       const resumoFiscalBanner = isFiscalAusente ? ` • Fiscal: <b>Não informado no portal</b>` : ` • Fiscal: <b>${fiscalSelecionado}</b>`;
-      this.setImportStatus(
-        prefix,
-        'success',
-        `<span>✅</span><div><strong>Contrato ${cttLabel} importado com sucesso!</strong><br><span class="font-normal">Contratado: <b>${empresa || 'N/I'}</b> • Valor: <b>${valorFmt}</b> • Vencimento: <b>${vencFmt}</b>${resumoFiscalBanner}${resumoItensBanner}${empCount > 0 ? ` • ${empCount} empenho(s)` : ''}. Confira os dados abaixo e clique em Salvar Contrato.</span></div>`
-      );
-      if (app.ui && app.ui.toast) {
-        app.ui.toast(`Dados do Contrato ${cttLabel} preenchidos automaticamente!`, 'success', 'Importação Betha');
+
+      // 10. Verificar se este contrato já existe no painel (para evitar duplicidade)
+      const currentEditId = prefix === 'edit' ? document.getElementById('panel-edit-id')?.value : null;
+      const dupCheck = this.findExistingContract({
+        link: url,
+        numeroCtt: numCtt ? `${numCtt}/${anoCtt}` : '',
+        empresa,
+        excludeId: currentEditId
+      });
+
+      if (dupCheck && dupCheck.contract) {
+        const ex = dupCheck.contract;
+        const exCtt = this.formatCttNumber(ex.numeroCtt);
+        const exVal = Number(ex.valorContrato || 0) > 0 ? this.formatCurrency(ex.valorContrato) : 'R$ 0,00';
+        const motivoTxt = dupCheck.reason === 'link' ? 'com este mesmo link do Portal Betha' : `com o número <b>${exCtt}</b>`;
+        this.setImportStatus(
+          prefix,
+          'warning',
+          `<span class="text-base leading-none">⚠️</span><div class="flex-1"><strong>Atenção: Este contrato já está cadastrado no painel!</strong><br><span class="font-normal">Já existe um registro ${motivoTxt}: <b>CTT ${exCtt} — ${ex.empresa}</b> (Fiscal: <b>${ex.fiscal || 'N/I'}</b> • Valor: <b>${exVal}</b> • Status: <b>${ex.status || 'Ativo'}</b>).<br>O sistema <b>não sobrescreve</b> contratos automaticamente. Para evitar criar um card duplicado, você pode abrir o contrato já existente:</span><div class="mt-2"><button type="button" onclick="app.contratos.openExistingFromDuplicateWarning(${ex.id})" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-[11px] shadow-xs transition inline-flex items-center gap-1"><span>✏️</span><span>Abrir Contrato Existente (${exCtt})</span></button></div></div>`
+        );
+        if (app.ui && app.ui.toast) {
+          app.ui.toast(`Atenção: O Contrato ${exCtt} já consta no painel!`, 'warning', 'Contrato Já Cadastrado');
+        }
+      } else {
+        this.setImportStatus(
+          prefix,
+          'success',
+          `<span>✅</span><div><strong>Contrato ${cttLabel} importado com sucesso!</strong><br><span class="font-normal">Contratado: <b>${empresa || 'N/I'}</b> • Valor: <b>${valorFmt}</b> • Vencimento: <b>${vencFmt}</b>${resumoFiscalBanner}${resumoItensBanner}${empCount > 0 ? ` • ${empCount} empenho(s)` : ''}. Confira os dados abaixo e clique em Salvar Contrato.</span></div>`
+        );
+        if (app.ui && app.ui.toast) {
+          app.ui.toast(`Dados do Contrato ${cttLabel} preenchidos automaticamente!`, 'success', 'Importação Betha');
+        }
       }
     } catch (err) {
       console.error('Erro ao importar link Betha:', err);
@@ -1468,6 +1539,26 @@ app.contratos = {
     if (!empresa || !numCtt || !dataIso) return app.ui.toast("Preencha ao menos Empresa, Nº do Contrato e Vencimento.", "warning", "Campos Obrigatórios");
 
     const numeroCtt = `${numCtt}/${anoCtt}`;
+
+    // Verificação anti-duplicidade antes de salvar novo contrato
+    const dupCheck = this.findExistingContract({ link: linkContrato, numeroCtt, empresa });
+    if (dupCheck && dupCheck.contract) {
+      const ex = dupCheck.contract;
+      const exCtt = this.formatCttNumber(ex.numeroCtt);
+      const isSameLink = dupCheck.reason === 'link';
+      const abrirExistente = confirm(
+        `⚠️ ATENÇÃO: CONTRATO JÁ CADASTRADO NO PAINEL!\n\n` +
+        `Já existe no mural o Contrato nº ${exCtt} — ${ex.empresa}` +
+        `${isSameLink ? ' (com este mesmo link do Portal Betha)' : ''}.\n\n` +
+        `• Clique em "OK" para ABRIR o contrato existente e editá-lo (sem duplicar).\n` +
+        `• Clique em "Cancelar" para voltar ao formulário.`
+      );
+      if (abrirExistente) {
+        this.openExistingFromDuplicateWarning(ex.id);
+      }
+      return;
+    }
+
     const now = new Date();
     const criadoEm = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     const criadoPor = (app.state.auth.user && app.state.auth.user.usuario) || 'admin';
@@ -2324,13 +2415,138 @@ app.contratos = {
     }
   },
 
-  // FILTROS & BUSCA EM TEMPO REAL (SEM PERDER FOCO DO INPUT)
-  setFilter(f) {
-    app.state.panelContractsFilter = f;
-    const selectFilter = document.getElementById('panel-contratos-filter-select');
-    if (selectFilter) {
-      selectFilter.value = f;
+  // FILTROS & BUSCA EM TEMPO REAL (MULTI-SELEÇÃO POR CAIXAS DE SELEÇÃO)
+  getSelectedFilters() {
+    if (!Array.isArray(app.state.panelContractsFilters)) {
+      app.state.panelContractsFilters = [];
     }
+    app.state.panelContractsFilters = app.state.panelContractsFilters.filter(f => f && f !== 'MURAL' && f !== 'TODOS');
+    return app.state.panelContractsFilters;
+  },
+
+  getFilterCriteriaLabel(f) {
+    const map = {
+      'ATIVOS': '🟢 Ativos',
+      'CRITICOS': '🔴 Críticos',
+      'ATENCAO': '🟡 Atenção',
+      'COMPARTILHADOS': '🌐 Compartilhados',
+      'PREVISTOS': '📝 Previstos',
+      'ARQUIVADOS': '📁 Arquivados'
+    };
+    return map[f] || f;
+  },
+
+  getFilterButtonSummary(totalCount) {
+    const selected = this.getSelectedFilters();
+    const total = typeof totalCount === 'number' ? totalCount : (app.state.panelContracts || []).length;
+    if (selected.length === 0) {
+      return `Todos (${total})`;
+    }
+    if (selected.length <= 2) {
+      return selected.map(f => this.getFilterCriteriaLabel(f)).join(' + ');
+    }
+    return `${selected.length} critérios selecionados`;
+  },
+
+  toggleFilterDropdown(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('panel-contratos-filter-menu');
+    if (!menu) return;
+    const isHidden = menu.classList.contains('hidden');
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      if (!this._outsideFilterClickListener) {
+        this._outsideFilterClickListener = (evt) => {
+          const wrapper = document.getElementById('panel-contratos-filter-wrapper');
+          const m = document.getElementById('panel-contratos-filter-menu');
+          if (m && !m.classList.contains('hidden') && wrapper && !wrapper.contains(evt.target)) {
+            m.classList.add('hidden');
+          }
+        };
+        document.addEventListener('click', this._outsideFilterClickListener);
+      }
+    } else {
+      menu.classList.add('hidden');
+    }
+  },
+
+  toggleFilter(crit) {
+    const selected = this.getSelectedFilters();
+    const idx = selected.indexOf(crit);
+    if (idx >= 0) {
+      selected.splice(idx, 1);
+    } else {
+      selected.push(crit);
+    }
+    app.state.panelContractsFilters = selected;
+    this.refreshFilterMenuUI();
+    this.updateContent();
+  },
+
+  clearFilters(e) {
+    if (e) e.stopPropagation();
+    app.state.panelContractsFilters = [];
+    this.refreshFilterMenuUI();
+    this.updateContent();
+  },
+
+  refreshFilterMenuUI() {
+    const selected = this.getSelectedFilters();
+    const total = (app.state.panelContracts || []).filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0).length;
+
+    const btnLabel = document.getElementById('panel-contratos-filter-btn-label');
+    if (btnLabel) {
+      btnLabel.textContent = this.getFilterButtonSummary(total);
+    }
+
+    const btnTrigger = document.getElementById('panel-contratos-filter-btn');
+    if (btnTrigger) {
+      if (selected.length > 0) {
+        btnTrigger.className = 'px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-xl text-xs font-black text-blue-800 outline-none cursor-pointer transition flex items-center gap-2 shadow-2xs';
+      } else {
+        btnTrigger.className = 'px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer transition flex items-center gap-2';
+      }
+    }
+
+    const clearInline = document.getElementById('panel-contratos-filter-clear-inline');
+    if (clearInline) {
+      if (selected.length > 0) clearInline.classList.remove('hidden');
+      else clearInline.classList.add('hidden');
+    }
+
+    const clearMenuBtn = document.getElementById('panel-contratos-filter-clear-menu');
+    if (clearMenuBtn) {
+      if (selected.length > 0) {
+        clearMenuBtn.disabled = false;
+        clearMenuBtn.className = 'text-[11px] font-black text-rose-600 hover:text-rose-700 hover:underline cursor-pointer transition';
+      } else {
+        clearMenuBtn.disabled = true;
+        clearMenuBtn.className = 'text-[11px] font-bold text-slate-300 cursor-not-allowed';
+      }
+    }
+
+    document.querySelectorAll('input[data-contract-filter]').forEach(chk => {
+      const val = chk.getAttribute('data-contract-filter');
+      const isChecked = selected.includes(val);
+      chk.checked = isChecked;
+      const row = chk.closest('label');
+      if (row) {
+        if (isChecked) {
+          row.className = 'flex items-center justify-between gap-2.5 px-2.5 py-2 rounded-xl cursor-pointer transition text-xs font-black bg-blue-50/90 text-blue-900 border border-blue-200';
+        } else {
+          row.className = 'flex items-center justify-between gap-2.5 px-2.5 py-2 rounded-xl cursor-pointer transition text-xs font-bold text-slate-700 hover:bg-slate-100 border border-transparent';
+        }
+      }
+    });
+  },
+
+  setFilter(f) {
+    if (!f || f === 'MURAL' || f === 'TODOS') {
+      this.clearFilters();
+      return;
+    }
+    app.state.panelContractsFilters = [f];
+    this.refreshFilterMenuUI();
     this.updateContent();
   },
 
@@ -2423,15 +2639,20 @@ app.contratos = {
     const filtered = list.filter(c => {
       const semaforo = this.calculateStatus(c);
 
-      // Filtro Status / Semáforo
+      // Filtro Status / Semáforo (Multi-seleção via Caixas de Seleção)
+      const selectedFilters = this.getSelectedFilters();
       let matchStatus = true;
-      if (app.state.panelContractsFilter === 'MURAL') matchStatus = true;
-      else if (app.state.panelContractsFilter === 'ATIVOS') matchStatus = c.status === 'Ativo';
-      else if (app.state.panelContractsFilter === 'COMPARTILHADOS') matchStatus = !!c.isCompartilhado && c.status === 'Ativo';
-      else if (app.state.panelContractsFilter === 'CRITICOS') matchStatus = semaforo.isUrgente && c.status === 'Ativo';
-      else if (app.state.panelContractsFilter === 'ATENCAO') matchStatus = semaforo.label.includes('Atenção') && c.status === 'Ativo';
-      else if (app.state.panelContractsFilter === 'PREVISTOS') matchStatus = c.status === 'Previsto';
-      else if (app.state.panelContractsFilter === 'ARQUIVADOS') matchStatus = c.status === 'Arquivado';
+      if (selectedFilters.length > 0) {
+        matchStatus = selectedFilters.some(f => {
+          if (f === 'ATIVOS') return c.status === 'Ativo';
+          if (f === 'COMPARTILHADOS') return !!c.isCompartilhado && c.status === 'Ativo';
+          if (f === 'CRITICOS') return semaforo.isUrgente && c.status === 'Ativo';
+          if (f === 'ATENCAO') return semaforo.label.includes('Atenção') && c.status === 'Ativo';
+          if (f === 'PREVISTOS') return c.status === 'Previsto';
+          if (f === 'ARQUIVADOS') return c.status === 'Arquivado';
+          return false;
+        });
+      }
 
       // Filtro Fiscal
       let matchFiscal = (!app.state.panelFiscalFilter || app.state.panelFiscalFilter === 'TODOS') || (c.fiscal === app.state.panelFiscalFilter);
@@ -2999,10 +3220,7 @@ app.render.contratosHub = function(el) {
     app.contratos.ensureMuralSync();
   }
 
-  // Define filtro padrão como 'MURAL' se não estiver definido
-  if (!app.state.panelContractsFilter) {
-    app.state.panelContractsFilter = 'MURAL';
-  }
+  const selectedFilters = app.contratos.getSelectedFilters();
 
   const allContracts = (app.state.panelContracts || []).filter(c => c && c.status !== 'Disponível' && !String(c.empresa).includes('ESPAÇO VAZIO') && String(c.empresa || '').trim().length > 0);
   if (allContracts.length !== (app.state.panelContracts || []).length) {
@@ -3013,6 +3231,7 @@ app.render.contratosHub = function(el) {
   }
   const activeContracts = allContracts.filter(c => c.status === 'Ativo');
   const previstosList = allContracts.filter(c => c.status === 'Previsto');
+  const arquivadosList = allContracts.filter(c => c.status === 'Arquivado');
   const criticosList = activeContracts.filter(c => {
     const s = app.contratos.calculateStatus(c);
     return s.isUrgente;
@@ -3043,8 +3262,17 @@ app.render.contratosHub = function(el) {
 
   const filteredList = app.contratos.getFilteredList();
   const isCardsMode = (app.state.panelViewMode || 'CARDS') === 'CARDS';
-  const currFilter = app.state.panelContractsFilter || 'MURAL';
   const currSort = app.state.panelSort || 'ALFABETICA_ASC';
+  const filterSummaryText = app.contratos.getFilterButtonSummary(totalPosicoesMural);
+  const hasActiveFilters = selectedFilters.length > 0;
+  const filterOptions = [
+    { id: 'ATIVOS', label: '🟢 Ativos', count: totalAtivos },
+    { id: 'CRITICOS', label: '🔴 Críticos', count: criticosList.length },
+    { id: 'ATENCAO', label: '🟡 Atenção', count: atencaoList.length },
+    { id: 'COMPARTILHADOS', label: '🌐 Compartilhados', count: totalCompartilhados },
+    { id: 'PREVISTOS', label: '📝 Previstos', count: previstosList.length },
+    { id: 'ARQUIVADOS', label: '📁 Arquivados', count: arquivadosList.length }
+  ];
 
   const activeEmpenhosCount = (app.state.empenhos || []).filter(e => e && e.status !== 'Arquivado').length;
 
@@ -3147,18 +3375,40 @@ app.render.contratosHub = function(el) {
                 <button id="panel-contratos-search-clear" onclick="app.contratos.clearSearch()" class="${(app.state.panelSearch || '').trim() ? '' : 'hidden'} absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 font-bold text-xs p-1" title="Limpar busca">✕</button>
             </div>
 
-            <!-- 1. MENU: SITUAÇÃO / SEMÁFORO (DROPDOWN VERTICAL) -->
-            <div class="flex items-center gap-1 shrink-0">
-                <label for="panel-contratos-filter-select" class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap hidden lg:inline">Situação:</label>
-                <select id="panel-contratos-filter-select" onchange="app.contratos.setFilter(this.value)" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer transition">
-                    <option value="MURAL" ${currFilter === 'MURAL' ? 'selected' : ''}>🖼️ Mural (${totalPosicoesMural})</option>
-                    <option value="ATIVOS" ${currFilter === 'ATIVOS' ? 'selected' : ''}>🟢 Ativos (${totalAtivos})</option>
-                    <option value="COMPARTILHADOS" ${currFilter === 'COMPARTILHADOS' ? 'selected' : ''}>🌐 Compartilhados (${totalCompartilhados})</option>
-                    <option value="CRITICOS" ${currFilter === 'CRITICOS' ? 'selected' : ''}>🔴 Críticos (${criticosList.length})</option>
-                    <option value="ATENCAO" ${currFilter === 'ATENCAO' ? 'selected' : ''}>🟡 Atenção (${atencaoList.length})</option>
-                    <option value="PREVISTOS" ${currFilter === 'PREVISTOS' ? 'selected' : ''}>📝 Previstos (${previstosList.length})</option>
-                    <option value="ARQUIVADOS" ${currFilter === 'ARQUIVADOS' ? 'selected' : ''}>📁 Arquivados</option>
-                </select>
+            <!-- 1. MENU: SITUAÇÃO / SEMÁFORO (CAIXAS DE SELEÇÃO MULTI-CRITÉRIO) -->
+            <div id="panel-contratos-filter-wrapper" class="relative flex items-center gap-1.5 shrink-0">
+                <span class="text-[10px] font-black uppercase text-slate-400 whitespace-nowrap hidden lg:inline">Situação:</span>
+                <button type="button" id="panel-contratos-filter-btn" onclick="app.contratos.toggleFilterDropdown(event)" class="${hasActiveFilters ? 'px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-xl text-xs font-black text-blue-800 outline-none cursor-pointer transition flex items-center gap-2 shadow-2xs' : 'px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer transition flex items-center gap-2'}">
+                    <span id="panel-contratos-filter-btn-label">${filterSummaryText}</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <button type="button" id="panel-contratos-filter-clear-inline" onclick="app.contratos.clearFilters(event)" class="${hasActiveFilters ? '' : 'hidden'} px-2.5 py-2 rounded-xl text-[11px] font-black text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition whitespace-nowrap" title="Desmarcar todos os filtros selecionados">
+                    ✕ Limpar seleção
+                </button>
+
+                <!-- POPOVER DE CAIXAS DE SELEÇÃO -->
+                <div id="panel-contratos-filter-menu" onclick="event.stopPropagation()" class="hidden absolute left-0 sm:right-0 sm:left-auto top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-50">
+                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Filtrar Situação</span>
+                        <button type="button" id="panel-contratos-filter-clear-menu" onclick="app.contratos.clearFilters(event)" ${hasActiveFilters ? '' : 'disabled'} class="${hasActiveFilters ? 'text-[11px] font-black text-rose-600 hover:text-rose-700 hover:underline cursor-pointer transition' : 'text-[11px] font-bold text-slate-300 cursor-not-allowed'}">
+                            Limpar seleção
+                        </button>
+                    </div>
+                    <div class="space-y-1">
+                        ${filterOptions.map(opt => {
+                          const isChecked = selectedFilters.includes(opt.id);
+                          return `
+                            <label class="flex items-center justify-between gap-2.5 px-2.5 py-2 rounded-xl cursor-pointer transition text-xs ${isChecked ? 'font-black bg-blue-50/90 text-blue-900 border border-blue-200' : 'font-bold text-slate-700 hover:bg-slate-100 border border-transparent'}">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" data-contract-filter="${opt.id}" ${isChecked ? 'checked' : ''} onchange="app.contratos.toggleFilter('${opt.id}')" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                    <span>${opt.label}</span>
+                                </div>
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-600">${opt.count}</span>
+                            </label>
+                          `;
+                        }).join('')}
+                    </div>
+                </div>
             </div>
 
             <!-- 2. MENU: FISCAL RESPONSÁVEL (DROPDOWN VERTICAL) -->
