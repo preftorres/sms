@@ -346,6 +346,18 @@ app.contratos = {
         c.cotaSaude = c.cotaSaude || 107420.99;
         modificado = true;
       }
+      // Corrige vigência final do Contrato 272/2021 (Silvano Tupinamba) considerando o 4º Termo Aditivo (guia Alterações do Contrato: 21/11/2026)
+      if ((Number(c.id) === 1792599860216 || String(c.numeroCtt) === '272/2021') && c.dataVencimentoIso === '2022-11-21') {
+        c.dataVencimentoIso = '2026-11-21';
+        if (!c.objeto || c.objeto.includes('4.000,00')) {
+          c.objeto = 'LOCAÇÃO DE IMÓVEL DE 200M² ANEXO AO IMÓVEL LOCALIZADO NA RUA GENERAL FIRMINO PAIM Nº 936 NA CIDADE DE TORRES/RS (12 MES × R$ 4.379,01)';
+        }
+        if (c.observacao && !c.observacao.includes('Termo aditivo')) {
+          c.observacao = 'Dispensa de licitação nº 593/2021 • Início: 14/12/2021 • 4º Termo aditivo (2025): vigência até 21/11/2026 (R$ 52.548,12) • ' + c.observacao.replace(/^Dispensa de licitação nº 593\/2021\s*•\s*Início:\s*14\/12\/2021\s*•\s*/i, '');
+        }
+        contractsToRepairInCloud.push(c);
+        modificado = true;
+      }
     });
 
     // Garante que os contratos oficiais 34, 35, 36, 463/2026 e 160/2025 estejam presentes na lista
@@ -981,10 +993,44 @@ app.contratos = {
     return null;
   },
 
-  openExistingFromDuplicateWarning(existingId) {
+  openExistingFromDuplicateWarning(existingId, applyImported = false) {
+    const importedSnapshot = applyImported ? {
+      vencIso: document.getElementById('panel-new-venc-iso')?.value || '',
+      valor: document.getElementById('panel-new-valor')?.value || '',
+      objeto: document.getElementById('panel-new-objeto')?.value || '',
+      observacao: document.getElementById('panel-new-observacao')?.value || '',
+      link: document.getElementById('panel-new-link')?.value || ''
+    } : null;
+
     this.closeNewModal();
     setTimeout(() => {
       this.openEditModal(Number(existingId));
+      if (importedSnapshot) {
+        if (importedSnapshot.vencIso) {
+          const vencEl = document.getElementById('panel-edit-venc-iso');
+          if (vencEl) vencEl.value = importedSnapshot.vencIso;
+          this.setupPrazoControls('edit', '', importedSnapshot.vencIso);
+        }
+        if (importedSnapshot.valor) {
+          const valEl = document.getElementById('panel-edit-valor');
+          if (valEl) valEl.value = importedSnapshot.valor;
+        }
+        if (importedSnapshot.objeto) {
+          const objEl = document.getElementById('panel-edit-objeto');
+          if (objEl) objEl.value = importedSnapshot.objeto;
+        }
+        if (importedSnapshot.observacao) {
+          const obsEl = document.getElementById('panel-edit-observacao');
+          if (obsEl) obsEl.value = importedSnapshot.observacao;
+        }
+        if (importedSnapshot.link) {
+          const linkEl = document.getElementById('panel-edit-link');
+          if (linkEl) linkEl.value = importedSnapshot.link;
+          this.onLinkInput('edit');
+        }
+        this.onValorContratoInput('edit');
+        this.setImportStatus('edit', 'success', '<span>✅</span><span>Dados atualizados a partir do Portal Betha (incluindo guia <b>Alterações do contrato</b>). Confira abaixo e clique em <b>Salvar Alterações</b>.</span>');
+      }
     }, 60);
   },
 
@@ -1071,26 +1117,50 @@ app.contratos = {
         valorEl.value = this.formatCurrency(valorNum);
       }
 
-      // 5. Data de Vencimento (dataVigenciaFinal ou dataVencimento)
-      const rawVenc = data.dataVigenciaFinal || data.dataVencimento || '';
-      const vencIso = this.formatDateIso(rawVenc);
+      // 5. Data de Vencimento: verifica tanto o campo "Vigência final" principal quanto a guia "Alterações do contrato" (aditivos/renovações)
+      const rawVencBase = data.dataVigenciaFinal || data.dataVencimento || '';
+      const baseVencIso = this.formatDateIso(rawVencBase);
+      let vencIso = baseVencIso;
+
+      const alteracoesList = Array.isArray(data.alteracoes) ? data.alteracoes : [];
+      let ultimaAlteracaoVigencia = null;
+
+      alteracoesList.forEach(alt => {
+        if (!alt) return;
+        const altVencIso = this.formatDateIso(alt.dataVigenciaFinal || alt.dataVencimento || '');
+        if (altVencIso && (!vencIso || altVencIso >= vencIso)) {
+          vencIso = altVencIso;
+          ultimaAlteracaoVigencia = alt;
+        }
+      });
+
       const vencEl = document.getElementById(`panel-${prefix}-venc-iso`);
       if (vencEl && vencIso) {
         vencEl.value = vencIso;
       }
 
-      // 6. Prazo de Renovação / Adição de Contrato (mantém padrão data exata para respeitar o vencimento real)
+      // 6. Prazo de Renovação / Adição de Contrato (mantém padrão data exata para respeitar o vencimento real atualizado)
       this.setupPrazoControls(prefix, '', vencIso);
 
       // 7. Objeto / Descrição dos Itens do Contrato (limita aos 3 primeiros itens quando a lista for extensa, ex.: laboratórios)
       const MAX_ITENS_RESUMO = 3;
       let objetoBase = String(data.objetoContratacao || '').trim();
+      if (!objetoBase && ultimaAlteracaoVigencia && ultimaAlteracaoVigencia.descricao) {
+        objetoBase = String(ultimaAlteracaoVigencia.descricao).trim();
+      }
       if (objetoBase.length > 260) {
         objetoBase = objetoBase.slice(0, 260).trim() + '...';
       }
 
-      const itensList = Array.isArray(data.itens) ? data.itens : [];
+      const baseItensList = Array.isArray(data.itens) ? data.itens : [];
+      const altItensList = (ultimaAlteracaoVigencia && Array.isArray(ultimaAlteracaoVigencia.itens) && ultimaAlteracaoVigencia.itens.length > 0)
+        ? ultimaAlteracaoVigencia.itens
+        : [];
+      // Se o contrato possui apenas 1 item renovado no último termo aditivo (ex.: aluguel/serviço mensal reajustado), usa o item atualizado do aditivo
+      const itensList = (baseItensList.length <= 1 && altItensList.length === 1) ? altItensList : baseItensList;
       let objetoStr = objetoBase;
+
+      const normCompare = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
       if (itensList.length > 0) {
         const formatarDetalheItem = (it) => {
@@ -1107,7 +1177,7 @@ app.contratos = {
 
         const descricoesUnicas = Array.from(new Set(itensList.map(it => String(it.descricao || '').trim()).filter(Boolean)));
 
-        // Caso especial: poucos itens (até 3) que compartilham exatamente a mesma descrição (ex.: TRANSALVA com 2 cotas do mesmo serviço)
+        // Caso especial: poucos itens (até 3) que compartilham exatamente a mesma descrição (ex.: TRANSALVA ou locação de imóvel)
         if (itensList.length <= MAX_ITENS_RESUMO && descricoesUnicas.length === 1) {
           let descUnica = descricoesUnicas[0];
           if (descUnica.length > 260) descUnica = descUnica.slice(0, 260).trim() + '...';
@@ -1115,7 +1185,7 @@ app.contratos = {
           const detalheQtd = resumos.length > 0 ? ` (${resumos.join(' + ')})` : '';
           if (!objetoBase) {
             objetoStr = `${descUnica}${detalheQtd}`;
-          } else if (!objetoBase.toLowerCase().includes(descUnica.toLowerCase().slice(0, 25))) {
+          } else if (!normCompare(objetoBase).includes(normCompare(descUnica).slice(0, 20))) {
             objetoStr = `${objetoBase} — ${descUnica}${detalheQtd}`;
           } else {
             objetoStr = `${objetoBase}${detalheQtd}`;
@@ -1137,7 +1207,7 @@ app.contratos = {
           const blocoItens = primeirosItens.join('\n');
           if (!objetoBase) {
             objetoStr = blocoItens;
-          } else if (itensList.length === 1 && objetoBase.toLowerCase().includes(String(itensList[0].descricao || '').trim().toLowerCase().slice(0, 25))) {
+          } else if (itensList.length === 1 && normCompare(objetoBase).includes(normCompare(itensList[0].descricao).slice(0, 20))) {
             const detUnico = formatarDetalheItem(itensList[0]);
             objetoStr = `${objetoBase}${detUnico ? ` (${detUnico})` : ''}`;
           } else {
@@ -1151,7 +1221,7 @@ app.contratos = {
       const objEl = document.getElementById(`panel-${prefix}-objeto`);
       if (objEl && objetoStr) objEl.value = objetoStr;
 
-      // 8. Observações / Detalhes complementares (Processo, Licitação, Empenhos vinculados, Vigência inicial)
+      // 8. Observações / Detalhes complementares (Processo, Licitação, Alterações/Aditivos, Empenhos vinculados, Vigência inicial)
       const obsParts = [];
       if (data.modalidadeLicitacao && data.numeroLicitacao) {
         obsParts.push(`${data.modalidadeLicitacao} nº ${data.numeroLicitacao}/${data.anoLicitacao || ''}`);
@@ -1161,6 +1231,13 @@ app.contratos = {
       if (data.dataAssinatura || data.dataVigenciaInicial) {
         const dtIni = this.formatDateBr(this.formatDateIso(data.dataVigenciaInicial || data.dataAssinatura));
         if (dtIni) obsParts.push(`Início: ${dtIni}`);
+      }
+      if (ultimaAlteracaoVigencia) {
+        const numAlt = ultimaAlteracaoVigencia.numero ? `${ultimaAlteracaoVigencia.numero}º ` : '';
+        const instAlt = ultimaAlteracaoVigencia.instrumento || 'Termo aditivo';
+        const anoAlt = ultimaAlteracaoVigencia.ano ? ` (${ultimaAlteracaoVigencia.ano})` : '';
+        const vlrAlt = ultimaAlteracaoVigencia.valorAlterado ? ` (${this.formatCurrency(ultimaAlteracaoVigencia.valorAlterado)})` : '';
+        obsParts.push(`${numAlt}${instAlt}${anoAlt}: vigência até ${this.formatDateBr(vencIso)}${vlrAlt}`);
       }
       const empenhosList = Array.isArray(data.empenhos) ? data.empenhos : [];
       if (empenhosList.length > 0) {
@@ -1176,7 +1253,7 @@ app.contratos = {
         obsParts.push(empTexto);
       }
       const obsEl = document.getElementById(`panel-${prefix}-observacao`);
-      if (obsEl && obsParts.length > 0 && !obsEl.value.trim()) {
+      if (obsEl && obsParts.length > 0 && (!obsEl.value.trim() || prefix === 'edit')) {
         obsEl.value = obsParts.join(' • ');
       }
 
@@ -1185,9 +1262,13 @@ app.contratos = {
 
       const cttLabel = numCtt ? `${numCtt}/${anoCtt}` : 'identificado';
       const empCount = empenhosList.length;
-      const itensCount = itensList.length;
+      const itensCount = baseItensList.length || itensList.length;
       const valorFmt = valorNum > 0 ? this.formatCurrency(valorNum) : 'R$ 0,00';
       const vencFmt = this.formatDateBr(vencIso) || 'Não informado';
+      const foiProrrogadoPorAditivo = !!(ultimaAlteracaoVigencia && baseVencIso && vencIso && vencIso !== baseVencIso);
+      const resumoAditivoBanner = foiProrrogadoPorAditivo
+        ? ` • <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold">🔄 Prorrogado em Alterações do Contrato (${alteracoesList.length} aditivo${alteracoesList.length > 1 ? 's' : ''}: de ${this.formatDateBr(baseVencIso)} para ${vencFmt})</span>`
+        : (alteracoesList.length > 0 ? ` • ${alteracoesList.length} alteração(ões)` : '');
       const resumoItensBanner = itensCount > MAX_ITENS_RESUMO
         ? ` • <b>${itensCount} itens</b> (listados os 3 primeiros)`
         : (itensCount > 0 ? ` • ${itensCount} ${itensCount === 1 ? 'item' : 'itens'}` : '');
@@ -1206,11 +1287,12 @@ app.contratos = {
         const ex = dupCheck.contract;
         const exCtt = this.formatCttNumber(ex.numeroCtt);
         const exVal = Number(ex.valorContrato || 0) > 0 ? this.formatCurrency(ex.valorContrato) : 'R$ 0,00';
+        const exVencFmt = this.formatDateBr(ex.dataVencimentoIso) || 'N/I';
         const motivoTxt = dupCheck.reason === 'link' ? 'com este mesmo link do Portal Betha' : `com o número <b>${exCtt}</b>`;
         this.setImportStatus(
           prefix,
           'warning',
-          `<span class="text-base leading-none">⚠️</span><div class="flex-1"><strong>Atenção: Este contrato já está cadastrado no painel!</strong><br><span class="font-normal">Já existe um registro ${motivoTxt}: <b>CTT ${exCtt} — ${ex.empresa}</b> (Fiscal: <b>${ex.fiscal || 'N/I'}</b> • Valor: <b>${exVal}</b> • Status: <b>${ex.status || 'Ativo'}</b>).<br>O sistema <b>não sobrescreve</b> contratos automaticamente. Para evitar criar um card duplicado, você pode abrir o contrato já existente:</span><div class="mt-2"><button type="button" onclick="app.contratos.openExistingFromDuplicateWarning(${ex.id})" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-[11px] shadow-xs transition inline-flex items-center gap-1"><span>✏️</span><span>Abrir Contrato Existente (${exCtt})</span></button></div></div>`
+          `<span class="text-base leading-none">⚠️</span><div class="flex-1"><strong>Atenção: Este contrato já está cadastrado no painel!</strong><br><span class="font-normal">Já existe um registro ${motivoTxt}: <b>CTT ${exCtt} — ${ex.empresa}</b> (Vencimento atual no painel: <b>${exVencFmt}</b> • Vencimento no Portal Betha: <b>${vencFmt}</b> • Valor: <b>${exVal}</b>).<br>Para evitar criar um card duplicado, escolha uma das opções abaixo:</span><div class="mt-2 flex flex-wrap gap-2"><button type="button" onclick="app.contratos.openExistingFromDuplicateWarning(${ex.id}, false)" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-[11px] shadow-xs transition inline-flex items-center gap-1"><span>✏️</span><span>Abrir Contrato Existente (${exCtt})</span></button><button type="button" onclick="app.contratos.openExistingFromDuplicateWarning(${ex.id}, true)" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] shadow-xs transition inline-flex items-center gap-1"><span>🔄</span><span>Abrir e Atualizar com Dados do Link (${vencFmt})</span></button></div></div>`
         );
         if (app.ui && app.ui.toast) {
           app.ui.toast(`Atenção: O Contrato ${exCtt} já consta no painel!`, 'warning', 'Contrato Já Cadastrado');
@@ -1219,7 +1301,7 @@ app.contratos = {
         this.setImportStatus(
           prefix,
           'success',
-          `<span>✅</span><div><strong>Contrato ${cttLabel} importado com sucesso!</strong><br><span class="font-normal">Contratado: <b>${empresa || 'N/I'}</b> • Valor: <b>${valorFmt}</b> • Vencimento: <b>${vencFmt}</b>${resumoFiscalBanner}${resumoItensBanner}${empCount > 0 ? ` • ${empCount} empenho(s)` : ''}. Confira os dados abaixo e clique em Salvar Contrato.</span></div>`
+          `<span>✅</span><div><strong>Contrato ${cttLabel} importado com sucesso!</strong><br><span class="font-normal">Contratado: <b>${empresa || 'N/I'}</b> • Valor: <b>${valorFmt}</b> • Vencimento: <b>${vencFmt}</b>${resumoAditivoBanner}${resumoFiscalBanner}${resumoItensBanner}${empCount > 0 ? ` • ${empCount} empenho(s)` : ''}. Confira os dados abaixo e clique em Salvar.</span></div>`
         );
         if (app.ui && app.ui.toast) {
           app.ui.toast(`Dados do Contrato ${cttLabel} preenchidos automaticamente!`, 'success', 'Importação Betha');
