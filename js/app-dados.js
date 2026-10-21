@@ -17,6 +17,8 @@ const CONFIG = {
     dotacoesCache: 'torres_dotacoes_cache_v6',
     panelContracts: 'torres_panel_contracts_v1',
     empenhosCache: 'torres_empenhos_v1',
+    frotaCache: 'torres_frota_cache_v1',
+    manutencoesCache: 'torres_manutencoes_cache_v1',
     permissions: 'torres_permissions_matrix_v2',
     auditSession: 'torres_audit_logged_user'
   }
@@ -583,7 +585,10 @@ const DEFAULT_PERMISSIONS = {
     'panel_access': false,
     'panel_create': false,
     'panel_edit': false,
-    'panel_archive': false
+    'panel_archive': false,
+    'frota_access': true,
+    'frota_edit': true,
+    'frota_maintenance': true
   },
   'Gestor Financeiro': {
     'audit_access': true,
@@ -598,7 +603,10 @@ const DEFAULT_PERMISSIONS = {
     'panel_access': true,
     'panel_create': true,
     'panel_edit': true,
-    'panel_archive': true
+    'panel_archive': true,
+    'frota_access': true,
+    'frota_edit': true,
+    'frota_maintenance': true
   },
   'Gerente': {
     'audit_access': true,
@@ -613,7 +621,10 @@ const DEFAULT_PERMISSIONS = {
     'panel_access': true,
     'panel_create': true,
     'panel_edit': true,
-    'panel_archive': true
+    'panel_archive': true,
+    'frota_access': true,
+    'frota_edit': true,
+    'frota_maintenance': true
   },
   'Visualizador': {
     'audit_access': true,
@@ -628,7 +639,10 @@ const DEFAULT_PERMISSIONS = {
     'panel_access': true,
     'panel_create': false,
     'panel_edit': false,
-    'panel_archive': false
+    'panel_archive': false,
+    'frota_access': true,
+    'frota_edit': false,
+    'frota_maintenance': false
   }
 };
 
@@ -709,6 +723,76 @@ const INITIAL_EMPENHOS = [
     criadoEm: "15/10/2026 às 14:00",
     criadoPor: "admin",
     historicoConsumo: []
+  }
+];
+
+// ============================================================================
+// BASE OFICIAL DE VEÍCULOS - SECRETARIA MUNICIPAL DE SAÚDE (33 VEÍCULOS)
+// ============================================================================
+const INITIAL_FROTA = [
+  { id: 1, numero: 1, placa: "IRD-4465", marca: "YAMAHA", modelo: "LANDER XTZ250", anoFab: 2008, anoMod: 2008, cor: "BRANCA", capacidade: 2, potencia: "25CV", cilindrada: "249", renavam: "203989996", chassi: "9C6KG021080029769", combustivel: "GASOLINA", proprietario: "Secretaria Estadual da Saude", linha: "Leve", categoria: "MOTO", status: "Em Operação", setor: "Vigilância Ambiental", kmAtual: 42300, observacao: "" },
+  { id: 2, numero: 2, placa: "IRD-4630", marca: "YAMAHA", modelo: "LANDER XTZ250", anoFab: 2008, anoMod: 2008, cor: "BRANCA", capacidade: 2, potencia: "25CV", cilindrada: "249", renavam: "203988167", chassi: "9C6KG021080029401", combustivel: "GASOLINA", proprietario: "Secretaria Estadual da Saude", linha: "Leve", categoria: "MOTO", status: "Em Operação", setor: "Vigilância Sanitária", kmAtual: 39800, observacao: "" },
+  { id: 3, numero: 3, placa: "IWL-8743", marca: "REBOQUE/RODALIVRE", modelo: "CA500 MD", anoFab: 2014, anoMod: 2014, cor: "PRETA", capacidade: 0, potencia: "0CV", cilindrada: "******", renavam: "1045343150", chassi: "9A9CA150SEAFC7375", combustivel: "OUTROS", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "REBOQUE", status: "Em Operação", setor: "Transporte Saúde", kmAtual: 0, observacao: "Reboque de carga e apoio logístico" },
+  { id: 4, numero: 4, placa: "IYG-9371", marca: "CHEVROLET", modelo: "PRISMA 1.4MT LT", anoFab: 2017, anoMod: 2018, cor: "BRANCA", capacidade: 5, potencia: "106CV", cilindrada: "1400", renavam: "1139739740", chassi: "9BGKS69V0JG268134", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Apoio Administrativo", kmAtual: 98400, observacao: "" },
+  { id: 5, numero: 5, placa: "IYL-6118", marca: "FIAT", modelo: "GRAND SIENA ATTRACTIVE 1.4", anoFab: 2018, anoMod: 2018, cor: "BRANCA", capacidade: 5, potencia: "88CV", cilindrada: "1400", renavam: "1148758825", chassi: "9BD19713HJ3354650", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Atenção Básica", kmAtual: 112300, observacao: "" },
+  { id: 6, numero: 6, placa: "IYU-2513", marca: "FIAT", modelo: "GRAND SIENA ATTRACTIVE 1.4", anoFab: 2018, anoMod: 2018, cor: "BRANCA", capacidade: 5, potencia: "88CV", cilindrada: "1400", renavam: "1166521840", chassi: "9BD19713HJ3361224", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Central", kmAtual: 105600, observacao: "" },
+  { id: 7, numero: 7, placa: "IYU-2517", marca: "FIAT", modelo: "GRAND SIENA ATTRACTIVE 1.4", anoFab: 2018, anoMod: 2019, cor: "BRANCA", capacidade: 5, potencia: "88CV", cilindrada: "1400", renavam: "1166522749", chassi: "9BD19713HK3363119", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Curtume / Stan", kmAtual: 118400, observacao: "" },
+  { id: 8, numero: 8, placa: "IYU-2523", marca: "FIAT", modelo: "TORO ENDURANCE AT", anoFab: 2018, anoMod: 2019, cor: "BRANCA", capacidade: 5, potencia: "139CV", cilindrada: "1800", renavam: "1166523702", chassi: "9882261CXKKC18019", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Logística / Almoxarifado", kmAtual: 86500, observacao: "" },
+  { id: 9, numero: 9, placa: "IYX-1536", marca: "MARCOPOLO", modelo: "VOLARE V8L ON", anoFab: 2018, anoMod: 2019, cor: "PRATA", capacidade: 29, potencia: "152CV", cilindrada: "3800", renavam: "1171861602", chassi: "93PB43M32KC098124", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "COLETIVO", status: "Em Operação", setor: "Transporte de Pacientes (TFD)", kmAtual: 148500, observacao: "Micro-ônibus 29 lugares TFD Porto Alegre / Região" },
+  { id: 10, numero: 10, placa: "IZC-3I95", marca: "MARCOPOLO", modelo: "VOLARE V8L ON", anoFab: 2018, anoMod: 2019, cor: "PRATA", capacidade: 29, potencia: "152CV", cilindrada: "3800", renavam: "1180996183", chassi: "93PB43M32KC060456", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "COLETIVO", status: "Em Operação", setor: "Transporte de Pacientes (TFD)", kmAtual: 154200, observacao: "Micro-ônibus 29 lugares TFD" },
+  { id: 11, numero: 11, placa: "IZJ-8D89", marca: "RENAULT", modelo: "MASTER INOVA AM3", anoFab: 2019, anoMod: 2020, cor: "BRANCA", capacidade: 7, potencia: "130CV", cilindrada: "2299", renavam: "1196549920", chassi: "93YMAFEXCLJ851119", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "SAMU / Resgate Municipal", kmAtual: 132000, observacao: "Ambulância de Suporte Básico" },
+  { id: 12, numero: 12, placa: "IZK-7F18", marca: "RENAULT", modelo: "MASTER INOVA AM3", anoFab: 2019, anoMod: 2020, cor: "BRANCA", capacidade: 7, potencia: "130CV", cilindrada: "2299", renavam: "1198445057", chassi: "93YMAFEXCLJ851113", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "Remoções SMS", kmAtual: 128400, observacao: "Ambulância de Transporte" },
+  { id: 13, numero: 13, placa: "IZM-1G73", marca: "MERCEDES-BENZ", modelo: "SPRINTER RONTAN AMB", anoFab: 2018, anoMod: 2019, cor: "BRANCA", capacidade: 7, potencia: "146CV", cilindrada: "2143", renavam: "1201251920", chassi: "8AC906633KE163862", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "SAMU / Suporte Avançado", kmAtual: 141000, observacao: "Ambulância UTI Móvel" },
+  { id: 14, numero: 14, placa: "IZX-0G96", marca: "MERCEDES-BENZ", modelo: "SPRINTER RONTAN AMB", anoFab: 2019, anoMod: 2019, cor: "BRANCA", capacidade: 7, potencia: "146CV", cilindrada: "2143", renavam: "1222959493", chassi: "8AC906633KE173316", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "Remoções SMS", kmAtual: 138600, observacao: "Ambulância de Suporte" },
+  { id: 15, numero: 15, placa: "JAT-8H09", marca: "RENAULT", modelo: "LOGAN ZEN16MT", anoFab: 2021, anoMod: 2022, cor: "BRANCA", capacidade: 5, potencia: "118CV", cilindrada: "1598", renavam: "1267335090", chassi: "93Y4SRZH5NJ909716", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Vigilância em Saúde", kmAtual: 68400, observacao: "" },
+  { id: 16, numero: 16, placa: "JAT-8I23", marca: "RENAULT", modelo: "LOGAN ZEN16MT", anoFab: 2021, anoMod: 2022, cor: "BRANCA", capacidade: 5, potencia: "118CV", cilindrada: "1598", renavam: "1267336770", chassi: "93Y4SRZH5NJ909715", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Regulação / Farmácia", kmAtual: 71200, observacao: "" },
+  { id: 17, numero: 17, placa: "JBC-3G02", marca: "CHEVROLET", modelo: "ONIX PLUS 10MT LT2", anoFab: 2021, anoMod: 2022, cor: "BRANCA", capacidade: 5, potencia: "82CV", cilindrada: "1000", renavam: "1285696376", chassi: "9BGEB69A0NG152749", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Gabinete / Secretaria", kmAtual: 59300, observacao: "" },
+  { id: 18, numero: 18, placa: "JCN-9F86", marca: "FIAT", modelo: "FIORINO VRIO AMB", anoFab: 2023, anoMod: 2024, cor: "BRANCA", capacidade: 2, potencia: "86CV", cilindrada: "1368", renavam: "1381193991", chassi: "9BD2651PAR9240732", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "AMBULANCIA", status: "Em Operação", setor: "Remoção Local / Simples", kmAtual: 34100, observacao: "Ambulância Simples Remoção" },
+  { id: 19, numero: 19, placa: "JDB-5C72", marca: "RENAULT", modelo: "MASTER JI MO AMB", anoFab: 2024, anoMod: 2025, cor: "BRANCA", capacidade: 6, potencia: "136CV", cilindrada: "2299", renavam: "1406999323", chassi: "93YF62005SJ064505", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "SAMU Base Torres", kmAtual: 28900, observacao: "Ambulância Suporte Avançado" },
+  { id: 20, numero: 20, placa: "TQO-1C40", marca: "RENAULT", modelo: "MASTER FLASH AM5", anoFab: 2024, anoMod: 2025, cor: "BRANCA", capacidade: 7, potencia: "136CV", cilindrada: "2999", renavam: "1439655070", chassi: "93YF62006SJ930468", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "Remoções Intermunicipais", kmAtual: 24500, observacao: "Ambulância UTI Móvel" },
+  { id: 21, numero: 21, placa: "TQR-4I75", marca: "CHEVROLET", modelo: "ONIX PLUS 10 TMT LT1", anoFab: 2025, anoMod: 2025, cor: "BRANCA", capacidade: 5, potencia: "116CV", cilindrada: "1000", renavam: "1449507163", chassi: "9BGEB69H0SG291398", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF São Francisco", kmAtual: 18200, observacao: "" },
+  { id: 22, numero: 22, placa: "TQR-4I80", marca: "CHEVROLET", modelo: "ONIX PLUS 10 TMT LT1", anoFab: 2025, anoMod: 2025, cor: "BRANCA", capacidade: 5, potencia: "116CV", cilindrada: "1000", renavam: "1449504326", chassi: "9BGEB69H0SG291293", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF São Braz", kmAtual: 17900, observacao: "" },
+  { id: 23, numero: 23, placa: "TQR-4J02", marca: "CHEVROLET", modelo: "ONIX PLUS 10 TMT LT1", anoFab: 2025, anoMod: 2025, cor: "BRANCA", capacidade: 5, potencia: "116CV", cilindrada: "1000", renavam: "1449509492", chassi: "9BGEB69H0SG293545", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Rio Verde", kmAtual: 19400, observacao: "" },
+  { id: 24, numero: 24, placa: "TQR-4J03", marca: "CHEVROLET", modelo: "ONIX PLUS 10 TMT LT1", anoFab: 2025, anoMod: 2025, cor: "BRANCA", capacidade: 5, potencia: "116CV", cilindrada: "1000", renavam: "1449512213", chassi: "9BGEB69HOSG296365", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Getúlio Vargas", kmAtual: 16800, observacao: "" },
+  { id: 25, numero: 25, placa: "TQY-4F23", marca: "HYUNDAI", modelo: "HB20S 1.0 TA LIMITED", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 5, potencia: "120CV", cilindrada: "998", renavam: "1469365763", chassi: "9BHCP41EBTP812502", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Praia Grande", kmAtual: 14200, observacao: "" },
+  { id: 26, numero: 26, placa: "TQY-4F30", marca: "HYUNDAI", modelo: "HB20S 1.0 TA LIMITED", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 5, potencia: "120CV", cilindrada: "998", renavam: "1469366387", chassi: "9BHCP41EBTP812504", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Vila São João", kmAtual: 13900, observacao: "" },
+  { id: 27, numero: 27, placa: "TQY-4F60", marca: "HYUNDAI", modelo: "HB20S 1.0 TA LIMITED", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 5, potencia: "120CV", cilindrada: "998", renavam: "1469372093", chassi: "9BHCP41EBTP804769", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "ESF Campo Bonito", kmAtual: 15300, observacao: "" },
+  { id: 28, numero: 28, placa: "TQY-4F62", marca: "HYUNDAI", modelo: "HB20S 1.0 TA LIMITED", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 5, potencia: "120CV", cilindrada: "998", renavam: "1469369610", chassi: "9BHCP41EBTP806714", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Vigilância Epidemiológica", kmAtual: 12800, observacao: "" },
+  { id: 29, numero: 29, placa: "TQY-4F72", marca: "HYUNDAI", modelo: "HB20S 1.0 TA LIMITED", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 5, potencia: "120CV", cilindrada: "998", renavam: "1469370309", chassi: "9BHCP41EBTP812433", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "CAPS / Saúde Mental", kmAtual: 16100, observacao: "" },
+  { id: 30, numero: 30, placa: "TQY-4F78", marca: "HYUNDAI", modelo: "HB20S 1.0 TA LIMITED", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 5, potencia: "120CV", cilindrada: "998", renavam: "1469374371", chassi: "9BHCP41EBTP806811", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Coordenação Médica / Regulação", kmAtual: 14700, observacao: "" },
+  { id: 31, numero: 31, placa: "TQZ-5C98", marca: "CHEVROLET", modelo: "SPIN 1.8L AT LTZ", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 7, potencia: "111CV", cilindrada: "1800", renavam: "1472179142", chassi: "9BGJC7520TB161045", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Transporte TFD (7 Lugares)", kmAtual: 21400, observacao: "Veículo 7 Lugares para Pacientes Especiais" },
+  { id: 32, numero: 32, placa: "TQZ-5D79", marca: "CHEVROLET", modelo: "SPIN 1.8L AT LTZ", anoFab: 2025, anoMod: 2026, cor: "BRANCA", capacidade: 7, potencia: "111CV", cilindrada: "1800", renavam: "1472187420", chassi: "9BGJC7520TB161030", combustivel: "ALCOOL/GASOLINA", proprietario: "Prefeitura Municipal de Torres", linha: "Leve", categoria: "CARRO", status: "Em Operação", setor: "Transporte TFD (7 Lugares)", kmAtual: 19800, observacao: "Veículo 7 Lugares para Pacientes Especiais" },
+  { id: 33, numero: 33, placa: "TRN-6E01", marca: "RENAULT", modelo: "MASTER FLASH A3", anoFab: 2026, anoMod: 2027, cor: "BRANCA", capacidade: 7, potencia: "150CV", cilindrada: "2299", renavam: "1513849970", chassi: "93YF62S04VJ575897", combustivel: "DIESEL", proprietario: "Prefeitura Municipal de Torres", linha: "Pesada", categoria: "AMBULANCIA", status: "Em Operação", setor: "SAMU / UTI Móvel", kmAtual: 8600, observacao: "Ambulância Nova Geração 2026/2027" }
+];
+
+// ============================================================================
+// HISTÓRICO DE MANUTENÇÕES INICIAIS (VINCULADAS À FROTA)
+// ============================================================================
+const INITIAL_MANUTENCOES = [
+  {
+    id: 1,
+    veiculoId: 9,
+    placa: "IYX-1536",
+    modelo: "VOLARE V8L ON",
+    tipo: "Corretiva",
+    defeitoApresentado: "Barulho e folga no diferencial traseiro ao tracionar, revisão do sistema de freios/ar comprimido e filtros de rotina",
+    oficina: "NILDIESEL RETÍFICA DE MOTORES",
+    dataEntrada: "2026-08-17",
+    dataSaida: "2026-08-25",
+    kmEntrada: 148500,
+    motorista: "Transporte Saúde",
+    status: "Concluída",
+    orcamentoNum: "2890",
+    empenhoPecas: "6844",
+    valorPecas: 2494.00,
+    empenhoServicos: "6842",
+    valorServicos: 3713.92,
+    notasFiscais: "NF 08606 / NF 270",
+    processo1Doc: "1Doc 19.562 / 1Doc 19.551",
+    itensOrcamento: "Kit Arruela Diferencial, Caixa Satélite Completa, Coroa e Pinhão, Braço/Palheta Limpador, Retentor Pinhão, Rolamentos, Válvula Eletropneumática, Óleo Diferencial, Filtro Secador Ar, Óleo Motor 15w40, Mancal Principal, Filtros Ar/Lubrificante/Racor/Diesel, Transmissão, Manivela Motor, Mancal Lateral Caixa Satélite",
+    observacoes: "Manutenção autorizada e executada com aplicação de 51% de desconto da tabela contratual da oficina credenciada.",
+    criadoEm: "17/08/2026 às 09:30",
+    criadoPor: "diego"
   }
 ];
 

@@ -35,6 +35,13 @@ Object.assign(window.app, {
     empenhosViewMode: 'CARDS',
     empenhosSearch: '',
     empenhosSort: 'RECENTES',
+    frota: [],
+    frotaFilter: 'all',
+    frotaLinhaFilter: 'all',
+    frotaStatusFilter: 'all',
+    frotaViewMode: 'cards',
+    frotaSearch: '',
+    manutencoes: [],
     users: [],
     permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS)),
     auth: { isLogged: false, user: null },
@@ -123,6 +130,13 @@ Object.assign(window.app, {
         const canAccess = getVal('panel_access');
         if (!canAccess) return false;
         if (actionKey === 'panel_access') return true;
+      }
+
+      // Se for de frota e frota_access for falso, bloqueia tudo do módulo
+      if (actionKey.startsWith('frota_')) {
+        const canAccess = getVal('frota_access');
+        if (!canAccess) return false;
+        if (actionKey === 'frota_access') return true;
       }
 
       return getVal(actionKey);
@@ -371,6 +385,47 @@ Object.assign(window.app, {
         app.state.empenhos = typeof INITIAL_EMPENHOS !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_EMPENHOS)) : [];
       }
 
+      const rawFrota = localStorage.getItem(CONFIG.keys.frotaCache);
+      try {
+        let listF = rawFrota ? JSON.parse(rawFrota) : null;
+        if (!Array.isArray(listF) || listF.length === 0) {
+          listF = typeof INITIAL_FROTA !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_FROTA)) : [];
+          app.state.frota = listF;
+          this.saveLocalFrota();
+        } else {
+          // Garante que todos os 33 veículos oficiais estejam presentes sem sobrescrever alterações do usuário
+          if (typeof INITIAL_FROTA !== 'undefined' && Array.isArray(INITIAL_FROTA)) {
+            INITIAL_FROTA.forEach(seed => {
+              const exists = listF.some(x => Number(x.id) === Number(seed.id) || (x.placa && String(x.placa).trim().toUpperCase() === String(seed.placa).trim().toUpperCase()));
+              if (!exists) listF.push(JSON.parse(JSON.stringify(seed)));
+            });
+          }
+          app.state.frota = listF;
+        }
+      } catch(e) {
+        app.state.frota = typeof INITIAL_FROTA !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_FROTA)) : [];
+      }
+
+      const rawManut = localStorage.getItem(CONFIG.keys.manutencoesCache);
+      try {
+        let listM = rawManut ? JSON.parse(rawManut) : null;
+        if (!Array.isArray(listM) || listM.length === 0) {
+          listM = typeof INITIAL_MANUTENCOES !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_MANUTENCOES)) : [];
+          app.state.manutencoes = listM;
+          this.saveLocalManutencoes();
+        } else {
+          if (typeof INITIAL_MANUTENCOES !== 'undefined' && Array.isArray(INITIAL_MANUTENCOES)) {
+            INITIAL_MANUTENCOES.forEach(seed => {
+              const exists = listM.some(x => Number(x.id) === Number(seed.id));
+              if (!exists) listM.push(JSON.parse(JSON.stringify(seed)));
+            });
+          }
+          app.state.manutencoes = listM;
+        }
+      } catch(e) {
+        app.state.manutencoes = typeof INITIAL_MANUTENCOES !== 'undefined' ? JSON.parse(JSON.stringify(INITIAL_MANUTENCOES)) : [];
+      }
+
       const rawPerms = localStorage.getItem(CONFIG.keys.permissions);
       app.state.permissions = rawPerms ? JSON.parse(rawPerms) : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
       if (app.state.permissions && typeof app.state.permissions === 'object') {
@@ -403,6 +458,20 @@ Object.assign(window.app, {
         app.state.empenhos = list;
       }
       localStorage.setItem(CONFIG.keys.empenhosCache, JSON.stringify(app.state.empenhos || []));
+    },
+
+    saveLocalFrota(list) {
+      if (list && Array.isArray(list)) {
+        app.state.frota = list;
+      }
+      localStorage.setItem(CONFIG.keys.frotaCache, JSON.stringify(app.state.frota || []));
+    },
+
+    saveLocalManutencoes(list) {
+      if (list && Array.isArray(list)) {
+        app.state.manutencoes = list;
+      }
+      localStorage.setItem(CONFIG.keys.manutencoesCache, JSON.stringify(app.state.manutencoes || []));
     },
 
     saveLocalDotacoes() {
@@ -634,6 +703,8 @@ Object.assign(window.app, {
         targetView = 'contratos_hub';
       } else if (hash === 'empenhos' || hash === 'empenhos_hub') {
         targetView = 'empenhos_hub';
+      } else if (hash === 'frota' || hash === 'frota_hub' || hash === 'veiculos') {
+        targetView = 'frota_hub';
       } else if (['landing', 'saude_links'].includes(hash)) {
         targetView = hash;
       }
@@ -642,7 +713,7 @@ Object.assign(window.app, {
     },
 
     async go(view) {
-      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub' || view === 'empenhos_hub');
+      const isRestricted = (view === 'auditoria_hub' || view === 'auditoria_detalhe' || view === 'dotacoes_hub' || view === 'contratos_hub' || view === 'empenhos_hub' || view === 'frota_hub');
       if (isRestricted && !app.state.auth.isLogged) {
         const vp = document.getElementById('app-viewport');
         if (vp && !vp.innerHTML.trim()) {
@@ -672,6 +743,11 @@ Object.assign(window.app, {
         }
         if (view === 'empenhos_hub' && !app.permissions.can('panel_access') && !app.permissions.can('dotacoes_access')) {
           app.ui.toast("Seu perfil não tem permissão para acessar o Controle de Empenhos.", "warning", "Acesso Restrito");
+          if (app.state.view !== 'saude_links') this.go('saude_links');
+          return;
+        }
+        if (view === 'frota_hub' && !app.permissions.can('frota_access')) {
+          app.ui.toast("Seu perfil não tem permissão para acessar o Controle da Frota.", "warning", "Acesso Restrito");
           if (app.state.view !== 'saude_links') this.go('saude_links');
           return;
         }
@@ -908,11 +984,13 @@ Object.assign(window.app, {
       const isDotacoes = app.state.view === 'dotacoes_hub';
       const isContratos = app.state.view === 'contratos_hub';
       const isEmpenhos = app.state.view === 'empenhos_hub';
+      const isFrota = app.state.view === 'frota_hub';
 
       const canAudit = !app.state.auth.isLogged || app.permissions.can('audit_access');
       const canDot = !app.state.auth.isLogged || app.permissions.can('dotacoes_access');
       const canPanel = !app.state.auth.isLogged || app.permissions.can('panel_access');
       const canEmpenhos = !app.state.auth.isLogged || app.permissions.can('panel_access') || app.permissions.can('dotacoes_access');
+      const canFrota = !app.state.auth.isLogged || app.permissions.can('frota_access');
 
       const auditBtnClass = canAudit
         ? (isAuditoria ? 'bg-blue-100 text-blue-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
@@ -942,6 +1020,13 @@ Object.assign(window.app, {
         ? `app.ui.navigate('empenhos')`
         : `app.ui.toast('Seu perfil não tem permissão para acessar o Controle de Empenhos.', 'warning', 'Acesso Restrito')`;
 
+      const frotaBtnClass = canFrota
+        ? (isFrota ? 'bg-cyan-100 text-cyan-950 font-black shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10 font-semibold')
+        : 'text-white/30 cursor-not-allowed hover:bg-transparent';
+      const frotaClick = canFrota
+        ? `app.ui.navigate('frota')`
+        : `app.ui.toast('Seu perfil não tem permissão para acessar o Controle da Frota.', 'warning', 'Acesso Restrito')`;
+
       nav.innerHTML = `
         <button onclick="app.ui.navigate('landing')" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 font-semibold text-[11px] sm:text-xs">
           Início
@@ -960,6 +1045,9 @@ Object.assign(window.app, {
         </button>
         <button onclick="${empClick}" title="${canEmpenhos ? 'Controle de Empenhos e Saldos' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${empBtnClass} text-[11px] sm:text-xs">
           ${!canEmpenhos ? '🔒 ' : ''}Empenhos
+        </button>
+        <button onclick="${frotaClick}" title="${canFrota ? 'Controle da Frota de Veículos' : 'Módulo desabilitado para o seu perfil'}" class="nav-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg ${frotaBtnClass} text-[11px] sm:text-xs">
+          ${!canFrota ? '🔒 ' : ''}Frota
         </button>
       `;
     },
@@ -1910,6 +1998,7 @@ Object.assign(window.app, {
       else if (app.state.view === 'dotacoes_hub' && app.render.dotacoesHub) app.render.dotacoesHub(vp);
       else if (app.state.view === 'contratos_hub' && app.render.contratosHub) app.render.contratosHub(vp);
       else if (app.state.view === 'empenhos_hub' && app.render.empenhosHub) app.render.empenhosHub(vp);
+      else if (app.state.view === 'frota_hub' && app.render.frotaHub) app.render.frotaHub(vp);
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -2020,6 +2109,7 @@ Object.assign(window.app, {
       const canDotacoes = !app.state.auth.isLogged || app.permissions.can('dotacoes_access');
       const canContratos = !app.state.auth.isLogged || app.permissions.can('panel_access');
       const canEmpenhos = !app.state.auth.isLogged || app.permissions.can('panel_access') || app.permissions.can('dotacoes_access');
+      const canFrota = !app.state.auth.isLogged || app.permissions.can('frota_access');
 
       el.innerHTML = `
         <div class="bg-torres-dark py-8 px-6 shadow-xl">
@@ -2179,6 +2269,45 @@ Object.assign(window.app, {
                     </div>
                 </button>
                 ` : ''}
+
+                <!-- CARD 5: FROTA DE VEÍCULOS & MANUTENÇÕES -->
+                ${canFrota ? `
+                <button onclick="app.ui.navigate('frota')" 
+                   class="text-left bg-white p-8 rounded-[2.5rem] border-2 border-emerald-500 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all group flex flex-col justify-between relative overflow-hidden ring-4 ring-emerald-50/60">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-200">Veículos & IA</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2"/></svg>
+                        </div>
+                        <h3 class="font-black text-slate-800 text-lg mb-1 group-hover:text-emerald-600 transition">Frota de Veículos da Saúde</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">33 veículos catalogados, status de operação, controle de manutenções com defeito registrado e Analisador de Orçamentos com IA.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600">
+                        <span>Acessar Painel da Frota</span>
+                        <span class="group-hover:translate-x-1 transition">→</span>
+                    </div>
+                </button>
+                ` : `
+                <button onclick="app.ui.toast('Seu perfil não possui permissão para acessar o módulo de Frota.', 'warning', 'Acesso Restrito')" 
+                   class="text-left bg-slate-100/90 p-8 rounded-[2.5rem] border-2 border-dashed border-slate-300 shadow-none cursor-not-allowed opacity-45 grayscale transition-all flex flex-col justify-between relative overflow-hidden" title="Área Inacessível para o seu perfil">
+                    <div class="absolute top-4 right-5">
+                        <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300 flex items-center gap-1">🔒 Inacessível</span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h3 class="font-black text-slate-500 text-lg mb-1">Frota de Veículos da Saúde</h3>
+                        <p class="text-sm text-slate-400 font-medium leading-tight">Módulo desabilitado pelo Administrador para o seu perfil de usuário.</p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-400">
+                        <span>🔒 Acesso Bloqueado</span>
+                        <span>✕</span>
+                    </div>
+                </button>
+                `}
 
                 <!-- LINKS SALVOS -->
                 ${app.state.links.map(l => `
